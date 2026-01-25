@@ -7,6 +7,12 @@ import { Briefcase, Menu, X, ChevronDown } from 'lucide-react';
 
 export default function TransparentHeader() {
   const pathname = usePathname();
+
+  // Don't render header on auth pages
+  if (pathname.startsWith('/auth')) {
+    return null;
+  }
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isJobsDropdownOpen, setIsJobsDropdownOpen] = useState(false);
   const [isCompaniesDropdownOpen, setIsCompaniesDropdownOpen] = useState(false);
