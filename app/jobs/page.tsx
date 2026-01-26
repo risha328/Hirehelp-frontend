@@ -20,6 +20,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
+import { jobsAPI } from '../api/companies';
 
 interface Job {
   id: string;
@@ -80,134 +81,33 @@ export default function JobsPage() {
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      // Mock data - replace with API call
-      const mockJobs: Job[] = [
-        {
-          id: '1',
-          title: 'Senior Frontend Developer',
-          company: 'TechCorp',
-          companyLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=TechCorp&backgroundColor=6366f1',
-          location: 'San Francisco, CA',
-          type: 'full-time',
-          salary: '$120,000 - $160,000',
-          experience: 'Senior',
-          postedDate: '2 days ago',
-          isFeatured: true,
-          isUrgent: true,
-          tags: ['React', 'TypeScript', 'Next.js', 'Tailwind'],
-          description: 'Join our team to build cutting-edge web applications using modern frontend technologies.'
-        },
-        {
-          id: '2',
-          title: 'UX/UI Designer',
-          company: 'DesignStudio',
-          companyLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=DesignStudio&backgroundColor=10b981',
-          location: 'Remote',
-          type: 'remote',
-          salary: '$90,000 - $120,000',
-          experience: 'Mid Level',
-          postedDate: '1 day ago',
-          isFeatured: true,
-          isUrgent: false,
-          tags: ['Figma', 'UI/UX', 'Prototyping', 'Design Systems'],
-          description: 'Create beautiful and intuitive user experiences for our digital products.'
-        },
-        {
-          id: '3',
-          title: 'Backend Engineer',
-          company: 'DataSystems',
-          companyLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=DataSystems&backgroundColor=8b5cf6',
-          location: 'New York, NY',
-          type: 'full-time',
-          salary: '$130,000 - $180,000',
-          experience: 'Senior',
-          postedDate: '3 days ago',
-          isFeatured: false,
-          isUrgent: true,
-          tags: ['Node.js', 'Python', 'AWS', 'Docker'],
-          description: 'Build scalable backend systems and APIs for enterprise applications.'
-        },
-        {
-          id: '4',
-          title: 'Marketing Intern',
-          company: 'GrowthLab',
-          companyLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=GrowthLab&backgroundColor=f59e0b',
-          location: 'Austin, TX',
-          type: 'internship',
-          salary: '$25/hour',
-          experience: 'Entry Level',
-          postedDate: '1 week ago',
-          isFeatured: false,
-          isUrgent: false,
-          tags: ['Marketing', 'Social Media', 'Content', 'Analytics'],
-          description: 'Support our marketing team in executing campaigns and analyzing performance.'
-        },
-        {
-          id: '5',
-          title: 'Project Manager',
-          company: 'ConsultPro',
-          companyLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=ConsultPro&backgroundColor=ef4444',
-          location: 'Chicago, IL',
-          type: 'contract',
-          salary: '$70 - $100/hour',
-          experience: 'Mid Level',
-          postedDate: '4 days ago',
-          isFeatured: true,
-          isUrgent: false,
-          tags: ['Agile', 'Scrum', 'Jira', 'Stakeholder Management'],
-          description: 'Lead cross-functional teams in delivering complex software projects.'
-        },
-        {
-          id: '6',
-          title: 'Data Scientist',
-          company: 'AnalyticsAI',
-          companyLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=AnalyticsAI&backgroundColor=3b82f6',
-          location: 'Remote',
-          type: 'remote',
-          salary: '$140,000 - $190,000',
-          experience: 'Senior',
-          postedDate: '5 days ago',
-          isFeatured: true,
-          isUrgent: true,
-          tags: ['Python', 'ML', 'TensorFlow', 'SQL'],
-          description: 'Develop machine learning models and derive insights from complex datasets.'
-        },
-        {
-          id: '7',
-          title: 'Customer Support',
-          company: 'ServiceFirst',
-          companyLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=ServiceFirst&backgroundColor=06b6d4',
-          location: 'Miami, FL',
-          type: 'part-time',
-          salary: '$25 - $35/hour',
-          experience: 'Entry Level',
-          postedDate: '2 days ago',
-          isFeatured: false,
-          isUrgent: false,
-          tags: ['Customer Service', 'Communication', 'Zendesk', 'CRM'],
-          description: 'Provide exceptional customer support through multiple channels.'
-        },
-        {
-          id: '8',
-          title: 'DevOps Engineer',
-          company: 'CloudTech',
-          companyLogo: 'https://api.dicebear.com/7.x/initials/svg?seed=CloudTech&backgroundColor=8b5cf6',
-          location: 'Seattle, WA',
-          type: 'full-time',
-          salary: '$130,000 - $170,000',
-          experience: 'Senior',
-          postedDate: '1 day ago',
-          isFeatured: true,
-          isUrgent: true,
-          tags: ['AWS', 'Kubernetes', 'Terraform', 'CI/CD'],
-          description: 'Build and maintain our cloud infrastructure and deployment pipelines.'
-        },
-      ];
-      
-      setJobs(mockJobs);
-      setFilteredJobs(mockJobs);
+      const jobsData = await jobsAPI.getAllJobs();
+      // Transform API data to match the Job interface
+      const transformedJobs: Job[] = jobsData.map((job: any) => ({
+        id: job._id,
+        title: job.title,
+        company: job.companyId.name,
+        companyLogo: job.companyId.logoUrl
+          ? `${process.env.NEXT_PUBLIC_API_URL}${job.companyId.logoUrl}`
+          : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}&backgroundColor=6366f1`,
+        location: job.location,
+        type: job.jobType || 'full-time',
+        salary: job.salary || 'Salary not specified',
+        experience: job.experienceLevel || 'Not specified',
+        postedDate: new Date(job.createdAt).toLocaleDateString(),
+        isFeatured: false, // You can add featured logic later
+        isUrgent: false, // You can add urgent logic later
+        tags: job.skills || [],
+        description: job.description,
+      }));
+
+      setJobs(transformedJobs);
+      setFilteredJobs(transformedJobs);
     } catch (error) {
       console.error('Failed to fetch jobs:', error);
+      // Fallback to empty array
+      setJobs([]);
+      setFilteredJobs([]);
     } finally {
       setLoading(false);
     }

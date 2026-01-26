@@ -12,8 +12,8 @@ export default function CompanyAdminPage() {
   useEffect(() => {
     const fetchCompany = async () => {
       try {
-        const companyData = await companiesAPI.getMyCompany();
-        setCompany(companyData);
+        const response = await companiesAPI.getMyCompany();
+        setCompany(response.company);
       } catch (error) {
         console.error('Failed to fetch company:', error);
         // Company not found or not registered yet

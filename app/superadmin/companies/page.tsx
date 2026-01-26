@@ -10,22 +10,35 @@ import {
   CheckCircle,
   XCircle,
 } from 'lucide-react';
-import { companiesAPI } from '../../api/companies';
+import { companiesAPI, jobsAPI } from '../../api/companies';
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState([]);
+  const [jobsCount, setJobsCount] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCompanies();
+    fetchData();
   }, []);
 
-  const fetchCompanies = async () => {
+  const fetchData = async () => {
     try {
-      const data = await companiesAPI.getAllCompanies();
-      setCompanies(data);
+      const [companiesData, jobsData] = await Promise.all([
+        companiesAPI.getAllCompanies(),
+        jobsAPI.getAllJobs(),
+      ]);
+
+      setCompanies(companiesData);
+
+      // Count jobs per company
+      const countMap: Record<string, number> = {};
+      jobsData.forEach((job: any) => {
+        const companyId = typeof job.companyId === 'string' ? job.companyId : job.companyId._id;
+        countMap[companyId] = (countMap[companyId] || 0) + 1;
+      });
+      setJobsCount(countMap);
     } catch (error) {
-      console.error('Failed to fetch companies:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
     }
@@ -33,8 +46,12 @@ export default function CompaniesPage() {
 
   const handleVerification = async (companyId: string, status: 'verified' | 'rejected') => {
     try {
-      await companiesAPI.updateCompany(companyId, { verificationStatus: status });
-      fetchCompanies(); // Refresh the list
+      if (status === 'verified') {
+        await companiesAPI.verifyCompany(companyId);
+      } else {
+        await companiesAPI.rejectCompany(companyId);
+      }
+      fetchData(); // Refresh the list
     } catch (error) {
       console.error('Failed to update company status:', error);
     }
@@ -92,7 +109,7 @@ export default function CompaniesPage() {
                       <div className="text-sm text-gray-500">{company.industry || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      0 {/* TODO: Add job count */}
+                      {jobsCount[company._id] || 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
