@@ -37,6 +37,7 @@ interface UserProfile {
   location?: string;
   website?: string;
   bio?: string;
+  resumeUrl?: string;
 }
 
 export default function ProfilePage() {
@@ -62,6 +63,10 @@ export default function ProfilePage() {
     bio: '',
   });
 
+  // Resume upload state
+  const [isUploadingResume, setIsUploadingResume] = useState(false);
+  const [resumeUploadError, setResumeUploadError] = useState('');
+
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -86,6 +91,7 @@ export default function ProfilePage() {
         location: profileData.location || '',
         website: profileData.website || '',
         bio: profileData.bio || '',
+        resumeUrl: profileData.resumeUrl || '',
       };
 
       setUser(userProfile);
@@ -713,6 +719,130 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Resume Upload Section */}
+                {user.role === 'CANDIDATE' && (
+                  <div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-6 pb-3 border-b border-gray-100">
+                      Resume
+                    </h4>
+                    <div className="space-y-4">
+                      {user.resumeUrl ? (
+                        <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center">
+                            <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
+                            <div>
+                              <p className="text-sm font-medium text-green-800">Resume uploaded</p>
+                              <p className="text-xs text-green-600">Click to view or download</p>
+                            </div>
+                          </div>
+                          <div className="flex space-x-2">
+                            <a
+                              href={`http://localhost:3001${user.resumeUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                            >
+                              View
+                            </a>
+                            <button
+                              onClick={() => setUser({ ...user, resumeUrl: '' })}
+                              className="px-3 py-1 text-sm border border-red-300 text-red-600 rounded hover:bg-red-50 transition-colors"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                          <div className="space-y-4">
+                            <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                              <User className="h-6 w-6 text-gray-400" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">Upload your resume</p>
+                              <p className="text-xs text-gray-500">PDF or DOCX files up to 2MB</p>
+                            </div>
+                            <div className="flex justify-center">
+                              <input
+                                type="file"
+                                accept=".pdf,.docx"
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+
+                                  // Validate file type
+                                  if (!file.name.match(/\.(pdf|docx)$/)) {
+                                    setResumeUploadError('Only PDF and DOCX files are allowed');
+                                    return;
+                                  }
+
+                                  // Validate file size (2MB)
+                                  if (file.size > 2 * 1024 * 1024) {
+                                    setResumeUploadError('File size must be less than 2MB');
+                                    return;
+                                  }
+
+                                  setIsUploadingResume(true);
+                                  setResumeUploadError('');
+
+                                  try {
+                                    const formData = new FormData();
+                                    formData.append('resume', file);
+
+                                    const token = localStorage.getItem('access_token');
+                                    const response = await fetch('http://localhost:3001/users/upload-resume', {
+                                      method: 'POST',
+                                      headers: {
+                                        'Authorization': `Bearer ${token}`,
+                                      },
+                                      body: formData,
+                                    });
+
+                                    if (!response.ok) {
+                                      throw new Error('Upload failed');
+                                    }
+
+                                    const result = await response.json();
+                                    setUser({ ...user, resumeUrl: result.resumeUrl });
+                                    setSuccessMessage('Resume uploaded successfully!');
+                                    setTimeout(() => setSuccessMessage(''), 4000);
+                                  } catch (error) {
+                                    setResumeUploadError('Failed to upload resume. Please try again.');
+                                  } finally {
+                                    setIsUploadingResume(false);
+                                  }
+                                }}
+                                className="hidden"
+                                id="resume-upload"
+                                disabled={isUploadingResume}
+                              />
+                              <label
+                                htmlFor="resume-upload"
+                                className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors ${
+                                  isUploadingResume ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
+                              >
+                                {isUploadingResume ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <User className="h-4 w-4 mr-2" />
+                                )}
+                                {isUploadingResume ? 'Uploading...' : 'Choose File'}
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {resumeUploadError && (
+                        <p className="mt-2 text-sm text-red-600 flex items-center">
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          {resumeUploadError}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* Submit Error */}
                 {errors.submit && (
