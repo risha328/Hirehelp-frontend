@@ -15,12 +15,8 @@ export default function ProfileLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className={`${inter.className} antialiased`}>
-        <main className="min-h-screen">
-          {children}
-        </main>
-      </body>
-    </html>
+    <main className="min-h-screen">
+      {children}
+    </main>
   );
 }

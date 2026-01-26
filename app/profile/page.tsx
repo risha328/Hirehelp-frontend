@@ -183,7 +183,7 @@ export default function ProfilePage() {
     switch (role) {
       case 'SUPER_ADMIN': return 'System Administrator';
       case 'COMPANY_ADMIN': return 'Company Administrator';
-      case 'CANDIDATE': return 'Professional Candidate';
+      case 'CANDIDATE': return ' Candidate';
       case 'RECRUITER': return 'Talent Recruiter';
       default: return role.replace('_', ' ');
     }
@@ -244,7 +244,7 @@ export default function ProfilePage() {
         <div className="mb-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Professional Profile</h1>
+              <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
               <p className="text-gray-600 mt-2">Manage your professional identity and account settings</p>
             </div>
             {!isEditing && (
@@ -559,7 +559,7 @@ export default function ProfilePage() {
                 {/* Professional Information Section */}
                 <div>
                   <h4 className="text-lg font-medium text-gray-900 mb-6 pb-3 border-b border-gray-100">
-                    Professional Information
+                    Your Information
                   </h4>
                   <div className="space-y-6">
                     {/* Job Title */}
@@ -692,7 +692,7 @@ export default function ProfilePage() {
                     {/* Bio */}
                     <div>
                       <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
-                        Professional Bio
+                       Bio
                       </label>
                       {isEditing ? (
                         <textarea
