@@ -25,6 +25,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [role, setRole] = useState<'SUPER_ADMIN' | 'COMPANY_ADMIN' | 'CANDIDATE'>('CANDIDATE');
+  const [gender, setGender] = useState<'MALE' | 'FEMALE' | ''>('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -45,6 +46,8 @@ export default function RegisterPage() {
 
     if (!['SUPER_ADMIN', 'COMPANY_ADMIN', 'CANDIDATE'].includes(role)) newErrors.role = 'Invalid role selected';
 
+    if (gender && !['MALE', 'FEMALE'].includes(gender)) newErrors.gender = 'Invalid gender selected';
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -64,6 +67,7 @@ export default function RegisterPage() {
         confirmPassword,
         dateOfBirth,
         role,
+        gender: gender || undefined,
       };
 
       const response = await authAPI.register(registerData);
@@ -294,6 +298,58 @@ export default function RegisterPage() {
                 <p className="mt-2 text-sm text-red-600 flex items-center">
                   <XCircle className="h-4 w-4 mr-1" />
                   {errors.dateOfBirth}
+                </p>
+              )}
+            </div>
+
+            {/* Gender Selection */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-4">
+                Gender (Optional)
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setGender('MALE')}
+                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all ${
+                    gender === 'MALE'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-300 hover:border-blue-300'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${
+                    gender === 'MALE' ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}>
+                    <User className={`h-4 w-4 ${gender === 'MALE' ? 'text-white' : 'text-gray-500'}`} />
+                  </div>
+                  <span className={`font-medium ${gender === 'MALE' ? 'text-blue-700' : 'text-gray-700'}`}>
+                    Male
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setGender('FEMALE')}
+                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all ${
+                    gender === 'FEMALE'
+                      ? 'border-pink-500 bg-pink-50'
+                      : 'border-gray-300 hover:border-pink-300'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${
+                    gender === 'FEMALE' ? 'bg-pink-500' : 'bg-gray-300'
+                  }`}>
+                    <User className={`h-4 w-4 ${gender === 'FEMALE' ? 'text-white' : 'text-gray-500'}`} />
+                  </div>
+                  <span className={`font-medium ${gender === 'FEMALE' ? 'text-pink-700' : 'text-gray-700'}`}>
+                    Female
+                  </span>
+                </button>
+              </div>
+              {errors.gender && (
+                <p className="mt-2 text-sm text-red-600 flex items-center">
+                  <XCircle className="h-4 w-4 mr-1" />
+                  {errors.gender}
                 </p>
               )}
             </div>

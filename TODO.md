@@ -1,9 +1,10 @@
-# Frontend-Backend Connection Tasks
+# Profile Page Implementation
 
-- [ ] Create API folder structure
-- [ ] Create config.ts with base URL
-- [ ] Create auth.ts with API functions
-- [ ] Update register/page.tsx to use real API calls
-- [ ] Update login/page.tsx to use real API calls
-- [ ] Test API connections
-- [ ] Implement JWT token storage and handling
+## Tasks
+- [x] Create profile page component with display mode
+- [x] Add edit mode functionality
+- [x] Implement auto-generated avatar based on gender
+- [x] Add phone field (frontend only - backend schema needs update)
+- [x] Integrate with auth API for profile fetching
+- [x] Add form validation and error handling
+- [x] Style the profile page consistently with app design

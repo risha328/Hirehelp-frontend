@@ -7,6 +7,7 @@ export interface RegisterData {
   confirmPassword: string;
   dateOfBirth: string;
   role: 'SUPER_ADMIN' | 'COMPANY_ADMIN' | 'CANDIDATE';
+  gender?: 'MALE' | 'FEMALE';
 }
 
 export interface LoginData {

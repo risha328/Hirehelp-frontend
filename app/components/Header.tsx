@@ -86,8 +86,8 @@ export default function TransparentHeader() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Don't render header on auth pages
-  if (pathname.startsWith('/auth')) {
+  // Don't render header on auth pages and profile page
+  if (pathname.startsWith('/auth') || pathname === '/profile') {
     return null;
   }
 
@@ -262,12 +262,12 @@ export default function TransparentHeader() {
                       <p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
                     </div>
                     <Link
-                      href="/dashboard"
+                      href="/profile"
                       onClick={() => setIsProfileDropdownOpen(false)}
                       className="flex items-center px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
                     >
                       <User className="h-4 w-4 mr-2" />
-                      <span className="text-sm font-medium">Dashboard</span>
+                      <span className="text-sm font-medium">Profile</span>
                     </Link>
                     <button
                       onClick={() => {
@@ -416,6 +416,13 @@ export default function TransparentHeader() {
                     <p className="font-semibold text-gray-900">{user.name}</p>
                     <p className="text-xs text-gray-600 mt-0.5">{user.email}</p>
                   </div>
+                  <Link
+                    href="/profile"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full px-4 py-3 text-center font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg border border-gray-300/50 transition-colors"
+                  >
+                    Profile
+                  </Link>
                   <Link
                     href="/dashboard"
                     onClick={() => setIsMenuOpen(false)}
