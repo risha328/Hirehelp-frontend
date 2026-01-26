@@ -41,7 +41,7 @@ export default function Hero() {
   ];
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-blue-50 via-white to-white">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-blue-200 via-white to-white">
       {/* Background Elements */}
       <div className="absolute inset-0">
         {/* Light Blue Gradient Circles */}

@@ -91,6 +91,9 @@ export default function TransparentHeader() {
     return null;
   }
 
+  // Check if current page has blue background theme
+  const hasBlueBackground = pathname === '/about' || pathname === '/contactus';
+
   // Navigation items
   const navItems = [
     { name: 'Home', href: '/', current: pathname === '/' },
@@ -120,7 +123,7 @@ export default function TransparentHeader() {
       ]
     },
     { name: 'About', href: '/about', current: pathname.startsWith('/about') },
-    { name: 'Contact Us', href: '/contact', current: pathname.startsWith('/contact') },
+    { name: 'Contact Us', href: '/contactus', current: pathname.startsWith('/contact') },
   ];
 
   return (
@@ -155,8 +158,9 @@ export default function TransparentHeader() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex lg:ml-12 lg:items-center lg:space-x-1">
-              {navItems.map((item) => (
+            {!(hasBlueBackground && isScrolled) && (
+              <nav className="hidden lg:flex lg:ml-12 lg:items-center lg:space-x-1">
+                {navItems.map((item) => (
                 <div key={item.name} className="relative">
                   {item.dropdown ? (
                     <div
@@ -170,7 +174,7 @@ export default function TransparentHeader() {
                             ? 'bg-white/20 text-white backdrop-blur-sm'
                             : isScrolled || isMenuOpen
                               ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                              : 'text-gray-900 hover:text-gray-700 hover:bg-white/10'
+                              : 'text-white hover:text-gray-100 hover:bg-white/10'
                         }`}
                       >
                         {item.name}
@@ -226,7 +230,7 @@ export default function TransparentHeader() {
                           ? 'bg-white/20 text-white backdrop-blur-sm'
                           : isScrolled || isMenuOpen
                             ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                            : 'text-gray-900 hover:text-gray-700 hover:bg-white/10'
+                            : 'text-white hover:text-gray-100 hover:bg-white/10'
                       }`}
                     >
                       {item.name}
@@ -235,6 +239,7 @@ export default function TransparentHeader() {
                 </div>
               ))}
             </nav>
+            )}
           </div>
 
           {/* CTA Buttons - Desktop */}
