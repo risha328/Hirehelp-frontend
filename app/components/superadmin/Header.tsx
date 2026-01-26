@@ -85,10 +85,10 @@ export default function SuperAdminHeader() {
           {/* Desktop User Menu */}
           <div className="hidden lg:flex lg:items-center lg:space-x-4">
             {/* Notifications */}
-            <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+            {/* <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+            </button> */}
 
             {user ? (
               <div className="relative">
