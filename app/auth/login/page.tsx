@@ -15,6 +15,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from 'lucide-react';
+import { authAPI } from '../../api/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,10 +33,21 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await authAPI.login({ email, password });
+      
+      // Store tokens in localStorage
+      localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('refresh_token', response.refresh_token);
+      
+      // Store user data for quick access
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
+      
+      // Redirect to dashboard
       router.push('/');
-    } catch {
-      setError('Invalid credentials. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Invalid credentials. Please try again.');
     } finally {
       setIsLoading(false);
     }

@@ -3,20 +3,25 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Briefcase, Menu, X, ChevronDown } from 'lucide-react';
+import { Briefcase, Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
+import { authAPI } from '../api/auth';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
 
 export default function TransparentHeader() {
-  const pathname = usePathname();
-
-  // Don't render header on auth pages
-  if (pathname.startsWith('/auth')) {
-    return null;
-  }
-
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isJobsDropdownOpen, setIsJobsDropdownOpen] = useState(false);
   const [isCompaniesDropdownOpen, setIsCompaniesDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  
+  const pathname = usePathname();
 
   // Handle scroll effect for transparency
   useEffect(() => {
@@ -31,6 +36,60 @@ export default function TransparentHeader() {
       window.removeEventListener('scroll', handleScroll);
     };
   }, []);
+
+  // Fetch current user on mount
+  useEffect(() => {
+    const fetchUser = async () => {
+      // First, try to get user from localStorage immediately
+      try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          console.log('User loaded from localStorage:', parsedUser);
+          setUser(parsedUser);
+        }
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+      }
+
+      const token = localStorage.getItem('access_token');
+      
+      if (!token) {
+        setUser(null);
+        return;
+      }
+
+      try {
+        // Try to fetch the profile from the backend to sync
+        console.log('Fetching profile from backend...');
+        const userData = await authAPI.getProfile();
+        console.log('Profile fetched successfully:', userData);
+        if (userData && userData.id) {
+          const user = {
+            id: userData.id || userData._id,
+            name: userData.name || 'User',
+            email: userData.email || '',
+            role: userData.role || 'CANDIDATE',
+          };
+          setUser(user);
+          // Update localStorage with fresh data from backend
+          localStorage.setItem('user', JSON.stringify(user));
+        }
+      } catch (error) {
+        console.warn('Could not fetch user profile from backend:', error);
+        // Backend fetch failed, but we already have user from localStorage above
+      }
+    };
+
+    // Add small delay to ensure localStorage is synced
+    const timer = setTimeout(fetchUser, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Don't render header on auth pages
+  if (pathname.startsWith('/auth')) {
+    return null;
+  }
 
   // Navigation items
   const navItems = [
@@ -180,36 +239,85 @@ export default function TransparentHeader() {
 
           {/* CTA Buttons - Desktop */}
           <div className="hidden lg:flex lg:items-center lg:space-x-4">
-            <Link
-              href="/auth/login"
-              className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${
-                isScrolled || isMenuOpen
-                  ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                  : 'text-gray-900 hover:text-gray-700 hover:bg-white/10 backdrop-blur-sm'
-              }`}
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/auth/register"
-              className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${
-                isScrolled || isMenuOpen
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
-                  : 'bg-white text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              Get Started
-            </Link>
-            <Link
-              href="/auth/register?role=company"
-              className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${
-                isScrolled || isMenuOpen
-                  ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
-                  : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
-              }`}
-            >
-              Post a Job
-            </Link>
+            {user ? (
+              // User Avatar Dropdown
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white transition-all duration-300 ${
+                    isScrolled || isMenuOpen
+                      ? 'bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                      : 'bg-gradient-to-br from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
+                  }`}
+                  title={user.name}
+                >
+                  {user.name?.charAt(0).toUpperCase() || 'U'}
+                </button>
+
+                {/* Profile Dropdown */}
+                {isProfileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-xl shadow-lg border border-white/20 py-2 z-50">
+                    <div className="px-4 py-3 border-b border-gray-100/50">
+                      <p className="font-semibold text-gray-900">{user.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
+                    </div>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="flex items-center px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      <span className="text-sm font-medium">Dashboard</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('access_token');
+                        localStorage.removeItem('refresh_token');
+                        setUser(null);
+                        setIsProfileDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50/50 transition-colors text-left"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      <span className="text-sm font-medium">Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${
+                    isScrolled || isMenuOpen
+                      ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
+                      : 'text-gray-900 hover:text-gray-700 hover:bg-white/10 backdrop-blur-sm'
+                  }`}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${
+                    isScrolled || isMenuOpen
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
+                      : 'bg-white text-gray-900 hover:bg-gray-100'
+                  }`}
+                >
+                  Get Started
+                </Link>
+                <Link
+                  href="/auth/register?role=company"
+                  className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${
+                    isScrolled || isMenuOpen
+                      ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+                      : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
+                  }`}
+                >
+                  Post a Job
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -302,27 +410,56 @@ export default function TransparentHeader() {
 
             {/* Mobile CTA Buttons */}
             <div className="mt-6 pt-4 border-t border-gray-200/50 space-y-3 px-4">
-              <Link
-                href="/auth/login"
-                onClick={() => setIsMenuOpen(false)}
-                className="block w-full px-4 py-3 text-center font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg border border-gray-300/50 transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/auth/register"
-                onClick={() => setIsMenuOpen(false)}
-                className="block w-full px-4 py-3 text-center font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
-              >
-                Get Started
-              </Link>
-              <Link
-                href="/auth/register?role=company"
-                onClick={() => setIsMenuOpen(false)}
-                className="block w-full px-4 py-3 text-center font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
-              >
-                Post a Job
-              </Link>
+              {user ? (
+                <>
+                  <div className="px-4 py-3 rounded-lg bg-blue-50 border border-blue-200/50">
+                    <p className="font-semibold text-gray-900">{user.name}</p>
+                    <p className="text-xs text-gray-600 mt-0.5">{user.email}</p>
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full px-4 py-3 text-center font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg border border-gray-300/50 transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('access_token');
+                      localStorage.removeItem('refresh_token');
+                      setUser(null);
+                      setIsMenuOpen(false);
+                    }}
+                    className="block w-full px-4 py-3 text-center font-medium text-red-600 hover:text-red-700 hover:bg-red-50/50 rounded-lg border border-red-300/50 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full px-4 py-3 text-center font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg border border-gray-300/50 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full px-4 py-3 text-center font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl"
+                  >
+                    Get Started
+                  </Link>
+                  <Link
+                    href="/auth/register?role=company"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full px-4 py-3 text-center font-semibold text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
+                  >
+                    Post a Job
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
