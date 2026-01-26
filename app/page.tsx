@@ -3,39 +3,14 @@
 import Link from 'next/link';
 import { ArrowRight, Briefcase, Users, TrendingUp, Shield, Zap } from 'lucide-react';
 import Header from './components/Header';
+import Hero from './components/Hero';
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Header />
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            Find Your Next 
-            <span className="text-blue-600"> Career Opportunity</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
-            A modern SaaS platform connecting talented professionals with innovative companies worldwide.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              href="/jobs"
-              className="inline-flex items-center justify-center bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Browse Jobs
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-            <Link 
-              href="/auth/register?role=employer"
-              className="inline-flex items-center justify-center bg-white text-blue-600 border border-gray-300 px-8 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
-            >
-              Post a Job
-            </Link>
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       {/* Features Section */}
       <section className="container mx-auto px-4 py-16">
