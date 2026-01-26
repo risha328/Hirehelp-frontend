@@ -86,8 +86,8 @@ export default function TransparentHeader() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Don't render header on auth pages and profile page
-  if (pathname.startsWith('/auth') || pathname === '/profile') {
+  // Don't render header on auth pages, profile page, and companyadmin pages
+  if (pathname.startsWith('/auth') || pathname === '/profile' || pathname.startsWith('/companyadmin')) {
     return null;
   }
 
