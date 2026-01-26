@@ -25,6 +25,18 @@ export interface AuthResponse {
   };
 }
 
+// Helper function to check if JWT token is expired
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Date.now() / 1000;
+    return payload.exp < currentTime;
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return true; // Assume expired if can't decode
+  }
+}
+
 export const authAPI = {
   async register(data: RegisterData): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -60,7 +72,7 @@ export const authAPI = {
     return response.json();
   },
 
-  async refreshToken(refreshToken: string): Promise<{ access_token: string }> {
+  async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
     const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: 'POST',
       headers: {
@@ -91,10 +103,29 @@ export const authAPI = {
   },
 
   async getProfile(): Promise<any> {
-    const token = localStorage.getItem('access_token');
-    
+    let token = localStorage.getItem('access_token');
+
     if (!token) {
       throw new Error('No access token found');
+    }
+
+    // Check if token is expired
+    if (isTokenExpired(token)) {
+      console.log('Access token expired, attempting refresh...');
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        throw new Error('No refresh token found');
+      }
+
+      try {
+        const refreshResponse = await this.refreshToken(refreshToken);
+        token = refreshResponse.accessToken;
+        localStorage.setItem('access_token', token);
+        console.log('Token refreshed successfully');
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        throw new Error('Session expired, please login again');
+      }
     }
 
     console.log('Fetching profile with token:', token.substring(0, 20) + '...');
