@@ -1,27 +1,18 @@
-- [x] Modify hirehelp-frontend/app/auth/login/page.tsx to implement role-based redirection:
-  - If user role is COMPANY_ADMIN, redirect to /companyadmin
-  - If user role is SUPER_ADMIN, redirect to /superadmin
-  - Otherwise, redirect to /
+# Company Onboarding Implementation
 
-# TODO: Implement Fetching Candidates on SuperAdmin Page
+## Backend Updates
+- [ ] Update company.schema.ts to add industry, size, website, location, verificationStatus
+- [ ] Update create-company.dto.ts and update-company.dto.ts
+- [ ] Add logo upload endpoint in companies.controller.ts
+- [ ] Update companies.service.ts if needed
 
-- [x] Add findByRole method to users service in backend
-- [x] Add GET /users/by-role endpoint in users controller (protected for SUPER_ADMIN)
-- [x] Create usersAPI in frontend for API calls
-- [x] Update superadmin/candidates page to fetch real candidates data instead of mock data
-=======
-# TODO: Implement Role-Based Redirection After Login
+## Frontend Updates
+- [ ] Create hirehelp-frontend/app/api/companies.ts for API calls
+- [ ] Implement hirehelp-frontend/app/companies/page.tsx with the onboarding form
+- [ ] Add "Register your company" button in hirehelp-frontend/app/companyadmin/page.tsx
+- [ ] Update hirehelp-frontend/app/superadmin/companies/page.tsx to show pending companies and verification actions
 
-- [x] Modify hirehelp-frontend/app/auth/login/page.tsx to implement role-based redirection:
-  - If user role is COMPANY_ADMIN, redirect to /companyadmin
-  - If user role is SUPER_ADMIN, redirect to /superadmin
-  - Otherwise, redirect to /
-
-# TODO: Implement Fetching Candidates on SuperAdmin Page
-
-- [x] Add findByRole method to users service in backend
-- [x] Add GET /users/by-role endpoint in users controller (protected for SUPER_ADMIN)
-- [x] Create usersAPI in frontend for API calls
-- [x] Update superadmin/candidates page to fetch real candidates data instead of mock data
-- [x] Fix import errors in backend controller
-- [x] Fix merge conflicts and update frontend page with proper loading/error states
+## Testing
+- [ ] Test company creation flow
+- [ ] Test logo upload
+- [ ] Test verification process

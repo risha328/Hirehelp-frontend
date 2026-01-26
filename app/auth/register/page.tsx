@@ -81,8 +81,14 @@ export default function RegisterPage() {
         localStorage.setItem('user', JSON.stringify(response.user));
       }
 
-      // Redirect to dashboard
-      router.push('/');
+      // Redirect based on user role
+      if (response.user.role === 'COMPANY_ADMIN') {
+        router.push('/companyadmin');
+      } else if (response.user.role === 'SUPER_ADMIN') {
+        router.push('/superadmin');
+      } else {
+        router.push('/');
+      }
     } catch (err: any) {
       setErrors({ submit: err.message || 'Registration failed. Please try again.' });
     } finally {

@@ -1,21 +1,44 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   Building,
   Plus,
   Edit,
   Eye,
   Filter,
+  CheckCircle,
+  XCircle,
 } from 'lucide-react';
+import { companiesAPI } from '../../api/companies';
 
 export default function CompaniesPage() {
-  // Mock data for companies
-  const companies = [
-    { id: 1, name: 'TechCorp Inc.', industry: 'Technology', jobs: 12, status: 'Active', lastPost: '2 days ago' },
-    { id: 2, name: 'DataSystems', industry: 'Data Analytics', jobs: 8, status: 'Active', lastPost: '1 week ago' },
-    { id: 3, name: 'CloudNative', industry: 'Cloud Computing', jobs: 15, status: 'Active', lastPost: '3 days ago' },
-    { id: 4, name: 'StartupXYZ', industry: 'Fintech', jobs: 6, status: 'Inactive', lastPost: '2 weeks ago' },
-  ];
+  const [companies, setCompanies] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  const fetchCompanies = async () => {
+    try {
+      const data = await companiesAPI.getAllCompanies();
+      setCompanies(data);
+    } catch (error) {
+      console.error('Failed to fetch companies:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerification = async (companyId: string, status: 'verified' | 'rejected') => {
+    try {
+      await companiesAPI.updateCompany(companyId, { verificationStatus: status });
+      fetchCompanies(); // Refresh the list
+    } catch (error) {
+      console.error('Failed to update company status:', error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -47,39 +70,72 @@ export default function CompaniesPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {companies.map((company) => (
-                <tr key={company.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{company.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{company.industry}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {company.jobs}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      company.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {company.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {company.lastPost}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button className="text-gray-600 hover:text-gray-900">
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    Loading companies...
                   </td>
                 </tr>
-              ))}
+              ) : companies.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                    No companies found
+                  </td>
+                </tr>
+              ) : (
+                companies.map((company: any) => (
+                  <tr key={company._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{company.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">{company.industry || 'N/A'}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      0 {/* TODO: Add job count */}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        company.verificationStatus === 'verified' ? 'bg-green-100 text-green-800' :
+                        company.verificationStatus === 'rejected' ? 'bg-red-100 text-red-800' :
+                        'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {company.verificationStatus === 'verified' ? 'Verified' :
+                         company.verificationStatus === 'rejected' ? 'Rejected' :
+                         'Pending'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(company.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button className="text-blue-600 hover:text-blue-900">
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        {company.verificationStatus === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => handleVerification(company._id, 'verified')}
+                              className="text-green-600 hover:text-green-900"
+                              title="Verify Company"
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleVerification(company._id, 'rejected')}
+                              className="text-red-600 hover:text-red-900"
+                              title="Reject Company"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
