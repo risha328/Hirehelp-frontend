@@ -92,14 +92,25 @@ export const authAPI = {
 
   async getProfile(): Promise<any> {
     const token = localStorage.getItem('access_token');
+    
+    if (!token) {
+      throw new Error('No access token found');
+    }
+
+    console.log('Fetching profile with token:', token.substring(0, 20) + '...');
+
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: 'GET',
       headers: {
+        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
     });
 
     if (!response.ok) {
-      throw new Error('Failed to get profile');
+      const errorData = await response.text();
+      console.error('Profile API Error:', response.status, errorData);
+      throw new Error(`Failed to get profile: ${response.status}`);
     }
 
     return response.json();

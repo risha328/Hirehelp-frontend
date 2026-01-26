@@ -71,6 +71,11 @@ export default function RegisterPage() {
       // Store tokens in localStorage
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
+      
+      // Store user data for quick access
+      if (response.user) {
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
 
       // Redirect to dashboard
       router.push('/');
