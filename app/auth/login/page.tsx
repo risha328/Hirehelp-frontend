@@ -43,9 +43,15 @@ export default function LoginPage() {
       if (response.user) {
         localStorage.setItem('user', JSON.stringify(response.user));
       }
-      
-      // Redirect to dashboard
-      router.push('/');
+
+      // Redirect based on user role
+      if (response.user.role === 'COMPANY_ADMIN') {
+        router.push('/companyadmin');
+      } else if (response.user.role === 'SUPER_ADMIN') {
+        router.push('/superadmin');
+      } else {
+        router.push('/');
+      }
     } catch (err: any) {
       setError(err.message || 'Invalid credentials. Please try again.');
     } finally {
