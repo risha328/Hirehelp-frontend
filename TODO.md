@@ -1,18 +1,16 @@
-# Company Onboarding Implementation
+# TODO: Update Company Admin Dashboard
 
-## Backend Updates
-- [ ] Update company.schema.ts to add industry, size, website, location, verificationStatus
-- [ ] Update create-company.dto.ts and update-company.dto.ts
-- [ ] Add logo upload endpoint in companies.controller.ts
-- [ ] Update companies.service.ts if needed
+## Task: Modify company admin dashboard to show different content based on verification status
 
-## Frontend Updates
-- [ ] Create hirehelp-frontend/app/api/companies.ts for API calls
-- [ ] Implement hirehelp-frontend/app/companies/page.tsx with the onboarding form
-- [ ] Add "Register your company" button in hirehelp-frontend/app/companyadmin/page.tsx
-- [ ] Update hirehelp-frontend/app/superadmin/companies/page.tsx to show pending companies and verification actions
+### Steps:
+1. [x] Update hirehelp-frontend/app/companyadmin/page.tsx to conditionally render content based on verification status
+   - [x] For 'pending': Show "Your Registered your company but still now not verified" with basic company info
+   - [x] For 'verified': Show all company details as currently implemented
+   - [x] For 'rejected': Handle appropriately (possibly show rejection message)
 
-## Testing
-- [ ] Test company creation flow
-- [ ] Test logo upload
-- [ ] Test verification process
+### Files to Edit:
+- [x] hirehelp-frontend/app/companyadmin/page.tsx
+
+### Followup Steps:
+- Test the dashboard after changes
+- Ensure proper display for all verification statuses

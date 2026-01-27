@@ -9,6 +9,7 @@ import {
   Filter,
   CheckCircle,
   XCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { companiesAPI, jobsAPI } from '../../api/companies';
 
@@ -16,6 +17,9 @@ export default function CompaniesPage() {
   const [companies, setCompanies] = useState([]);
   const [jobsCount, setJobsCount] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [modalAction, setModalAction] = useState<'verified' | 'rejected' | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -133,14 +137,22 @@ export default function CompaniesPage() {
                         {company.verificationStatus === 'pending' && (
                           <>
                             <button
-                              onClick={() => handleVerification(company._id, 'verified')}
+                              onClick={() => {
+                                setSelectedCompany(company);
+                                setModalAction('verified');
+                                setShowModal(true);
+                              }}
                               className="text-green-600 hover:text-green-900"
                               title="Verify Company"
                             >
                               <CheckCircle className="h-4 w-4" />
                             </button>
                             <button
-                              onClick={() => handleVerification(company._id, 'rejected')}
+                              onClick={() => {
+                                setSelectedCompany(company);
+                                setModalAction('rejected');
+                                setShowModal(true);
+                              }}
                               className="text-red-600 hover:text-red-900"
                               title="Reject Company"
                             >
@@ -157,6 +169,46 @@ export default function CompaniesPage() {
           </table>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showModal && selectedCompany && modalAction && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 border border-gray-200">
+            <div className="flex items-center mb-4">
+              <AlertTriangle className="h-6 w-6 text-yellow-500 mr-3" />
+              <h3 className="text-lg font-semibold text-gray-900">Confirm Action</h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to {modalAction === 'verified' ? 'verify' : 'reject'} the company "{selectedCompany.name}"?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                No
+              </button>
+              <button
+                onClick={async () => {
+                  if (selectedCompany && modalAction) {
+                    await handleVerification(selectedCompany._id, modalAction);
+                    setShowModal(false);
+                    setSelectedCompany(null);
+                    setModalAction(null);
+                  }
+                }}
+                className={`px-4 py-2 rounded-lg text-white ${
+                  modalAction === 'verified'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                Yes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

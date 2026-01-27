@@ -12,8 +12,10 @@ export default function CompanyAdminPage() {
   useEffect(() => {
     const fetchCompany = async () => {
       try {
+        console.log('Fetching company...');
         const response = await companiesAPI.getMyCompany();
-        setCompany(response.company);
+        console.log('getMyCompany response:', response);
+        setCompany(response);
       } catch (error) {
         console.error('Failed to fetch company:', error);
         // Company not found or not registered yet
@@ -36,33 +38,90 @@ export default function CompanyAdminPage() {
   return (
     <div className="space-y-6">
       {company ? (
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center space-x-4 mb-4">
-            {company.logoUrl && (
-              <img
-                src={`${process.env.NEXT_PUBLIC_API_URL}${company.logoUrl}`}
-                alt={`${company.name} logo`}
-                className="w-16 h-16 rounded-lg object-cover"
-              />
-            )}
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{company.name}</h2>
-              <p className="text-gray-600">{company.industry} • {company.size}</p>
-              <p className="text-sm text-gray-500">Verification Status: {company.verificationStatus}</p>
-            </div>
-          </div>
-          <p className="text-gray-700 mb-4">{company.description}</p>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            {company.website && (
+        company.verificationStatus === 'verified' ? (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center space-x-4 mb-4">
+              {company.logoUrl && (
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${company.logoUrl}`}
+                  alt={`${company.name} logo`}
+                  className="w-16 h-16 rounded-lg object-cover"
+                />
+              )}
               <div>
-                <span className="font-medium">Website:</span> <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{company.website}</a>
+                <h2 className="text-2xl font-bold text-gray-900">{company.name}</h2>
+                <p className="text-gray-600">{company.industry} • {company.size}</p>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500">Verification Status:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    company.verificationStatus === 'verified'
+                      ? 'bg-green-100 text-green-800'
+                      : company.verificationStatus === 'rejected'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {company.verificationStatus === 'verified' ? 'Active' :
+                     company.verificationStatus === 'rejected' ? 'Rejected' : 'Pending'}
+                  </span>
+                </div>
               </div>
-            )}
-            <div>
-              <span className="font-medium">Location:</span> {company.location}
+            </div>
+            <p className="text-gray-700 mb-4">{company.description}</p>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {company.website && (
+                <div>
+                  <span className="font-medium">Website:</span> <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{company.website}</a>
+                </div>
+              )}
+              <div>
+                <span className="font-medium">Location:</span> {company.location}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="flex items-center space-x-4 mb-4">
+              {company.logoUrl && (
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL}${company.logoUrl}`}
+                  alt={`${company.name} logo`}
+                  className="w-16 h-16 rounded-lg object-cover"
+                />
+              )}
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Your Company: {company.name}</h2>
+                <p className="text-gray-600">{company.industry} • {company.size}</p>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-500">Verification Status:</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    company.verificationStatus === 'verified'
+                      ? 'bg-green-100 text-green-800'
+                      : company.verificationStatus === 'rejected'
+                      ? 'bg-red-100 text-red-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {company.verificationStatus === 'verified' ? 'Active' :
+                     company.verificationStatus === 'rejected' ? 'Rejected' : 'Pending'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <p className="text-gray-700 mb-4">{company.description}</p>
+            <p className="text-gray-600 mb-4">
+              Your Registered your company but still now not verified.
+            </p>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {company.website && (
+                <div>
+                  <span className="font-medium">Website:</span> <a href={company.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{company.website}</a>
+                </div>
+              )}
+              <div>
+                <span className="font-medium">Location:</span> {company.location}
+              </div>
+            </div>
+          </div>
+        )
       ) : (
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Company Admin</h2>

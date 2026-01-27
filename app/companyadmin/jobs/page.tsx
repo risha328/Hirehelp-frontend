@@ -23,6 +23,7 @@ interface Company {
   _id: string;
   name: string;
   logoUrl?: string;
+  verificationStatus: string;
 }
 
 export default function CompanyJobsPage() {
@@ -99,18 +100,29 @@ export default function CompanyJobsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm() || !company) return;
+    if (!validateForm() || !company || !company._id || company._id.trim() === '') {
+      console.error('Validation failed:', {
+        hasCompany: !!company,
+        hasCompanyId: !!(company && company._id),
+        companyId: company?._id,
+        companyIdTrimmed: company?._id?.trim(),
+        company
+      });
+      alert('Unable to post job: Company information is missing. Please refresh the page and try again.');
+      return;
+    }
 
     setPosting(true);
 
     try {
       const jobData = {
         ...formData,
-        companyId: company._id,
+        companyId: company._id.trim(),
         skills: formData.skills ? formData.skills.split(',').map(s => s.trim()) : [],
         status: 'active',
       };
 
+      console.log('Submitting job data:', jobData);
       await jobsAPI.createJob(jobData);
 
       // Refresh jobs list
@@ -132,7 +144,14 @@ export default function CompanyJobsPage() {
       alert('Job posted successfully!');
     } catch (error) {
       console.error('Failed to post job:', error);
-      alert('Failed to post job. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to post job. Please try again.';
+
+      // Check if the error is related to company verification
+      if (errorMessage.includes('Company must be verified')) {
+        alert('Your company is not verified Still now');
+      } else {
+        alert(errorMessage);
+      }
     } finally {
       setPosting(false);
     }
@@ -176,10 +195,21 @@ export default function CompanyJobsPage() {
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Job Postings</h2>
             <p className="text-gray-600">Manage your company's job listings</p>
+            {company.verificationStatus !== 'verified' && (
+              <p className="text-sm text-amber-600 mt-1">
+                Your company is pending verification. Job posting will be available once verified by superadmin.
+              </p>
+            )}
           </div>
           <button
             onClick={() => setShowModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            disabled={company.verificationStatus !== 'verified'}
+            className={`px-4 py-2 rounded ${
+              company.verificationStatus === 'verified'
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+            }`}
+            title={company.verificationStatus !== 'verified' ? 'Company must be verified by superadmin to post jobs' : ''}
           >
             Post New Job
           </button>
