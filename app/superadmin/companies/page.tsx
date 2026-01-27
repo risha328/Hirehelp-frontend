@@ -10,8 +10,10 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
+  X
 } from 'lucide-react';
 import { companiesAPI, jobsAPI } from '../../api/companies';
+import { usersAPI } from '../../api/users';
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState([]);
@@ -20,10 +22,31 @@ export default function CompaniesPage() {
   const [showModal, setShowModal] = useState(false);
   const [modalAction, setModalAction] = useState<'verified' | 'rejected' | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [viewModal, setViewModal] = useState(false);
+  const [selectedCompanyForView, setSelectedCompanyForView] = useState<any>(null);
+  const [companyAdmin, setCompanyAdmin] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (selectedCompanyForView) {
+      fetchCompanyAdmin();
+    }
+  }, [selectedCompanyForView]);
+
+  const fetchCompanyAdmin = async () => {
+    if (!selectedCompanyForView) return;
+    try {
+      const users = await usersAPI.getUsersByRole('COMPANYADMIN');
+      const admin = users.find((user: any) => user._id === selectedCompanyForView.ownerId);
+      setCompanyAdmin(admin || null);
+    } catch (error) {
+      console.error('Failed to fetch company admin:', error);
+      setCompanyAdmin(null);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -131,7 +154,14 @@ export default function CompaniesPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
-                        <button className="text-blue-600 hover:text-blue-900">
+                        <button
+                          onClick={() => {
+                            setSelectedCompanyForView(company);
+                            setViewModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900"
+                          title="View Company Details"
+                        >
                           <Eye className="h-4 w-4" />
                         </button>
                         {company.verificationStatus === 'pending' && (
@@ -172,7 +202,7 @@ export default function CompaniesPage() {
 
       {/* Confirmation Modal */}
       {showModal && selectedCompany && modalAction && (
-        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-[100]">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 border border-gray-200">
             <div className="flex items-center mb-4">
               <AlertTriangle className="h-6 w-6 text-yellow-500 mr-3" />
@@ -205,6 +235,137 @@ export default function CompaniesPage() {
               >
                 Yes
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Company Details Modal */}
+      {viewModal && selectedCompanyForView && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-gray-900">Company Details</h2>
+              <button
+                onClick={() => {
+                  setViewModal(false);
+                  setSelectedCompanyForView(null);
+                  setCompanyAdmin(null);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Company Header */}
+              <div className="flex items-start space-x-4">
+                <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
+                  <img
+                    src={selectedCompanyForView.logoUrl
+                      ? `${process.env.NEXT_PUBLIC_API_URL}${selectedCompanyForView.logoUrl}`
+                      : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(selectedCompanyForView.name)}&backgroundColor=6366f1`
+                    }
+                    alt={selectedCompanyForView.name}
+                    className="w-14 h-14"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(selectedCompanyForView.name)}`;
+                    }}
+                  />
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-gray-900">{selectedCompanyForView.name}</h1>
+                  <p className="text-gray-600">{selectedCompanyForView.industry || 'Industry not specified'}</p>
+                </div>
+              </div>
+
+              {/* Company Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Company Information</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Size:</span>
+                        <span className="font-medium">{selectedCompanyForView.size || 'Not specified'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Location:</span>
+                        <span className="font-medium">{selectedCompanyForView.location || 'Not specified'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Website:</span>
+                        <span className="font-medium">
+                          {selectedCompanyForView.website ? (
+                            <a href={selectedCompanyForView.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                              {selectedCompanyForView.website}
+                            </a>
+                          ) : 'Not specified'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Status:</span>
+                        <span className={`font-medium ${
+                          selectedCompanyForView.verificationStatus === 'verified' ? 'text-green-600' :
+                          selectedCompanyForView.verificationStatus === 'rejected' ? 'text-red-600' :
+                          'text-yellow-600'
+                        }`}>
+                          {selectedCompanyForView.verificationStatus === 'verified' ? 'Verified' :
+                           selectedCompanyForView.verificationStatus === 'rejected' ? 'Rejected' :
+                           'Pending'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Created:</span>
+                        <span className="font-medium">{new Date(selectedCompanyForView.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Company Admin</h3>
+                    {companyAdmin ? (
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Name:</span>
+                          <span className="font-medium">{companyAdmin.name}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Email:</span>
+                          <span className="font-medium">{companyAdmin.email}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Role:</span>
+                          <span className="font-medium">{companyAdmin.role}</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">Loading admin details...</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Statistics</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Active Jobs:</span>
+                        <span className="font-medium">{jobsCount[selectedCompanyForView._id] || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              {selectedCompanyForView.description && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
+                  <p className="text-gray-700 leading-relaxed">{selectedCompanyForView.description}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
