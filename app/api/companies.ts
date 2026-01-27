@@ -226,7 +226,8 @@ export const companiesAPI = {
       throw new Error('Failed to fetch company');
     }
 
-    return response.json();
+    const data = await response.json();
+    return data.company; // Extract the company from the response
   },
 
   uploadLogo: async (file: File) => {
@@ -443,7 +444,19 @@ export const jobsAPI = {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Failed to create job:', response.status, response.statusText, errorText);
-      throw new Error(`Failed to create job: ${response.status} ${response.statusText}`);
+      let errorMessage = `Failed to create job: ${response.status} ${response.statusText}`;
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (e) {
+        // If parsing fails, use the raw error text
+        if (errorText) {
+          errorMessage = errorText;
+        }
+      }
+      throw new Error(errorMessage);
     }
 
     return response.json();
