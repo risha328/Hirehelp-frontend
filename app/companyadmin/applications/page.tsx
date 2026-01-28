@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText } from 'lucide-react';
+import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
 import { API_BASE_URL } from '../../api/config';
+import KanbanBoard from '../../components/KanbanBoard';
 
 export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -11,6 +12,7 @@ export default function ApplicationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('kanban');
 
   useEffect(() => {
     fetchApplications();
@@ -117,8 +119,34 @@ export default function ApplicationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Job Applications</h1>
-        <div className="text-sm text-gray-600">
-          {applications.length} application{applications.length !== 1 ? 's' : ''}
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-600">
+            {applications.length} application{applications.length !== 1 ? 's' : ''}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'table'
+                  ? 'bg-indigo-100 text-indigo-600'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+              title="Table View"
+            >
+              <List className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`p-2 rounded-lg transition-colors ${
+                viewMode === 'kanban'
+                  ? 'bg-indigo-100 text-indigo-600'
+                  : 'text-gray-400 hover:text-gray-600'
+              }`}
+              title="Kanban View"
+            >
+              <Grid3X3 className="h-5 w-5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -130,6 +158,15 @@ export default function ApplicationsPage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-2">No Applications Yet</h2>
           <p className="text-gray-600">Applications for your jobs will appear here.</p>
         </div>
+      ) : viewMode === 'kanban' ? (
+        <KanbanBoard
+          applications={applications}
+          onApplicationUpdate={fetchApplications}
+          onViewDetails={(application) => {
+            setSelectedApplication(application);
+            setShowModal(true);
+          }}
+        />
       ) : (
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
