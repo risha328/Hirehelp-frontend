@@ -24,6 +24,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { jobsAPI } from '../../api/companies';
+import { applicationsAPI } from '../../api/applications';
+import ApplyModal from '../../components/ApplyModal';
 
 interface Job {
   _id: string;
@@ -56,10 +58,25 @@ export default function JobDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
 
   useEffect(() => {
     fetchJobDetails();
+    checkApplicationStatus();
   }, [jobId]);
+
+  const checkApplicationStatus = async () => {
+    try {
+      const applications = await applicationsAPI.getApplicationsByCandidate();
+      const hasAppliedForJob = applications.some(app => app.jobId._id === jobId);
+      setHasApplied(hasAppliedForJob);
+    } catch (err) {
+      console.error('Failed to check application status:', err);
+      // If there's an error (e.g., not logged in), assume not applied
+      setHasApplied(false);
+    }
+  };
 
   const fetchJobDetails = async () => {
     setLoading(true);
@@ -212,8 +229,16 @@ export default function JobDetailsPage() {
               <button className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                 <Share2 className="h-5 w-5" />
               </button>
-              <button className="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors">
-                Apply Now
+              <button
+                onClick={() => setShowApplyModal(true)}
+                disabled={hasApplied}
+                className={`px-6 py-3 font-medium rounded-lg transition-colors ${
+                  hasApplied
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                {hasApplied ? 'Already Applied' : 'Apply Now'}
               </button>
             </div>
           </div>
@@ -358,13 +383,34 @@ export default function JobDetailsPage() {
             <div className="bg-indigo-600 rounded-xl p-6 text-center">
               <h3 className="text-white font-semibold mb-2">Ready to Apply?</h3>
               <p className="text-indigo-100 text-sm mb-4">Take the next step in your career</p>
-              <button className="w-full px-6 py-3 bg-white text-indigo-600 font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                Apply for this Job
+              <button
+                onClick={() => setShowApplyModal(true)}
+                disabled={hasApplied}
+                className={`w-full px-6 py-3 font-medium rounded-lg transition-colors ${
+                  hasApplied
+                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    : 'bg-white text-indigo-600 hover:bg-gray-50'
+                }`}
+              >
+                {hasApplied ? 'Already Applied' : 'Apply for this Job'}
               </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Apply Modal */}
+      <ApplyModal
+        isOpen={showApplyModal}
+        onClose={() => setShowApplyModal(false)}
+        jobId={jobId}
+        companyId={job.companyId._id}
+        jobTitle={job.title}
+        onSuccess={() => {
+          setShowApplyModal(false);
+          setHasApplied(true);
+        }}
+      />
     </div>
   );
 }
