@@ -1,0 +1,109 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+export interface Application {
+  _id: string;
+  candidateId: {
+    _id: string;
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  jobId: {
+    _id: string;
+    title: string;
+  };
+  companyId: {
+    _id: string;
+    name: string;
+  };
+  coverLetter?: string;
+  resumeUrl?: string;
+  status: 'APPLIED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'HIRED' | 'REJECTED';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateApplicationDto {
+  jobId: string;
+  companyId: string;
+  coverLetter?: string;
+  resumeUrl?: string;
+}
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('access_token');
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': token ? `Bearer ${token}` : '',
+  };
+};
+
+export const applicationsAPI = {
+  createApplication: async (data: CreateApplicationDto): Promise<Application> => {
+    const response = await fetch(`${API_BASE_URL}/applications`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create application');
+    }
+
+    return response.json();
+  },
+
+  getApplicationsByCompany: async (companyId: string): Promise<Application[]> => {
+    const response = await fetch(`${API_BASE_URL}/applications/company/${companyId}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch applications');
+    }
+
+    return response.json();
+  },
+
+  getApplicationsByCandidate: async (): Promise<Application[]> => {
+    const response = await fetch(`${API_BASE_URL}/applications/candidate`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch applications');
+    }
+
+    return response.json();
+  },
+
+  getApplicationById: async (id: string): Promise<Application> => {
+    const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch application');
+    }
+
+    return response.json();
+  },
+
+  updateApplicationStatus: async (id: string, status: string, notes?: string): Promise<Application> => {
+    const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status, notes }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update application status');
+    }
+
+    return response.json();
+  },
+};
