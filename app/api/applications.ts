@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+import { API_BASE_URL } from './config';
 
 export interface Application {
   _id: string;
@@ -101,7 +101,9 @@ export const applicationsAPI = {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update application status');
+      const errorText = await response.text();
+      console.error('Update status error:', response.status, errorText);
+      throw new Error(`Failed to update application status: ${response.status} ${response.statusText}`);
     }
 
     return response.json();
