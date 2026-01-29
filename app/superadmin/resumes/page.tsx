@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import {
   FileText,
   Plus,
@@ -8,15 +9,67 @@ import {
   Download,
   Trash2,
 } from 'lucide-react';
+import { applicationsAPI, Application } from '../../api/applications';
+import { API_BASE_URL } from '../../api/config';
 
 export default function ResumesPage() {
-  // Mock data for resumes
-  const resumes = [
-    { id: 1, candidate: 'John Doe', fileName: 'john_doe_resume.pdf', uploadDate: '2024-01-15', status: 'Approved', size: '2.3 MB' },
-    { id: 2, candidate: 'Jane Smith', fileName: 'jane_smith_cv.pdf', uploadDate: '2024-01-12', status: 'Reviewed', size: '1.8 MB' },
-    { id: 3, candidate: 'Mike Johnson', fileName: 'mike_j_resume.docx', uploadDate: '2024-01-10', status: 'Pending', size: '3.1 MB' },
-    { id: 4, candidate: 'Sarah Wilson', fileName: 'sarah_w_cv.pdf', uploadDate: '2024-01-08', status: 'Approved', size: '2.0 MB' },
-  ];
+  const [resumes, setResumes] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchResumes = async () => {
+      try {
+        const data = await applicationsAPI.getAllApplications();
+        setResumes(data);
+      } catch (err) {
+        setError('Failed to fetch resumes');
+        console.error('Error fetching resumes:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResumes();
+  }, []);
+
+  const getFileName = (url: string) => {
+    return url.split('/').pop() || 'Unknown';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const handleView = (resumeUrl: string) => {
+    window.open(`${API_BASE_URL}${resumeUrl}`, '_blank');
+  };
+
+  const handleDownload = (resumeUrl: string) => {
+    window.open(`${API_BASE_URL}${resumeUrl}`, '_blank');
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Resume Management</h1>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-500">Loading resumes...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-gray-900">Resume Management</h1>
+        <div className="flex justify-center items-center h-64">
+          <div className="text-red-500">{error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -34,47 +87,52 @@ export default function ResumesPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Candidate</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Name</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Upload Date</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Size</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {resumes.map((resume) => (
-                <tr key={resume.id} className="hover:bg-gray-50">
+                <tr key={resume._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{resume.candidate}</div>
+                    <div className="text-sm font-medium text-gray-900">{resume.candidateId.name}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{resume.fileName}</div>
+                    <div className="text-sm text-gray-500">{resume.candidateId.email}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">{resume.resumeUrl ? getFileName(resume.resumeUrl) : 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {resume.uploadDate}
+                    {formatDate(resume.createdAt)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      resume.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                      resume.status === 'Reviewed' ? 'bg-blue-100 text-blue-800' :
-                      'bg-yellow-100 text-yellow-800'
+                      resume.status === 'HIRED' ? 'bg-green-100 text-green-800' :
+                      resume.status === 'SHORTLISTED' ? 'bg-blue-100 text-blue-800' :
+                      resume.status === 'UNDER_REVIEW' ? 'bg-yellow-100 text-yellow-800' :
+                      resume.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
                     }`}>
-                      {resume.status}
+                      {resume.status.replace('_', ' ')}
                     </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {resume.size}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900">
+                      <button
+                        className="text-blue-600 hover:text-blue-900"
+                        onClick={() => resume.resumeUrl && handleView(resume.resumeUrl)}
+                      >
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button className="text-green-600 hover:text-green-900">
+                      <button
+                        className="text-green-600 hover:text-green-900"
+                        onClick={() => resume.resumeUrl && handleDownload(resume.resumeUrl)}
+                      >
                         <Download className="h-4 w-4" />
-                      </button>
-                      <button className="text-red-600 hover:text-red-900">
-                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </td>

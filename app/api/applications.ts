@@ -80,6 +80,19 @@ export const applicationsAPI = {
     return response.json();
   },
 
+  getAllApplications: async (): Promise<Application[]> => {
+    const response = await fetch(`${API_BASE_URL}/applications`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch all applications');
+    }
+
+    return response.json();
+  },
+
   getApplicationById: async (id: string): Promise<Application> => {
     const response = await fetch(`${API_BASE_URL}/applications/${id}`, {
       method: 'GET',
