@@ -13,7 +13,8 @@ import {
   Users,
   X,
   Home,
-  UserCheck
+  UserCheck,
+  User
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -85,6 +86,18 @@ export default function CompanyAdminSidebar({ sidebarOpen, setSidebarOpen }: Com
             })}
           </div>
         </nav>
+
+        {/* Profile tab at the bottom */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <Link
+            href="/companyadmin/profile"
+            onClick={() => setSidebarOpen(false)}
+            className="flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+          >
+            <User className="mr-3 h-5 w-5 text-blue-700" />
+            Profile
+          </Link>
+        </div>
       </div>
 
       {/* Mobile sidebar overlay */}
