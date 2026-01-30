@@ -32,28 +32,21 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    // Avoid accessing localStorage during SSR
-    if (typeof window === 'undefined') return null;
-    try {
-      const stored = localStorage.getItem('user');
-      return stored ? (JSON.parse(stored) as User) : null;
-    } catch (err) {
-      console.error('Error parsing stored user during init:', err);
-      return null;
-    }
-  });
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch current user on mount
   useEffect(() => {
     // Initialize from localStorage so UI (e.g., Header avatar) is immediately available
-    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-    if (storedUser) {
+    const storedUserString = localStorage.getItem('user');
+    let storedUser = null;
+    if (storedUserString) {
       try {
-        setUser(JSON.parse(storedUser));
+        storedUser = JSON.parse(storedUserString);
+        setUser(storedUser);
       } catch (err) {
         console.error('Error parsing stored user:', err);
+        localStorage.removeItem('user'); // Clear corrupted data
       }
     }
 
@@ -80,19 +73,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(user);
           // Update localStorage with fresh data from backend
           localStorage.setItem('user', JSON.stringify(user));
-        } else {
-          setUser(null);
         }
+        // If no valid user data, keep the current user (from localStorage)
       } catch (error) {
         console.warn('Could not fetch user profile from backend:', error);
-        // If we have a stored user, keep it to avoid UI flicker (avatar disappearing on refresh)
-        if (storedUser) {
-          console.warn('Keeping user from localStorage due to profile fetch error.');
-        } else {
-          // No stored user — clear state and localStorage
-          setUser(null);
-          localStorage.removeItem('user');
-        }
+        // Keep the current user (from localStorage)
       } finally {
         setIsLoading(false);
       }
@@ -107,9 +92,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('Login response:', response);
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      setUser(response.user);
-      console.log('User set after login:', response.user);
+      const user = {
+        id: response.user.id,
+        name: response.user.name || 'User',
+        email: response.user.email || '',
+        role: response.user.role || 'CANDIDATE',
+      };
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+      console.log('User set after login:', user);
     } catch (error) {
       throw error;
     }
