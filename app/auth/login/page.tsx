@@ -15,10 +15,11 @@ import {
   CheckCircle,
   AlertCircle,
 } from 'lucide-react';
-import { authAPI } from '../../api/auth';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,22 +34,20 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await authAPI.login({ email, password });
-      
-      // Store tokens in localStorage
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
-      
-      // Store user data for quick access
-      if (response.user) {
-        localStorage.setItem('user', JSON.stringify(response.user));
-      }
+      await login(email, password);
 
-      // Redirect based on user role
-      if (response.user.role === 'COMPANY_ADMIN') {
-        router.push('/companyadmin');
-      } else if (response.user.role === 'SUPER_ADMIN') {
-        router.push('/superadmin');
+      // Get user from localStorage to determine redirect
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        // Redirect based on user role
+        if (user.role === 'COMPANY_ADMIN') {
+          router.push('/companyadmin');
+        } else if (user.role === 'SUPER_ADMIN') {
+          router.push('/superadmin');
+        } else {
+          router.push('/');
+        }
       } else {
         router.push('/');
       }

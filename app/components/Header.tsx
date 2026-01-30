@@ -4,24 +4,32 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Briefcase, Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
-import { authAPI } from '../api/auth';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { useAuth } from '../contexts/AuthContext';
 
 export default function TransparentHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isJobsDropdownOpen, setIsJobsDropdownOpen] = useState(false);
   const [isCompaniesDropdownOpen, setIsCompaniesDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  
+  const [localUser, setLocalUser] = useState(null);
+
+  const { user, logout } = useAuth();
   const pathname = usePathname();
+
+  console.log('Header user state:', user);
+
+  // Load user from localStorage as fallback
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setLocalUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+      }
+    }
+  }, []);
 
   // Handle scroll effect for transparency
   useEffect(() => {
@@ -37,54 +45,7 @@ export default function TransparentHeader() {
     };
   }, []);
 
-  // Fetch current user on mount
-  useEffect(() => {
-    const fetchUser = async () => {
-      // First, try to get user from localStorage immediately
-      try {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          console.log('User loaded from localStorage:', parsedUser);
-          setUser(parsedUser);
-        }
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-      }
 
-      const token = localStorage.getItem('access_token');
-      
-      if (!token) {
-        setUser(null);
-        return;
-      }
-
-      try {
-        // Try to fetch the profile from the backend to sync
-        console.log('Fetching profile from backend...');
-        const userData = await authAPI.getProfile();
-        console.log('Profile fetched successfully:', userData);
-        if (userData && userData.id) {
-          const user = {
-            id: userData.id || userData._id,
-            name: userData.name || 'User',
-            email: userData.email || '',
-            role: userData.role || 'CANDIDATE',
-          };
-          setUser(user);
-          // Update localStorage with fresh data from backend
-          localStorage.setItem('user', JSON.stringify(user));
-        }
-      } catch (error) {
-        console.warn('Could not fetch user profile from backend:', error);
-        // Backend fetch failed, but we already have user from localStorage above
-      }
-    };
-
-    // Add small delay to ensure localStorage is synced
-    const timer = setTimeout(fetchUser, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   // Don't render header on auth pages, profile page, and companyadmin pages
   if (pathname.startsWith('/auth') || pathname === '/profile' || pathname.startsWith('/companyadmin')) {
@@ -245,7 +206,7 @@ export default function TransparentHeader() {
           {/* CTA Buttons - Desktop */}
           <div className="hidden lg:flex lg:items-center lg:space-x-4">
             {user ? (
-              // User Avatar Dropdown
+              // User Avatar Dropdown for logged-in users
               <div className="relative">
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
@@ -276,9 +237,7 @@ export default function TransparentHeader() {
                     </Link>
                     <button
                       onClick={() => {
-                        localStorage.removeItem('access_token');
-                        localStorage.removeItem('refresh_token');
-                        setUser(null);
+                        logout();
                         setIsProfileDropdownOpen(false);
                       }}
                       className="w-full flex items-center px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50/50 transition-colors text-left"
@@ -437,9 +396,7 @@ export default function TransparentHeader() {
                   </Link>
                   <button
                     onClick={() => {
-                      localStorage.removeItem('access_token');
-                      localStorage.removeItem('refresh_token');
-                      setUser(null);
+                      logout();
                       setIsMenuOpen(false);
                     }}
                     className="block w-full px-4 py-3 text-center font-medium text-red-600 hover:text-red-700 hover:bg-red-50/50 rounded-lg border border-red-300/50 transition-colors"

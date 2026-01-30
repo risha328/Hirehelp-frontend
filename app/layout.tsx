@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import TransparentHeader from './components/Header';
+import { AuthProvider } from './contexts/AuthContext';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -18,10 +19,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>
-        <TransparentHeader />
-        <main className="min-h-screen">
-          {children}
-        </main>
+        <AuthProvider>
+          <TransparentHeader />
+          <main className="min-h-screen">
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   );
