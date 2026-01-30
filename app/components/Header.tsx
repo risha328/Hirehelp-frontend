@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Briefcase, Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -15,19 +15,9 @@ export default function TransparentHeader() {
 
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
-  // Fallback to localStorage user if context user is briefly null (prevents avatar flicker on refresh)
-  const storedUser = typeof window !== 'undefined' ? (() => {
-    const s = localStorage.getItem('user');
-    try {
-      return s ? JSON.parse(s) : null;
-    } catch (err) {
-      console.error('Error parsing stored user in Header:', err);
-      return null;
-    }
-  })() : null;
-
-  const currentUser = user ?? storedUser;
+  const currentUser = user;
 
   // Handle scroll effect for transparency
   useEffect(() => {
@@ -237,6 +227,7 @@ export default function TransparentHeader() {
                       onClick={() => {
                         logout();
                         setIsProfileDropdownOpen(false);
+                        router.push('/');
                       }}
                       className="w-full flex items-center px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50/50 transition-colors text-left"
                     >
@@ -396,6 +387,7 @@ export default function TransparentHeader() {
                     onClick={() => {
                       logout();
                       setIsMenuOpen(false);
+                      router.push('/');
                     }}
                     className="block w-full px-4 py-3 text-center font-medium text-red-600 hover:text-red-700 hover:bg-red-50/50 rounded-lg border border-red-300/50 transition-colors"
                   >
