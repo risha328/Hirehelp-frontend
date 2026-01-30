@@ -12,24 +12,22 @@ export default function TransparentHeader() {
   const [isCompaniesDropdownOpen, setIsCompaniesDropdownOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-  const [localUser, setLocalUser] = useState(null);
 
   const { user, logout } = useAuth();
   const pathname = usePathname();
 
-  console.log('Header user state:', user);
-
-  // Load user from localStorage as fallback
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setLocalUser(JSON.parse(storedUser));
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-      }
+  // Fallback to localStorage user if context user is briefly null (prevents avatar flicker on refresh)
+  const storedUser = typeof window !== 'undefined' ? (() => {
+    const s = localStorage.getItem('user');
+    try {
+      return s ? JSON.parse(s) : null;
+    } catch (err) {
+      console.error('Error parsing stored user in Header:', err);
+      return null;
     }
-  }, []);
+  })() : null;
+
+  const currentUser = user ?? storedUser;
 
   // Handle scroll effect for transparency
   useEffect(() => {
@@ -205,7 +203,7 @@ export default function TransparentHeader() {
 
           {/* CTA Buttons - Desktop */}
           <div className="hidden lg:flex lg:items-center lg:space-x-4">
-            {user ? (
+            {currentUser ? (
               // User Avatar Dropdown for logged-in users
               <div className="relative">
                 <button
@@ -215,17 +213,17 @@ export default function TransparentHeader() {
                       ? 'bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
                       : 'bg-gradient-to-br from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
                   }`}
-                  title={user.name}
+                  title={currentUser.name}
                 >
-                  {user.name?.charAt(0).toUpperCase() || 'U'}
+                  {currentUser.name?.charAt(0).toUpperCase() || 'U'}
                 </button>
 
                 {/* Profile Dropdown */}
                 {isProfileDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl rounded-xl shadow-lg border border-white/20 py-2 z-50">
                     <div className="px-4 py-3 border-b border-gray-100/50">
-                      <p className="font-semibold text-gray-900">{user.name}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
+                      <p className="font-semibold text-gray-900">{currentUser.name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{currentUser.email}</p>
                     </div>
                     <Link
                       href="/profile"
@@ -374,11 +372,11 @@ export default function TransparentHeader() {
 
             {/* Mobile CTA Buttons */}
             <div className="mt-6 pt-4 border-t border-gray-200/50 space-y-3 px-4">
-              {user ? (
+              {currentUser ? (
                 <>
                   <div className="px-4 py-3 rounded-lg bg-blue-50 border border-blue-200/50">
-                    <p className="font-semibold text-gray-900">{user.name}</p>
-                    <p className="text-xs text-gray-600 mt-0.5">{user.email}</p>
+                    <p className="font-semibold text-gray-900">{currentUser.name}</p>
+                    <p className="text-xs text-gray-600 mt-0.5">{currentUser.email}</p>
                   </div>
                   <Link
                     href="/profile"

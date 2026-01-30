@@ -103,7 +103,7 @@ export default function ApplicationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16 lg:pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="relative inline-block">
             <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
@@ -117,7 +117,7 @@ export default function ApplicationsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16 lg:pt-20 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
@@ -136,7 +136,7 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16 lg:pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
