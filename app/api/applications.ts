@@ -11,6 +11,14 @@ export interface Application {
   jobId: {
     _id: string;
     title: string;
+    companyId: {
+      _id: string;
+      name: string;
+      logoUrl?: string;
+    };
+    location: string;
+    salary: string;
+    jobType: string;
   };
   companyId: {
     _id: string;
