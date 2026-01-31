@@ -13,7 +13,8 @@ import {
   Settings,
   X,
   Home,
-  UserCheck
+  UserCheck,
+  User
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -85,6 +86,24 @@ export default function SuperAdminSidebar({ sidebarOpen, setSidebarOpen }: Super
             })}
           </div>
         </nav>
+
+        {/* Profile tab at the bottom */}
+        <div className="absolute bottom-4 left-4 right-4">
+          <Link
+            href="/superadmin/profile"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
+              pathname === '/superadmin/profile'
+                ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            <User className={`mr-3 h-5 w-5 ${
+              pathname === '/superadmin/profile' ? 'text-blue-700' : 'text-gray-400'
+            }`} />
+            Profile
+          </Link>
+        </div>
       </div>
 
       {/* Mobile sidebar overlay */}
