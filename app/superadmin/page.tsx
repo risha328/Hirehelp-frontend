@@ -1,135 +1,308 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+// API imports
+import { companiesAPI, jobsAPI } from '../api/companies';
+import { usersAPI } from '../api/users';
+import { applicationsAPI } from '../api/applications';
+import { analyticsAPI } from '../api/analytics';
 import {
-  Users,
-  Building,
   FileText,
+  Download,
+  ChevronRight,
+  AlertCircle,
+  Target,
+  MoreVertical,
+  Filter,
+  Calendar,
+  Building,
+  Users,
   Briefcase,
   TrendingUp,
-  TrendingDown,
-  UserCheck,
-  BarChart3,
-  PieChart,
-  Activity,
-  DollarSign,
-  Calendar,
-  Eye,
-  Download,
-  Filter,
-  ChevronRight,
-  Globe,
-  Shield,
-  Zap,
-  Sparkles
+  TrendingDown
 } from 'lucide-react';
+
+// Chart components
+import {
+  LineChart as RechartsLine,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart as RechartsBar,
+  Bar,
+  AreaChart,
+  Area
+} from 'recharts';
+
+import { useState, useEffect } from 'react';
 
 export default function SuperadminDashboardPage() {
   const [timeRange, setTimeRange] = useState('30d');
-  const [isLoading, setIsLoading] = useState(true);
+  const [kpiData, setKpiData] = useState({
+    companies: { value: '0', change: '+0%', trend: 'up' },
+    candidates: { value: '0', change: '+0%', trend: 'up' },
+    jobs: { value: '0', change: '+0%', trend: 'up' },
+    applications: { value: '0', change: '+0%', trend: 'up' },
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate loading data
-    setTimeout(() => setIsLoading(false), 1000);
+    const fetchKPIData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch data from APIs
+        const [companies, candidates, jobs, applications] = await Promise.all([
+          companiesAPI.getAllCompanies(),
+          usersAPI.getUsersByRole('candidate'),
+          jobsAPI.getAllJobs(),
+          applicationsAPI.getAllApplications(),
+        ]);
+
+        // Calculate metrics
+        const totalCompanies = companies.length;
+        const totalCandidates = candidates.length;
+        const totalJobs = jobs.length;
+        const totalApplications = applications.length;
+
+        // For simplicity, using static change values; in a real app, calculate from historical data
+        setKpiData({
+          companies: { value: totalCompanies.toString(), change: '+8.3%', trend: 'up' },
+          candidates: { value: totalCandidates.toString(), change: '+12.5%', trend: 'up' },
+          jobs: { value: totalJobs.toString(), change: '+18.7%', trend: 'up' },
+          applications: { value: totalApplications.toString(), change: '+22.1%', trend: 'up' },
+        });
+      } catch (err) {
+        console.error('Error fetching KPI data:', err);
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchKPIData();
   }, []);
 
-  // Mock data for dashboard stats
-  const dashboardStats = [
-    { 
-      id: 'candidates',
-      label: 'Total Candidates', 
-      value: '12,847', 
-      icon: Users, 
-      change: '+12.5%', 
-      changeValue: 1256,
-      color: 'from-blue-500 to-cyan-500',
-      description: 'Active platform users',
-      chartData: [65, 78, 82, 74, 85, 90, 95]
-    },
-    { 
+  // Simplified KPI Cards
+  const platformKPIs = [
+    {
       id: 'companies',
-      label: 'Total Companies', 
-      value: '2,489', 
-      icon: Building, 
-      change: '+8.3%', 
-      changeValue: 189,
-      color: 'from-emerald-500 to-teal-500',
-      description: 'Verified company accounts',
-      chartData: [45, 52, 48, 60, 65, 70, 72]
+      label: 'Total Companies',
+      value: loading ? 'Loading...' : kpiData.companies.value,
+      icon: Building,
+      change: kpiData.companies.change,
+      trend: kpiData.companies.trend,
+      color: 'bg-blue-500'
     },
-    { 
-      id: 'resumes',
-      label: 'Total Resumes', 
-      value: '15,624', 
-      icon: FileText, 
-      change: '+15.2%', 
-      changeValue: 206,
-      color: 'from-purple-500 to-pink-500',
-      description: 'Uploaded CVs/Resumes',
-      chartData: [80, 75, 82, 78, 85, 88, 92]
+    {
+      id: 'candidates',
+      label: 'Total Candidates',
+      value: loading ? 'Loading...' : kpiData.candidates.value,
+      icon: Users,
+      change: kpiData.candidates.change,
+      trend: kpiData.candidates.trend,
+      color: 'bg-emerald-500'
     },
-    { 
+    {
       id: 'jobs',
-      label: 'Total Job Posts', 
-      value: '8,543', 
-      icon: Briefcase, 
-      change: '+18.7%', 
-      changeValue: 1347,
-      color: 'from-amber-500 to-orange-500',
-      description: 'Active job listings',
-      chartData: [30, 42, 48, 55, 60, 68, 75]
+      label: 'Active Jobs',
+      value: loading ? 'Loading...' : kpiData.jobs.value,
+      icon: Briefcase,
+      change: kpiData.jobs.change,
+      trend: kpiData.jobs.trend,
+      color: 'bg-purple-500'
+    },
+    {
+      id: 'applications',
+      label: 'Applications (30d)',
+      value: loading ? 'Loading...' : kpiData.applications.value,
+      icon: FileText,
+      change: kpiData.applications.change,
+      trend: kpiData.applications.trend,
+      color: 'bg-amber-500'
     },
   ];
 
-  const recentActivities = [
-    { id: 1, user: 'Sarah Chen', action: 'applied for', target: 'Senior Frontend Developer', time: '2 min ago', type: 'application' },
-    { id: 2, user: 'TechCorp Inc.', action: 'posted new job', target: 'DevOps Engineer', time: '15 min ago', type: 'job' },
-    { id: 3, user: 'Michael Rodriguez', action: 'updated profile', target: 'Skills & Experience', time: '30 min ago', type: 'profile' },
-    { id: 4, user: 'DesignStudio', action: 'hired', target: 'Jane Smith as UX Designer', time: '1 hour ago', type: 'hire' },
-    { id: 5, user: 'GlobalSoft', action: 'verified company', target: 'Account', time: '2 hours ago', type: 'verification' },
+  const [companyGrowthData, setCompanyGrowthData] = useState([
+    { month: 'Jul', companies: 240, growth: 15 },
+    { month: 'Aug', companies: 288, growth: 20 },
+    { month: 'Sep', companies: 340, growth: 18 },
+    { month: 'Oct', companies: 401, growth: 22 },
+    { month: 'Nov', companies: 459, growth: 14 },
+    { month: 'Dec', companies: 504, growth: 10 },
+  ]);
+
+  const [hiringActivityData, setHiringActivityData] = useState([
+    { week: 'W1', jobs: 210, applications: 4200 },
+    { week: 'W2', jobs: 245, applications: 4900 },
+    { week: 'W3', jobs: 280, applications: 5600 },
+    { week: 'W4', jobs: 315, applications: 6300 },
+  ]);
+
+  useEffect(() => {
+    const fetchAnalyticsData = async () => {
+      try {
+        const [companyGrowth, hiringActivity] = await Promise.all([
+          analyticsAPI.getCompanyGrowth(),
+          analyticsAPI.getHiringActivity(),
+        ]);
+
+        // Transform company growth data
+        const sortedGrowth = companyGrowth.sort((a: any, b: any) => a.period.localeCompare(b.period));
+        let cumulative = 0;
+        const transformedGrowth = sortedGrowth.map((item: any, index: number) => {
+          cumulative += item.count;
+          const growth = index === 0 ? item.count : item.count; // growth is the monthly addition
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const [, month] = item.period.split('-');
+          const monthName = monthNames[parseInt(month) - 1];
+          return { month: monthName, companies: cumulative, growth };
+        });
+        setCompanyGrowthData(transformedGrowth);
+
+        // Transform hiring activity data - take last 4 weeks
+        const sortedActivity = hiringActivity.sort((a: any, b: any) => a.period.localeCompare(b.period));
+        const last4 = sortedActivity.slice(-4);
+        const transformedActivity = last4.map((item: any, index: number) => ({
+          week: `W${index + 1}`,
+          jobs: item.jobs,
+          applications: item.applications,
+        }));
+        setHiringActivityData(transformedActivity);
+      } catch (err) {
+        console.error('Error fetching analytics data:', err);
+        // Keep default data on error
+      }
+    };
+
+    fetchAnalyticsData();
+  }, []);
+
+  useEffect(() => {
+    const fetchTopCompaniesData = async () => {
+      try {
+        const topCompaniesData = await analyticsAPI.getTopCompanies();
+        setTopCompanies(topCompaniesData);
+      } catch (err) {
+        console.error('Error fetching top companies data:', err);
+        // Keep default data on error
+      }
+    };
+
+    fetchTopCompaniesData();
+  }, []);
+
+  const [topCompanies, setTopCompanies] = useState([
+    {
+      name: 'ABC Tech',
+      jobs: 42,
+      applications: 3200,
+      hires: 18,
+      score: 3364,
+      engagement: 92
+    },
+    {
+      name: 'FinEdge',
+      jobs: 28,
+      applications: 2100,
+      hires: 12,
+      score: 2266,
+      engagement: 88
+    },
+    {
+      name: 'CloudTech',
+      jobs: 32,
+      applications: 2850,
+      hires: 15,
+      score: 2995,
+      engagement: 95
+    },
+    {
+      name: 'DataSystems',
+      jobs: 24,
+      applications: 1800,
+      hires: 9,
+      score: 1893,
+      engagement: 85
+    },
+    {
+      name: 'DevWorks',
+      jobs: 19,
+      applications: 1050,
+      hires: 6,
+      score: 1133,
+      engagement: 78
+    },
+  ]);
+
+  // Platform Insights
+  const platformInsights = [
+    {
+      id: 1,
+      title: 'High Engagement',
+      description: 'Top 3 companies account for 45% of total applications',
+      icon: TrendingUp,
+      color: 'text-emerald-600 bg-emerald-50'
+    },
+    {
+      id: 2,
+      title: 'Attention Required',
+      description: '12 companies inactive for 30+ days',
+      icon: AlertCircle,
+      color: 'text-amber-600 bg-amber-50'
+    },
+    {
+      id: 3,
+      title: 'Growth Opportunity',
+      description: 'Conversion rate increased to 4.2% this month',
+      icon: Target,
+      color: 'text-blue-600 bg-blue-50'
+    },
   ];
 
-  const platformMetrics = [
-    { label: 'Placement Rate', value: '86%', icon: UserCheck, color: 'bg-emerald-100 text-emerald-600' },
-    { label: 'Avg Response Time', value: '2.4h', icon: Activity, color: 'bg-blue-100 text-blue-600' },
-    { label: 'Revenue (MTD)', value: '$124.5K', icon: DollarSign, color: 'bg-purple-100 text-purple-600' },
-    { label: 'Avg. Time to Hire', value: '18 days', icon: Calendar, color: 'bg-amber-100 text-amber-600' },
-  ];
-
-  const topCompanies = [
-    { name: 'TechCorp', jobs: 156, candidates: 2.4, rating: 4.8, trend: '+12%' },
-    { name: 'GlobalSoft', jobs: 128, candidates: 1.9, rating: 4.7, trend: '+8%' },
-    { name: 'DesignStudio', jobs: 89, candidates: 1.5, rating: 4.9, trend: '+15%' },
-    { name: 'DataSystems', jobs: 104, candidates: 2.1, rating: 4.6, trend: '+5%' },
-    { name: 'CloudTech', jobs: 92, candidates: 1.7, rating: 4.8, trend: '+11%' },
-  ];
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+          <p className="font-medium text-gray-900">{label}</p>
+          {payload.map((pld: any, index: number) => (
+            <div key={index} className="flex items-center mt-1">
+              <div
+                className="w-2 h-2 rounded-full mr-2"
+                style={{ backgroundColor: pld.color }}
+              />
+              <span className="text-sm text-gray-600">{pld.dataKey}: </span>
+              <span className="text-sm font-medium ml-1 text-gray-900">{pld.value}</span>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
-      {/* Header */}
-      {/* <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="flex items-center">
-                <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-                <div className="ml-4">
-                  <h1 className="text-2xl font-bold text-gray-900">Super Admin Dashboard</h1>
-                  <p className="text-gray-600 mt-1">
-                    Platform overview and management console
-                  </p>
-                </div>
-              </div>
+              <h1 className="text-2xl font-bold text-gray-900">Platform Overview</h1>
+              <p className="text-gray-600 mt-1">Real-time platform metrics and analytics</p>
             </div>
-            
+
             <div className="mt-4 sm:mt-0 flex items-center space-x-3">
               <div className="relative">
-                <select 
+                <select
                   value={timeRange}
                   onChange={(e) => setTimeRange(e.target.value)}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="7d">Last 7 days</option>
                   <option value="30d">Last 30 days</option>
@@ -140,327 +313,294 @@ export default function SuperadminDashboardPage() {
                   <ChevronRight className="h-4 w-4 rotate-90" />
                 </div>
               </div>
-              <button className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium">
+              <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">
                 <Download className="h-4 w-4 mr-2" />
-                Export Report
+                Export
               </button>
             </div>
           </div>
         </div>
-      </div> */}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Banner */}
+        {/* Simplified KPI Cards */}
         <div className="mb-8">
-          <div className="relative overflow-hidden bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl">
-            <div className="absolute inset-0 bg-grid-white/10 bg-grid-8"></div>
-            <div className="relative p-8">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full mb-4">
-                    <Sparkles className="h-4 w-4 text-white mr-2" />
-                    <span className="text-white text-sm font-medium">
-                      Platform Overview
-                    </span>
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                    Welcome back, Super Admin
-                  </h2>
-                  <p className="text-white/90 max-w-2xl">
-                    Monitor platform performance, manage users, and access real-time analytics from your centralized dashboard.
-                  </p>
-                </div>
-                <div className="mt-6 md:mt-0">
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <div className="text-white text-2xl font-bold">99.2%</div>
-                      <div className="text-white/80 text-sm">Uptime</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {platformKPIs.map((kpi) => {
+              const Icon = kpi.icon;
+              return (
+                <div
+                  key={kpi.id}
+                  className="bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 transition-colors"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className={`p-3 rounded-xl ${kpi.color}`}>
+                      <Icon className="h-6 w-6 text-white" />
                     </div>
-                    <div className="h-12 w-px bg-white/30"></div>
-                    <div className="text-right">
-                      <div className="text-white text-2xl font-bold">24/7</div>
-                      <div className="text-white/80 text-sm">Monitoring</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Stats Grid */}
-        <div className="mb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Left Column - Main Stats */}
-            <div className="lg:col-span-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {dashboardStats.map((stat) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div 
-                      key={stat.id}
-                      className="group relative bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color}`}>
-                          <Icon className="h-6 w-6 text-white" />
-                        </div>
-                        <div className={`flex items-center text-sm font-medium ${
-                          stat.changeValue >= 0 ? 'text-emerald-600' : 'text-red-600'
-                        }`}>
-                          {stat.changeValue >= 0 ? (
-                            <TrendingUp className="h-4 w-4 mr-1" />
-                          ) : (
-                            <TrendingDown className="h-4 w-4 mr-1" />
-                          )}
-                          {stat.change}
-                        </div>
-                      </div>
-                      
-                      <div className="mb-3">
-                        <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                        <div className="text-sm text-gray-600">{stat.label}</div>
-                      </div>
-                      
-                      <div className="text-xs text-gray-500 mb-4">{stat.description}</div>
-                      
-                      {/* Mini Chart */}
-                      <div className="relative h-12">
-                        <div className="absolute inset-0 flex items-end space-x-0.5">
-                          {stat.chartData.map((value, index) => (
-                            <div 
-                              key={index}
-                              className="flex-1 bg-gradient-to-t from-gray-200 to-gray-100 rounded-t"
-                              style={{ height: `${value}%` }}
-                            >
-                              <div className={`absolute bottom-0 w-full rounded-t bg-gradient-to-t ${stat.color}`}></div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Second Row - Metrics & Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-          {/* Platform Metrics */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Platform Performance</h3>
-                <button className="text-gray-500 hover:text-gray-700">
-                  <Filter className="h-4 w-4" />
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {platformMetrics.map((metric, index) => {
-                  const Icon = metric.icon;
-                  return (
-                    <div key={index} className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className={`p-2 rounded-lg ${metric.color.split(' ')[0]}`}>
-                          <Icon className={`h-4 w-4 ${metric.color.split(' ')[1]}`} />
-                        </div>
-                        <div className="text-xs text-gray-500">Last 30d</div>
-                      </div>
-                      <div className="text-xl font-bold text-gray-900">{metric.value}</div>
-                      <div className="text-sm text-gray-600">{metric.label}</div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Chart Placeholder */}
-              <div className="mt-8">
-                <div className="h-64 bg-gradient-to-b from-gray-50 to-gray-100 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Performance analytics chart</p>
-                    <p className="text-gray-400 text-sm mt-1">Interactive visualization of platform metrics</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 h-full">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-                <button className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-                  View all
-                </button>
-              </div>
-              
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="group flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                      activity.type === 'application' ? 'bg-blue-100 text-blue-600' :
-                      activity.type === 'job' ? 'bg-green-100 text-green-600' :
-                      activity.type === 'profile' ? 'bg-purple-100 text-purple-600' :
-                      activity.type === 'hire' ? 'bg-amber-100 text-amber-600' :
-                      'bg-gray-100 text-gray-600'
+                    <div className={`flex items-center text-sm font-medium ${
+                      kpi.trend === 'up' ? 'text-emerald-600' : 'text-red-600'
                     }`}>
-                      {activity.type === 'application' && <Briefcase className="h-4 w-4" />}
-                      {activity.type === 'job' && <Building className="h-4 w-4" />}
-                      {activity.type === 'profile' && <Users className="h-4 w-4" />}
-                      {activity.type === 'hire' && <UserCheck className="h-4 w-4" />}
-                      {activity.type === 'verification' && <Shield className="h-4 w-4" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900">
-                        <span className="font-medium">{activity.user}</span>{' '}
-                        <span className="text-gray-600">{activity.action}</span>{' '}
-                        <span className="font-medium">{activity.target}</span>
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
+                      {kpi.trend === 'up' ? (
+                        <TrendingUp className="h-4 w-4 mr-1" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 mr-1" />
+                      )}
+                      {kpi.change}
                     </div>
                   </div>
-                ))}
+
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900 mb-1">{kpi.value}</div>
+                    <div className="text-sm font-medium text-gray-700">{kpi.label}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Enhanced Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Chart 1: Company Growth - Cleaner Design */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Company Growth</h3>
+                <p className="text-sm text-gray-600">Cumulative company signups over time</p>
               </div>
+              <button className="text-gray-500 hover:text-gray-700">
+                <MoreVertical className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={companyGrowthData}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorCompanies" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#f3f4f6"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="month"
+                    stroke="#6b7280"
+                    fontSize={12}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    stroke="#6b7280"
+                    fontSize={12}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="companies"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    fill="url(#colorCompanies)"
+                  />
+            </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Chart 2: Hiring Activity - Cleaner Design */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Hiring Activity</h3>
+                <p className="text-sm text-gray-600">Weekly job posts vs applications</p>
+              </div>
+              <button className="text-gray-500 hover:text-gray-700">
+                <Filter className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="h-72">
+              <ResponsiveContainer width="100%" height="100%">
+                <RechartsBar
+                  data={hiringActivityData}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#f3f4f6"
+                    vertical={false}
+                  />
+                  <XAxis
+                    dataKey="week"
+                    stroke="#6b7280"
+                    fontSize={12}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    stroke="#6b7280"
+                    fontSize={12}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar
+                    dataKey="jobs"
+                    name="Jobs Posted"
+                    fill="#8b5cf6"
+                    radius={[4, 4, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="applications"
+                    name="Applications"
+                    fill="#10b981"
+                    radius={[4, 4, 0, 0]}
+                  />
+            </RechartsBar>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
 
-        {/* Third Row - Companies & Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Top Companies */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-6">
+        {/* Enhanced Top Performing Companies */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden mb-8">
+          <div className="px-6 py-5 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
                 <h3 className="text-lg font-semibold text-gray-900">Top Performing Companies</h3>
-                <button className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-                  View all companies
-                </button>
+                <p className="text-sm text-gray-600">Ranked by hiring activity and engagement</p>
               </div>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Active Jobs</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Candidates/Job</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rating</th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Growth</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {topCompanies.map((company, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-100 to-cyan-100 rounded-lg flex items-center justify-center mr-3">
-                              <Building className="h-4 w-4 text-blue-600" />
-                            </div>
-                            <span className="font-medium text-gray-900">{company.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{company.jobs}</td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{company.candidates}K</td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex items-center">
-                              {[...Array(5)].map((_, i) => (
-                                <div key={i} className={`w-4 h-4 ${
-                                  i < Math.floor(company.rating) 
-                                    ? 'text-amber-400 fill-current' 
-                                    : 'text-gray-300'
-                                }`}>
-                                  ★
-                                </div>
-                              ))}
-                            </div>
-                            <span className="ml-2 text-sm text-gray-600">{company.rating}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            company.trend.startsWith('+') 
-                              ? 'bg-emerald-100 text-emerald-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
-                            {company.trend.startsWith('+') ? (
-                              <TrendingUp className="h-3 w-3 mr-1" />
-                            ) : (
-                              <TrendingDown className="h-3 w-3 mr-1" />
-                            )}
-                            {company.trend}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <button className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                View all
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </button>
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="lg:col-span-1">
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl border border-indigo-100 p-6 h-full">
-              <div className="flex items-center mb-6">
-                <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg">
-                  <Zap className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 ml-3">Quick Actions</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <button className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all group">
-                  <div className="flex items-center">
-                    <Users className="h-5 w-5 text-blue-600 mr-3" />
-                    <div>
-                      <div className="font-medium text-gray-900">Manage Users</div>
-                      <div className="text-sm text-gray-500">View all platform users</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-indigo-600" />
-                </button>
-                
-                <button className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all group">
-                  <div className="flex items-center">
-                    <Building className="h-5 w-5 text-emerald-600 mr-3" />
-                    <div>
-                      <div className="font-medium text-gray-900">Company Management</div>
-                      <div className="text-sm text-gray-500">Verify and manage companies</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-indigo-600" />
-                </button>
-                
-                <button className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all group">
-                  <div className="flex items-center">
-                    <BarChart3 className="h-5 w-5 text-purple-600 mr-3" />
-                    <div>
-                      <div className="font-medium text-gray-900">Analytics Reports</div>
-                      <div className="text-sm text-gray-500">Generate detailed reports</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-indigo-600" />
-                </button>
-                
-                <button className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all group">
-                  <div className="flex items-center">
-                    <Globe className="h-5 w-5 text-amber-600 mr-3" />
-                    <div>
-                      <div className="font-medium text-gray-900">Platform Settings</div>
-                      <div className="text-sm text-gray-500">Configure system settings</div>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-indigo-600" />
-                </button>
-              </div>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Company
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Jobs
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Applications
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Hires
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Engagement
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Score
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {topCompanies.map((company, index) => (
+                  <tr key={company.name} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                          index === 0 ? 'bg-amber-50' :
+                          index === 1 ? 'bg-blue-50' :
+                          index === 2 ? 'bg-purple-50' : 'bg-gray-50'
+                        }`}>
+                          <Building className={`h-5 w-5 ${
+                            index === 0 ? 'text-amber-600' :
+                            index === 1 ? 'text-blue-600' :
+                            index === 2 ? 'text-purple-600' : 'text-gray-600'
+                          }`} />
+                        </div>
+                        <div className="ml-3">
+                          <div className="font-medium text-gray-900">{company.name}</div>
+                          <div className="text-xs text-gray-500">Active</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{company.jobs}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {company.applications.toLocaleString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="text-sm font-medium text-gray-900 mr-2">{company.hires}</div>
+                        <div className="text-xs px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full">
+                          {((company.hires / company.applications) * 100).toFixed(1)}%
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full ${
+                              company.engagement > 90 ? 'bg-emerald-500' :
+                              company.engagement > 80 ? 'bg-blue-500' :
+                              'bg-amber-500'
+                            }`}
+                            style={{ width: `${company.engagement}%` }}
+                          ></div>
+                        </div>
+                        <span className="ml-2 text-sm font-medium text-gray-900">
+                          {company.engagement}%
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-bold text-gray-900">
+                        {company.score.toLocaleString()}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
+
+        {/* Enhanced Platform Insights */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {platformInsights.map((insight) => {
+            const Icon = insight.icon;
+            return (
+              <div key={insight.id} className="group">
+                <div className="bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 transition-all hover:shadow-sm">
+                  <div className="flex items-start">
+                    <div className={`p-3 rounded-xl ${insight.color.split(' ')[1]}`}>
+                      <Icon className={`h-5 w-5 ${insight.color.split(' ')[0]}`} />
+                    </div>
+                    <div className="ml-4">
+                      <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {insight.title}
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1">{insight.description}</p>
+                      <button className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
+                        Learn more
+                        <ChevronRight className="h-4 w-4 ml-1" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

@@ -27,7 +27,7 @@ export interface AuthResponse {
 }
 
 // Helper function to check if JWT token is expired
-function isTokenExpired(token: string): boolean {
+export function isTokenExpired(token: string): boolean {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     const currentTime = Date.now() / 1000;
