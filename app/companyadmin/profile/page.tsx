@@ -31,7 +31,7 @@ export default function CompanyProfilePage() {
   const fetchCompany = async () => {
     try {
       const response = await companiesAPI.getMyCompany();
-      setCompany(response);
+      setCompany(response.company);
     } catch (error) {
       console.error('Failed to fetch company:', error);
     } finally {

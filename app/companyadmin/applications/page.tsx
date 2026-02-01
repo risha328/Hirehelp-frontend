@@ -24,9 +24,14 @@ export default function ApplicationsPage() {
     try {
       // Get company information for the logged-in company admin
       const { companiesAPI } = await import('../../api/companies');
-      const company = await companiesAPI.getMyCompany();
+      const response = await companiesAPI.getMyCompany();
 
-      const data = await applicationsAPI.getApplicationsByCompany(company._id);
+      if (!response.company) {
+        setError('No company found for this user.');
+        return;
+      }
+
+      const data = await applicationsAPI.getApplicationsByCompany(response.company._id);
       setApplications(data);
     } catch (err) {
       console.error('Failed to fetch applications:', err);

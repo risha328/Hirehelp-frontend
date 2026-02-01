@@ -224,10 +224,10 @@ export default function CompanyAdminPage() {
     try {
       const response = await companiesAPI.getMyCompany();
       console.log('getMyCompany response:', response);
-      setCompany(response);
+      setCompany(response.company);
       // Fetch recent activities after company is loaded
-      if (response) {
-        await fetchRecentActivities(response);
+      if (response.company) {
+        await fetchRecentActivities(response.company);
       }
     } catch (error) {
       console.error('Failed to fetch company:', error);
