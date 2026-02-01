@@ -196,6 +196,7 @@ import {
   Upload,
   Save
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { companiesAPI, jobsAPI } from '../api/companies';
 import { applicationsAPI } from '../api/applications';
 import { API_BASE_URL } from '../api/config';
@@ -214,10 +215,14 @@ export default function CompanyAdminPage() {
   });
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [showAllActivities, setShowAllActivities] = useState(false);
+  const [jobPerformanceData, setJobPerformanceData] = useState<any[]>([]);
+  const [applicationSourceData, setApplicationSourceData] = useState<any[]>([]);
+  const [hiredCandidates, setHiredCandidates] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCompany();
     fetchStats();
+    fetchChartData();
   }, []);
 
   const fetchCompany = async () => {
@@ -245,6 +250,29 @@ export default function CompanyAdminPage() {
         teamMembers: 8,
         interviewsScheduled: 24
       });
+    }, 500);
+  };
+
+  const fetchChartData = async () => {
+    // Mock chart data - replace with API calls
+    setTimeout(() => {
+      // Job Performance Data (Bar Chart)
+      setJobPerformanceData([
+        { name: 'Frontend Dev', applications: 45 },
+        { name: 'Backend Dev', applications: 32 },
+        { name: 'Full Stack', applications: 28 },
+        { name: 'UI/UX Designer', applications: 22 },
+        { name: 'DevOps Engineer', applications: 18 },
+        { name: 'Data Scientist', applications: 11 }
+      ]);
+
+      // Application Source Data (Pie Chart)
+      setApplicationSourceData([
+        { name: 'Platform Search', value: 45, color: '#3b82f6' },
+        { name: 'Direct Job Link', value: 30, color: '#10b981' },
+        { name: 'Company Page', value: 20, color: '#f59e0b' },
+        { name: 'Referral', value: 5, color: '#ef4444' }
+      ]);
     }, 500);
   };
 
@@ -282,6 +310,17 @@ export default function CompanyAdminPage() {
         type: 'application',
         count: applicationsResponse.filter((a: any) => a.jobId._id === app.jobId._id).length
       }));
+
+      // Fetch hired candidates
+      const hiredApplications = applicationsResponse.filter((app: any) => app.status === 'HIRED');
+      const hiredCandidatesData = hiredApplications.slice(0, 5).map((app: any) => ({
+        id: app._id,
+        name: app.candidateId.name,
+        position: app.jobId.title,
+        hireDate: new Date(app.updatedAt).toLocaleDateString(),
+        email: app.candidateId.email
+      }));
+      setHiredCandidates(hiredCandidatesData);
 
       // Combine and sort by time (most recent first)
       const allActivities = [...recentJobs, ...recentApplications]
@@ -321,6 +360,31 @@ export default function CompanyAdminPage() {
           target: 'Website & Logo',
           time: '1 day ago',
           type: 'update'
+        }
+      ]);
+
+      // Fallback hired candidates data
+      setHiredCandidates([
+        {
+          id: '1',
+          name: 'John Smith',
+          position: 'Senior Frontend Developer',
+          hireDate: '2024-01-15',
+          email: 'john.smith@email.com'
+        },
+        {
+          id: '2',
+          name: 'Sarah Johnson',
+          position: 'UX Designer',
+          hireDate: '2024-01-10',
+          email: 'sarah.johnson@email.com'
+        },
+        {
+          id: '3',
+          name: 'Mike Davis',
+          position: 'Backend Developer',
+          hireDate: '2024-01-08',
+          email: 'mike.davis@email.com'
         }
       ]);
     }
@@ -585,111 +649,77 @@ export default function CompanyAdminPage() {
           )}
         </div>
 
-        {/* Stats Grid */}
-        <div className="mb-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-blue-50 rounded-xl">
-                  <Briefcase className="h-6 w-6 text-blue-600" />
+        {/* Charts Section */}
+        {company && (
+          <div className="mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Job Performance Chart */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                <div className="flex items-center mb-6">
+                  <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
+                    <BarChart3 className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-lg font-semibold text-gray-900">Job Performance Chart</h3>
+                    <p className="text-sm text-gray-500">Applications per job</p>
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-emerald-600 flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +12%
-                </span>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={jobPerformanceData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="applications" fill="#3b82f6" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-              <div className="text-3xl font-bold text-gray-900">{stats.activeJobs}</div>
-              <div className="text-gray-600">Active Jobs</div>
-              <div className="h-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full mt-2"></div>
-            </div>
 
-            <div className="rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-emerald-50 rounded-xl">
-                  <FileText className="h-6 w-6 text-emerald-600" />
+              {/* Application Source Distribution */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-6">
+                <div className="flex items-center mb-6">
+                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                    <FileText className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-lg font-semibold text-gray-900">Application Source Distribution</h3>
+                    <p className="text-sm text-gray-500">Where candidates come from</p>
+                  </div>
                 </div>
-                <span className="text-sm font-medium text-emerald-600 flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +24%
-                </span>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{stats.totalApplications}</div>
-              <div className="text-gray-600">Total Applications</div>
-              <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full mt-2"></div>
-            </div>
-
-            <div className="rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-purple-50 rounded-xl">
-                  <Users className="h-6 w-6 text-purple-600" />
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={applicationSourceData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {applicationSourceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <span className="text-sm font-medium text-emerald-600 flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +8%
-                </span>
               </div>
-              <div className="text-3xl font-bold text-gray-900">{stats.teamMembers}</div>
-              <div className="text-gray-600">Team Members</div>
-              <div className="h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mt-2"></div>
-            </div>
-
-            <div className="rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-amber-50 rounded-xl">
-                  <Calendar className="h-6 w-6 text-amber-600" />
-                </div>
-                <span className="text-sm font-medium text-emerald-600 flex items-center">
-                  <TrendingUp className="h-4 w-4 mr-1" />
-                  +15%
-                </span>
-              </div>
-              <div className="text-3xl font-bold text-gray-900">{stats.interviewsScheduled}</div>
-              <div className="text-gray-600">Interviews Scheduled</div>
-              <div className="h-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full mt-2"></div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Main Content */}
         {company ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Quick Actions */}
-            <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Quick Actions</h3>
-                  <span className="text-sm text-gray-500">Get started quickly</span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {quickActions.map((action, index) => {
-                    const Icon = action.icon;
-                    return (
-                      <button
-                        key={index}
-                        onClick={() => router.push(action.href)}
-                        className="group relative bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-5 text-left hover:border-indigo-300 hover:shadow-md transition-all duration-300 hover:-translate-y-1"
-                      >
-                        <div className="flex items-center space-x-4">
-                          <div className={`p-3 rounded-lg bg-gradient-to-r ${action.color}`}>
-                            <Icon className="h-6 w-6 text-white" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600">
-                              {action.label}
-                            </h4>
-                            <p className="text-sm text-gray-500">{action.description}</p>
-                          </div>
-                        </div>
-                        <ChevronRight className="absolute right-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-transform" />
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Recent Activity */}
-              <div className="mt-8 bg-white rounded-2xl border border-gray-200 p-6">
+              <div className="bg-white rounded-2xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
                   {recentActivities.length > 2 && (
@@ -733,94 +763,48 @@ export default function CompanyAdminPage() {
                   ))}
                 </div>
               </div>
-            </div>
 
-            {/* Company Profile Sidebar */}
-            <div className="space-y-8">
-              {/* Company Details Card */}
-              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-6">
+              {/* Hired Candidates */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-6">
                 <div className="flex items-center mb-6">
-                  <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg">
-                    <Shield className="h-5 w-5 text-white" />
+                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                    <Award className="h-5 w-5 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 ml-3">Company Profile</h3>
+                  <div className="ml-3">
+                    <h3 className="text-lg font-semibold text-gray-900">Hired Candidates</h3>
+                    <p className="text-sm text-gray-500">Recently hired team members</p>
+                  </div>
                 </div>
 
                 <div className="space-y-4">
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Description</div>
-                    <p className="text-sm text-gray-700 line-clamp-3">{company.description}</p>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Industry</div>
-                    <div className="text-sm font-medium text-gray-900">{company.industry}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Company Size</div>
-                    <div className="text-sm font-medium text-gray-900">{company.size}</div>
-                  </div>
-
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Location</div>
-                    <div className="text-sm font-medium text-gray-900">{company.location}</div>
-                  </div>
+                  {hiredCandidates.length > 0 ? (
+                    hiredCandidates.map((candidate) => (
+                      <div key={candidate.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                            <Award className="h-5 w-5 text-emerald-600" />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm text-gray-900">
+                            <span className="font-medium">{candidate.name}</span>
+                          </p>
+                          <p className="text-sm text-gray-600">{candidate.position}</p>
+                          <p className="text-xs text-gray-500 mt-1">Hired on {candidate.hireDate}</p>
+                        </div>
+                        <div className="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded-full">
+                          Hired
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Award className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500 text-sm">No hired candidates yet</p>
+                      <p className="text-gray-400 text-xs mt-1">Candidates will appear here once hired</p>
+                    </div>
+                  )}
                 </div>
-
-                <button
-                  onClick={() => setShowEditModal(true)}
-                  className="w-full mt-6 py-2.5 text-indigo-600 font-medium rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors text-sm"
-                >
-                  Edit Company Profile
-                </button>
-              </div>
-
-              {/* Performance Overview */}
-              {/* <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Overview</h3>
-
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Application Rate</span>
-                    <span className="font-medium text-gray-900">12.5%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-emerald-500 h-2 rounded-full" style={{ width: '12.5%' }}></div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Interview Rate</span>
-                    <span className="font-medium text-gray-900">45%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: '45%' }}></div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Hire Rate</span>
-                    <span className="font-medium text-gray-900">28%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-purple-500 h-2 rounded-full" style={{ width: '28%' }}></div>
-                  </div>
-                </div>
-              </div> */}
-
-              {/* Support Card */}
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl p-6 text-white">
-                <div className="flex items-center mb-4">
-                  <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
-                    <MessageSquare className="h-5 w-5" />
-                  </div>
-                  <h3 className="text-lg font-semibold ml-3">Need Help?</h3>
-                </div>
-                <p className="text-blue-100 text-sm mb-6">
-                  Our support team is here to help you with any questions about your company account.
-                </p>
-                <button className="w-full py-2.5 bg-white text-blue-600 font-medium rounded-lg hover:bg-gray-100 transition-colors text-sm">
-                  Contact Support
-                </button>
               </div>
             </div>
           </div>
