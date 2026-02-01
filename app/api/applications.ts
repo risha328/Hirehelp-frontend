@@ -62,6 +62,23 @@ export const applicationsAPI = {
     return response.json();
   },
 
+  submitApplication: async (formData: FormData): Promise<Application> => {
+    const token = localStorage.getItem('access_token');
+    const response = await fetch(`${API_BASE_URL}/applications`, {
+      method: 'POST',
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to submit application');
+    }
+
+    return response.json();
+  },
+
   getApplicationsByCompany: async (companyId: string): Promise<Application[]> => {
     const response = await fetch(`${API_BASE_URL}/applications/company/${companyId}`, {
       method: 'GET',

@@ -34,9 +34,14 @@ export default function CandidatesPage() {
     try {
       // Get company information for the logged-in company admin
       const { companiesAPI } = await import('../../api/companies');
-      const company = await companiesAPI.getMyCompany();
+      const response = await companiesAPI.getMyCompany();
 
-      const applications = await applicationsAPI.getApplicationsByCompany(company._id);
+      if (!response.company) {
+        setError('No company found for this user.');
+        return;
+      }
+
+      const applications = await applicationsAPI.getApplicationsByCompany(response.company._id);
 
       // Group applications by candidate
       const candidateMap = new Map<string, CandidateWithApplications>();
