@@ -23,6 +23,8 @@ interface KanbanColumn {
 
 export default function KanbanBoard({ applications, onApplicationUpdate, onViewDetails }: KanbanBoardProps) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmData, setConfirmData] = useState<{application: Application, newStatus: string} | null>(null);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -117,7 +119,25 @@ export default function KanbanBoard({ applications, onApplicationUpdate, onViewD
       return;
     }
 
-    // Update the application status
+    // Check if this is a transition that requires confirmation
+    const confirmTransitions = [
+      { from: 'APPLIED', to: 'UNDER_REVIEW' },
+      { from: 'UNDER_REVIEW', to: 'SHORTLISTED' },
+      { from: 'SHORTLISTED', to: 'HIRED' },
+      { from: 'SHORTLISTED', to: 'REJECTED' }
+    ];
+
+    const requiresConfirmation = confirmTransitions.some(
+      transition => transition.from === application.status && transition.to === destColumn.status
+    );
+
+    if (requiresConfirmation) {
+      setConfirmData({ application, newStatus: destColumn.status });
+      setShowConfirmModal(true);
+      return;
+    }
+
+    // Update the application status without confirmation
     setIsUpdating(draggableId);
     try {
       await applicationsAPI.updateApplicationStatus(application._id, destColumn.status);
@@ -127,6 +147,28 @@ export default function KanbanBoard({ applications, onApplicationUpdate, onViewD
     } finally {
       setIsUpdating(null);
     }
+  };
+
+  const handleConfirm = async () => {
+    if (!confirmData) return;
+
+    setIsUpdating(confirmData.application._id);
+    setShowConfirmModal(false);
+    setConfirmData(null);
+
+    try {
+      await applicationsAPI.updateApplicationStatus(confirmData.application._id, confirmData.newStatus);
+      onApplicationUpdate();
+    } catch (error) {
+      console.error('Failed to update application status:', error);
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  const handleCancel = () => {
+    setShowConfirmModal(false);
+    setConfirmData(null);
   };
 
   return (
@@ -245,6 +287,31 @@ export default function KanbanBoard({ applications, onApplicationUpdate, onViewD
           ))}
         </div>
       </DragDropContext>
+
+      {showConfirmModal && confirmData && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">Confirm Status Change</h3>
+            <p className="mb-6 text-gray-700">
+              Are you sure you want to change the status from {getStatusConfig(confirmData.application.status).title} to {getStatusConfig(confirmData.newStatus).title}?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancel}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
