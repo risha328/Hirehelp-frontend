@@ -37,7 +37,8 @@ export default function CandidatesPage() {
       const response = await companiesAPI.getMyCompany();
 
       if (!response.company) {
-        setError('No company found for this user.');
+        setError('No company found for this user. Please contact support to set up your company profile.');
+        setLoading(false);
         return;
       }
 

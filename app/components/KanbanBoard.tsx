@@ -210,8 +210,8 @@ export default function KanbanBoard({ applications, onApplicationUpdate, onViewD
                               <div className="flex items-center justify-between">
                                 <div className="flex space-x-1">
                                   <button
-                                    onClick={() => onViewDetails(application)}
-                                    className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                    onClick={() => window.location.href = `/companyadmin/candidates/${application.candidateId._id}`}
+                                    className="p-1 text-gray-400 hover:text-indigo-600 transition-colors cursor-pointer"
                                     title="View Details"
                                   >
                                     <Eye className="h-4 w-4" />
