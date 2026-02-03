@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
 import { API_BASE_URL } from '../../api/config';
 import KanbanBoard from '../../components/KanbanBoard';
 
 export default function ApplicationsPage() {
+  const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +29,8 @@ export default function ApplicationsPage() {
       const response = await companiesAPI.getMyCompany();
 
       if (!response.company) {
-        setError('No company found for this user.');
+        setError('No company found for this user. Please contact support to set up your company profile.');
+        setLoading(false);
         return;
       }
 
@@ -230,11 +233,8 @@ export default function ApplicationsPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex space-x-2">
                         <button
-                          onClick={() => {
-                            setSelectedApplication(application);
-                            setShowModal(true);
-                          }}
-                          className="text-indigo-600 hover:text-indigo-900"
+                          onClick={() => router.push(`/companyadmin/candidates/${application.candidateId._id}`)}
+                          className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
                         >
                           <Eye className="h-4 w-4" />
                         </button>

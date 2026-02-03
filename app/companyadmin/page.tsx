@@ -554,20 +554,13 @@ export default function CompanyAdminPage() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     {company.verificationStatus === 'verified' ? (
                       <>
-                        <button
-                          onClick={() => router.push('/company/jobs/new')}
-                          className="inline-flex items-center px-6 py-3 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors shadow-sm hover:shadow-md"
-                        >
-                          <Plus className="h-5 w-5 mr-2" />
-                          Post New Job
-                        </button>
-                        <button
+                        {/* <button
                           onClick={() => setShowEditModal(true)}
-                          className="inline-flex items-center px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transition-colors border border-white/30"
+                          className="inline-flex items-center px-3 py-3 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-lg hover:bg-white/30 transition-colors border border-white/30 cursor-pointer"
+                          title="Edit Company"
                         >
-                          <Edit className="h-5 w-5 mr-2" />
-                          Edit Company
-                        </button>
+                          <Edit className="h-5 w-5" />
+                        </button> */}
                       </>
                     ) : company.verificationStatus === 'pending' ? (
                       <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
@@ -582,10 +575,10 @@ export default function CompanyAdminPage() {
                     ) : (
                       <button
                          onClick={() => setShowEditModal(true)}
-                        className="inline-flex items-center px-6 py-3 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                        className="inline-flex items-center px-3 py-3 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                        title="Edit Company Info"
                       >
-                        <Edit className="h-5 w-5 mr-2" />
-                        Update Company Info
+                        <Edit className="h-5 w-5" />
                       </button>
                     )}
                   </div>

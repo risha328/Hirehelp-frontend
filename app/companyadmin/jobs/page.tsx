@@ -666,7 +666,7 @@ export default function CompanyJobsPage() {
                 disabled={company.verificationStatus !== 'verified'}
                 className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
                   company.verificationStatus === 'verified'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg cursor-pointer'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
                 title={company.verificationStatus !== 'verified' ? 'Company must be verified by admin to post jobs' : ''}
@@ -845,7 +845,7 @@ export default function CompanyJobsPage() {
                     <div className="flex gap-3 lg:flex-col">
                       <button
                         onClick={() => router.push(`/companyadmin/jobs/${job._id}`)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium"
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium cursor-pointer"
                       >
                         <EyeIcon className="w-4 h-4" />
                         View Details

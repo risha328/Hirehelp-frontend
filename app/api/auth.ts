@@ -74,19 +74,26 @@ export const authAPI = {
   },
 
   async refreshToken(refreshToken: string): Promise<{ accessToken: string }> {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ refreshToken }),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
 
-    if (!response.ok) {
-      throw new Error('Token refresh failed');
+      if (!response.ok) {
+        throw new Error('Token refresh failed');
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error instanceof TypeError && error.message === 'Failed to fetch') {
+        throw new Error('Network error: Unable to connect to the server. Please check if the backend is running.');
+      }
+      throw error;
     }
-
-    return response.json();
   },
 
   async logout(): Promise<void> {

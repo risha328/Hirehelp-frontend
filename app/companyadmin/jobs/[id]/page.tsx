@@ -175,7 +175,7 @@ export default function JobDetailsPage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => router.push('/companyadmin/jobs')}
-            className="flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-gray-700 font-medium"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Jobs
@@ -186,7 +186,7 @@ export default function JobDetailsPage() {
           </div>
         </div>
         <div className="flex space-x-3">
-          <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+          <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-gray-700 font-medium">
             <Edit className="h-4 w-4 mr-2" />
             Edit Job
           </button>
