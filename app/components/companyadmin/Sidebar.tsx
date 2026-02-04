@@ -8,6 +8,7 @@ import {
   Briefcase,
   Building,
   FileText,
+  File,
   Menu,
   Settings,
   Users,
@@ -26,6 +27,7 @@ interface SidebarItem {
 const sidebarItems: SidebarItem[] = [
   { name: 'Overview', href: '/companyadmin', icon: Home },
   { name: 'Jobs', href: '/companyadmin/jobs', icon: Briefcase },
+  { name: 'Rounds', href: '/companyadmin/rounds', icon: File },
   { name: 'Applications', href: '/companyadmin/applications', icon: FileText },
   { name: 'Candidates', href: '/companyadmin/candidates', icon: UserCheck },
   { name: 'Analytics', href: '/companyadmin/analytics', icon: BarChart3 },
