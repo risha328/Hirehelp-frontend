@@ -1,455 +1,13 @@
-// 'use client';
-
-// import { useState, useEffect } from 'react';
-// import { useRouter } from 'next/navigation';
-// import { jobsAPI } from '../../api/companies';
-// import { companiesAPI } from '../../api/companies';
-
-// interface Job {
-//   _id: string;
-//   title: string;
-//   description: string;
-//   location: string;
-//   salary?: string;
-//   jobType?: string;
-//   experienceLevel?: string;
-//   skills?: string[];
-//   applicationDeadline?: string;
-//   status: string;
-//   createdAt: string;
-// }
-
-// interface Company {
-//   _id: string;
-//   name: string;
-//   logoUrl?: string;
-//   verificationStatus: string;
-// }
-
-// export default function CompanyJobsPage() {
-//   const router = useRouter();
-//   const [jobs, setJobs] = useState<Job[]>([]);
-//   const [company, setCompany] = useState<Company | null>(null);
-//   const [loading, setLoading] = useState(true);
-//   const [showModal, setShowModal] = useState(false);
-//   const [posting, setPosting] = useState(false);
-//   const [formData, setFormData] = useState({
-//     title: '',
-//     description: '',
-//     location: '',
-//     salary: '',
-//     jobType: 'full-time',
-//     experienceLevel: 'entry',
-//     skills: '',
-//     applicationDeadline: '',
-//   });
-//   const [errors, setErrors] = useState<Record<string, string>>({});
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         const companyResponse = await companiesAPI.getMyCompany();
-//         const companyData = companyResponse.company;
-
-//         setCompany(companyData);
-
-//         if (companyData && companyData._id) {
-//           const jobsData = await jobsAPI.getJobsByCompany(companyData._id);
-//           setJobs(jobsData || []);
-//         } else {
-//           setJobs([]);
-//         }
-//       } catch (error) {
-//         console.error('Failed to fetch data:', error);
-//         setJobs([]);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchData();
-//   }, []);
-
-//   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-//     const { name, value } = e.target;
-//     setFormData(prev => ({ ...prev, [name]: value }));
-//     if (errors[name]) {
-//       setErrors(prev => ({ ...prev, [name]: '' }));
-//     }
-//   };
-
-//   const validateForm = () => {
-//     const newErrors: Record<string, string> = {};
-
-//     if (!formData.title.trim()) {
-//       newErrors.title = 'Job title is required';
-//     }
-
-//     if (!formData.description.trim()) {
-//       newErrors.description = 'Job description is required';
-//     }
-
-//     if (!formData.location.trim()) {
-//       newErrors.location = 'Location is required';
-//     }
-
-//     setErrors(newErrors);
-//     return Object.keys(newErrors).length === 0;
-//   };
-
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault();
-
-//     if (!validateForm() || !company || !company._id || company._id.trim() === '') {
-//       console.error('Validation failed:', {
-//         hasCompany: !!company,
-//         hasCompanyId: !!(company && company._id),
-//         companyId: company?._id,
-//         companyIdTrimmed: company?._id?.trim(),
-//         company
-//       });
-//       alert('Unable to post job: Company information is missing. Please refresh the page and try again.');
-//       return;
-//     }
-
-//     setPosting(true);
-
-//     try {
-//       const jobData = {
-//         ...formData,
-//         companyId: company._id.trim(),
-//         skills: formData.skills ? formData.skills.split(',').map(s => s.trim()) : [],
-//         status: 'active',
-//       };
-
-//       console.log('Submitting job data:', jobData);
-//       await jobsAPI.createJob(jobData);
-
-//       // Refresh jobs list
-//       const updatedJobs = await jobsAPI.getJobsByCompany(company._id);
-//       setJobs(updatedJobs || []);
-
-//       setShowModal(false);
-//       setFormData({
-//         title: '',
-//         description: '',
-//         location: '',
-//         salary: '',
-//         jobType: 'full-time',
-//         experienceLevel: 'entry',
-//         skills: '',
-//         applicationDeadline: '',
-//       });
-
-//       alert('Job posted successfully!');
-//     } catch (error) {
-//       console.error('Failed to post job:', error);
-//       const errorMessage = error instanceof Error ? error.message : 'Failed to post job. Please try again.';
-
-//       // Check if the error is related to company verification
-//       if (errorMessage.includes('Company must be verified')) {
-//         alert('Your company is not verified Still now');
-//       } else {
-//         alert(errorMessage);
-//       }
-//     } finally {
-//       setPosting(false);
-//     }
-//   };
-
-//   if (loading) {
-//     return (
-//       <div className="flex justify-center items-center min-h-screen">
-//         <div className="text-lg">Loading...</div>
-//       </div>
-//     );
-//   }
-
-//   if (!company) {
-//     return (
-//       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-//         <div className="sm:mx-auto sm:w-full sm:max-w-md">
-//           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-//             <div className="text-center">
-//               <h2 className="text-2xl font-bold text-gray-900 mb-4">Company Not Found</h2>
-//               <p className="text-gray-600 mb-6">
-//                 You need to register a company first before posting jobs.
-//               </p>
-//               <button
-//                 onClick={() => router.push('/companies')}
-//                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-//               >
-//                 Register Company
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="space-y-6">
-//       <div className="bg-white rounded-lg shadow p-6">
-//         <div className="flex justify-between items-center mb-6">
-//           <div>
-//             <h2 className="text-2xl font-bold text-gray-900">Job Postings</h2>
-//             <p className="text-gray-600">Manage your company's job listings</p>
-//             {company.verificationStatus !== 'verified' && (
-//               <p className="text-sm text-amber-600 mt-1">
-//                 Your company is pending verification. Job posting will be available once verified by superadmin.
-//               </p>
-//             )}
-//           </div>
-//           <button
-//             onClick={() => setShowModal(true)}
-//             disabled={company.verificationStatus !== 'verified'}
-//             className={`px-4 py-2 rounded ${
-//               company.verificationStatus === 'verified'
-//                 ? 'bg-blue-600 text-white hover:bg-blue-700'
-//                 : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-//             }`}
-//             title={company.verificationStatus !== 'verified' ? 'Company must be verified by superadmin to post jobs' : ''}
-//           >
-//             Post New Job
-//           </button>
-//         </div>
-
-//         {jobs.length === 0 ? (
-//           <div className="text-center py-12">
-//             <p className="text-gray-500">No jobs posted yet. Click "Post New Job" to get started.</p>
-//           </div>
-//         ) : (
-//           <div className="space-y-4">
-//             {jobs.map(job => (
-//               <div key={job._id} className="border rounded-lg p-4">
-//                 <div className="flex justify-between items-start">
-//                   <div>
-//                     <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
-//                     <p className="text-gray-600">{job.location} • {job.jobType} • {job.experienceLevel}</p>
-//                     {job.salary && <p className="text-green-600 font-medium">{job.salary}</p>}
-//                     <p className="text-sm text-gray-500 mt-2">
-//                       Posted on {new Date(job.createdAt).toLocaleDateString()}
-//                     </p>
-//                   </div>
-//                   <div className="flex flex-col items-end space-y-2">
-//                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-//                       job.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-//                     }`}>
-//                       {job.status}
-//                     </span>
-//                     <button
-//                       onClick={() => router.push(`/companyadmin/jobs/${job._id}`)}
-//                       className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-//                     >
-//                       View Details
-//                     </button>
-//                   </div>
-//                 </div>
-//                 <p className="text-gray-700 mt-2">{job.description.substring(0, 200)}...</p>
-//                 {job.skills && job.skills.length > 0 && (
-//                   <div className="mt-2">
-//                     <p className="text-sm text-gray-600">Skills: {job.skills.join(', ')}</p>
-//                   </div>
-//                 )}
-//               </div>
-//             ))}
-//           </div>
-//         )}
-//       </div>
-
-//       {/* Job Posting Modal */}
-//       {showModal && (
-//         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-//           <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
-//             <div className="mt-3">
-//               <div className="flex justify-between items-center mb-4">
-//                 <h3 className="text-lg font-medium text-gray-900">Post New Job</h3>
-//                 <button
-//                   onClick={() => setShowModal(false)}
-//                   className="text-gray-400 hover:text-gray-600"
-//                 >
-//                   <span className="text-2xl">&times;</span>
-//                 </button>
-//               </div>
-
-//               <form onSubmit={handleSubmit} className="space-y-6">
-//                 {/* Job Title */}
-//                 <div>
-//                   <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
-//                     Job Title *
-//                   </label>
-//                   <input
-//                     id="title"
-//                     name="title"
-//                     type="text"
-//                     required
-//                     value={formData.title}
-//                     onChange={handleInputChange}
-//                     placeholder="e.g. Senior Software Engineer"
-//                     className="block w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-//                   />
-//                   {errors.title && <p className="mt-2 text-sm text-red-600 font-medium">{errors.title}</p>}
-//                 </div>
-
-//                 {/* Job Description */}
-//                 <div>
-//                   <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-//                     Job Description *
-//                   </label>
-//                   <textarea
-//                     id="description"
-//                     name="description"
-//                     rows={5}
-//                     required
-//                     value={formData.description}
-//                     onChange={handleInputChange}
-//                     placeholder="Describe the role, responsibilities, and requirements..."
-//                     className="block w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-//                   />
-//                   {errors.description && <p className="mt-2 text-sm text-red-600 font-medium">{errors.description}</p>}
-//                 </div>
-
-//                 {/* Location */}
-//                 <div>
-//                   <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
-//                     Location *
-//                   </label>
-//                   <input
-//                     id="location"
-//                     name="location"
-//                     type="text"
-//                     required
-//                     value={formData.location}
-//                     onChange={handleInputChange}
-//                     placeholder="e.g. New York, NY or Remote"
-//                     className="block w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-//                   />
-//                   {errors.location && <p className="mt-2 text-sm text-red-600 font-medium">{errors.location}</p>}
-//                 </div>
-
-//                 {/* Salary */}
-//                 <div>
-//                   <label htmlFor="salary" className="block text-sm font-medium text-gray-700 mb-2">
-//                     Salary Range
-//                   </label>
-//                   <input
-//                     id="salary"
-//                     name="salary"
-//                     type="text"
-//                     value={formData.salary}
-//                     onChange={handleInputChange}
-//                     placeholder="e.g. $80,000 - $120,000 per year"
-//                     className="block w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-//                   />
-//                 </div>
-
-//                 {/* Job Type */}
-//                 <div>
-//                   <label htmlFor="jobType" className="block text-sm font-medium text-gray-700 mb-2">
-//                     Job Type
-//                   </label>
-//                   <select
-//                     id="jobType"
-//                     name="jobType"
-//                     value={formData.jobType}
-//                     onChange={handleInputChange}
-//                     className="block w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-//                   >
-//                     <option value="full-time">Full-time</option>
-//                     <option value="part-time">Part-time</option>
-//                     <option value="contract">Contract</option>
-//                     <option value="internship">Internship</option>
-//                   </select>
-//                 </div>
-
-//                 {/* Experience Level */}
-//                 <div>
-//                   <label htmlFor="experienceLevel" className="block text-sm font-medium text-gray-700 mb-2">
-//                     Experience Level
-//                   </label>
-//                   <select
-//                     id="experienceLevel"
-//                     name="experienceLevel"
-//                     value={formData.experienceLevel}
-//                     onChange={handleInputChange}
-//                     className="block w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-//                   >
-//                     <option value="entry">Entry Level</option>
-//                     <option value="mid">Mid Level</option>
-//                     <option value="senior">Senior Level</option>
-//                     <option value="executive">Executive Level</option>
-//                   </select>
-//                 </div>
-
-//                 {/* Skills */}
-//                 <div>
-//                   <label htmlFor="skills" className="block text-sm font-medium text-gray-700 mb-2">
-//                     Required Skills
-//                   </label>
-//                   <input
-//                     id="skills"
-//                     name="skills"
-//                     type="text"
-//                     value={formData.skills}
-//                     onChange={handleInputChange}
-//                     placeholder="e.g. JavaScript, React, Node.js (comma separated)"
-//                     className="block w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-//                   />
-//                 </div>
-
-//                 {/* Application Deadline */}
-//                 <div>
-//                   <label htmlFor="applicationDeadline" className="block text-sm font-medium text-gray-700 mb-2">
-//                     Application Deadline
-//                   </label>
-//                   <input
-//                     id="applicationDeadline"
-//                     name="applicationDeadline"
-//                     type="date"
-//                     value={formData.applicationDeadline}
-//                     onChange={handleInputChange}
-//                     className="block w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white"
-//                   />
-//                 </div>
-
-//                 {/* Submit Button */}
-//                 <div className="flex justify-end space-x-3 pt-4">
-//                   <button
-//                     type="button"
-//                     onClick={() => setShowModal(false)}
-//                     className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-lg font-medium transition-all duration-200"
-//                   >
-//                     Cancel
-//                   </button>
-//                   <button
-//                     type="submit"
-//                     disabled={posting}
-//                     className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium transition-all duration-200"
-//                   >
-//                     {posting ? 'Posting...' : 'Post Job'}
-//                   </button>
-//                 </div>
-//               </form>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { jobsAPI } from '../../api/companies';
 import { companiesAPI } from '../../api/companies';
-import { 
-  BriefcaseIcon, 
-  MapPinIcon, 
-  CurrencyDollarIcon, 
+import {
+  BriefcaseIcon,
+  MapPinIcon,
+  CurrencyDollarIcon,
   CalendarIcon,
   ClockIcon,
   CheckBadgeIcon,
@@ -462,7 +20,8 @@ import {
   DocumentTextIcon,
   TagIcon,
   UserIcon,
-  GlobeAltIcon
+  GlobeAltIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 
 interface Job {
@@ -509,15 +68,20 @@ export default function CompanyJobsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('Fetching company data...');
         const companyResponse = await companiesAPI.getMyCompany();
+        console.log('Company response:', companyResponse);
         const companyData = companyResponse.company;
+        console.log('Company data:', companyData);
 
         setCompany(companyData);
 
         if (companyData && companyData._id) {
+          console.log('Fetching jobs for company:', companyData._id);
           const jobsData = await jobsAPI.getJobsByCompany(companyData._id);
           setJobs(jobsData || []);
         } else {
+          console.log('No company data or company ID found');
           setJobs([]);
         }
       } catch (error) {
@@ -533,6 +97,7 @@ export default function CompanyJobsPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -540,19 +105,84 @@ export default function CompanyJobsPage() {
   };
 
   const validateForm = () => {
+    console.log('Starting form validation...');
     const newErrors: Record<string, string> = {};
 
-    if (!formData.title.trim()) {
-      newErrors.title = 'Job title is required';
-    }
-
-    if (!formData.description.trim()) {
-      newErrors.description = 'Job description is required';
-    }
-
+    // Location validation
+    console.log('Validating location:', formData.location);
     if (!formData.location.trim()) {
-      newErrors.location = 'Location is required';
+      console.log('Location is empty');
+      newErrors.location = 'Please select a location';
     }
+
+    // Salary validation (optional but if provided, validate format)
+    if (formData.salary.trim()) {
+      console.log('Validating salary:', formData.salary);
+      const salaryPattern = /^[\$]?[\d,]+(\.\d{2})?(?:\s*-\s*[\$]?[\d,]+(\.\d{2})?)?(?:\s*(?:per\s+year|per\s+month|per\s+hour|annually|monthly|hourly|k|K))?$/i;
+      if (!salaryPattern.test(formData.salary.trim())) {
+        console.log('Salary format invalid');
+        newErrors.salary = 'Please enter a valid salary format (e.g., $50,000 - $70,000 per year)';
+      }
+    }
+
+    // Job Type validation
+    console.log('Validating job type:', formData.jobType);
+    if (!formData.jobType) {
+      console.log('Job type is empty');
+      newErrors.jobType = 'Please select an employment type';
+    }
+
+    // Experience Level validation
+    console.log('Validating experience level:', formData.experienceLevel);
+    if (!formData.experienceLevel) {
+      console.log('Experience level is empty');
+      newErrors.experienceLevel = 'Please select an experience level';
+    }
+
+    // Application Deadline validation (optional but if provided, must be future date)
+    if (formData.applicationDeadline) {
+      console.log('Validating application deadline:', formData.applicationDeadline);
+      const deadlineDate = new Date(formData.applicationDeadline);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (deadlineDate < today) {
+        console.log('Application deadline is in the past');
+        newErrors.applicationDeadline = 'Application deadline must be a future date';
+      }
+    }
+
+    // Skills validation (optional but if provided, validate format)
+    if (formData.skills.trim()) {
+      console.log('Validating skills:', formData.skills);
+      const skillsArray = formData.skills.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      if (skillsArray.length === 0) {
+        console.log('No valid skills found');
+        newErrors.skills = 'Please enter valid skills separated by commas';
+      } else if (skillsArray.some(skill => skill.length < 2)) {
+        console.log('Some skills too short');
+        newErrors.skills = 'Each skill must be at least 2 characters long';
+      } else if (skillsArray.length > 20) {
+        console.log('Too many skills:', skillsArray.length);
+        newErrors.skills = 'Maximum 20 skills allowed';
+      }
+    }
+
+    // Job Description validation
+    console.log('Validating job description:', formData.description.length, 'characters');
+    if (!formData.description.trim()) {
+      console.log('Job description is empty');
+      newErrors.description = 'Job description is required';
+    } else if (formData.description.trim().length < 50) {
+      console.log('Job description too short:', formData.description.trim().length);
+      newErrors.description = 'Job description must be at least 50 characters long';
+    } else if (formData.description.trim().length > 5000) {
+      console.log('Job description too long:', formData.description.trim().length);
+      newErrors.description = 'Job description must be less than 5000 characters';
+    }
+
+    console.log('Validation errors:', newErrors);
+    console.log('Validation result:', Object.keys(newErrors).length === 0);
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -561,7 +191,37 @@ export default function CompanyJobsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm() || !company || !company._id || company._id.trim() === '') {
+    console.log('Submitting job form...');
+    console.log('Current company state:', company);
+    console.log('Company ID:', company?._id);
+    console.log('Company ID trimmed:', company?._id?.trim());
+    console.log('Form validation result:', validateForm());
+
+    console.log('Checking conditions:');
+    console.log('!validateForm():', !validateForm());
+    console.log('!company:', !company);
+    console.log('!company._id:', !company?._id);
+    console.log('company._id.trim() === "":', company?._id?.trim() === '');
+
+    if (!validateForm()) {
+      console.error('Form validation failed');
+      return;
+    }
+
+    if (!company) {
+      console.error('Company is null');
+      alert('Unable to post job: Company information is missing. Please refresh the page and try again.');
+      return;
+    }
+
+    if (!company._id) {
+      console.error('Company ID is missing');
+      alert('Unable to post job: Company information is missing. Please refresh the page and try again.');
+      return;
+    }
+
+    if (company._id.trim() === '') {
+      console.error('Company ID is empty after trimming');
       alert('Unable to post job: Company information is missing. Please refresh the page and try again.');
       return;
     }
@@ -775,29 +435,20 @@ export default function CompanyJobsPage() {
                 <div key={job._id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h3>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
-                            <span className="flex items-center gap-1">
-                              <MapPinIcon className="w-4 h-4" />
-                              {job.location}
-                            </span>
-                            <span className="px-2 py-1 bg-gray-100 rounded-md text-gray-700">
-                              {job.jobType}
-                            </span>
-                            <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
-                              {job.experienceLevel}
-                            </span>
-                          </div>
+                      <div className="mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h3>
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
+                          <span className="flex items-center gap-1">
+                            <MapPinIcon className="w-4 h-4" />
+                            {job.location}
+                          </span>
+                          <span className="px-2 py-1 bg-gray-100 rounded-md text-gray-700">
+                            {job.jobType}
+                          </span>
+                          <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
+                            {job.experienceLevel}
+                          </span>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          job.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {job.status}
-                        </span>
                       </div>
 
                       <p className="text-gray-700 mb-4 line-clamp-2">{job.description}</p>
@@ -842,17 +493,20 @@ export default function CompanyJobsPage() {
                       )}
                     </div>
 
-                    <div className="flex gap-3 lg:flex-col">
+                    <div className="flex flex-col gap-3">
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        job.status === 'active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {job.status}
+                      </span>
                       <button
                         onClick={() => router.push(`/companyadmin/jobs/${job._id}`)}
                         className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium cursor-pointer"
                       >
                         <EyeIcon className="w-4 h-4" />
                         View Details
-                      </button>
-                      <button className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors duration-200 text-sm font-medium">
-                        <PencilSquareIcon className="w-4 h-4" />
-                        Edit
                       </button>
                     </div>
                   </div>
@@ -865,11 +519,11 @@ export default function CompanyJobsPage() {
 
       {/* Job Posting Modal - Enhanced Form */}
       {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
             {/* Backdrop */}
-            <div 
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm transition-opacity"
               onClick={() => setShowModal(false)}
             ></div>
 
@@ -969,7 +623,7 @@ export default function CompanyJobsPage() {
                           {/* Job Title - Prominent */}
                           <div className="space-y-3">
                             <label htmlFor="title" className="block text-sm font-semibold text-gray-900">
-                              Job Title *
+                              Job Title
                               <span className="text-sm font-normal text-gray-600 ml-2">(What position are you hiring for?)</span>
                             </label>
                             <div className="relative">
@@ -1003,18 +657,33 @@ export default function CompanyJobsPage() {
                             </label>
                             <div className="relative">
                               <MapPinIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                              <input
+                              <select
                                 id="location"
                                 name="location"
-                                type="text"
                                 required
                                 value={formData.location}
                                 onChange={handleInputChange}
-                                placeholder="e.g. San Francisco, CA or Remote"
-                                className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
+                                className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none ${
                                   errors.location ? 'border-red-300' : 'border-gray-300'
                                 }`}
-                              />
+                              >
+                                <option value="">Select a location</option>
+                                <option value="Bengaluru, Karnataka">Bengaluru, Karnataka</option>
+                                <option value="Hyderabad, Telangana">Hyderabad, Telangana</option>
+                                <option value="Pune, Maharashtra">Pune, Maharashtra</option>
+                                <option value="Mumbai, Maharashtra">Mumbai, Maharashtra</option>
+                                <option value="Chennai, Tamil Nadu">Chennai, Tamil Nadu</option>
+                                <option value="Noida, Uttar Pradesh">Noida, Uttar Pradesh</option>
+                                <option value="Gurugram, Haryana">Gurugram, Haryana</option>
+                                <option value="Delhi (NCR)">Delhi (NCR)</option>
+                                <option value="Kolkata, West Bengal">Kolkata, West Bengal</option>
+                                <option value="Ahmedabad, Gujarat">Ahmedabad, Gujarat</option>
+                                <option value="Indore, Madhya Pradesh">Indore, Madhya Pradesh</option>
+                                <option value="Jaipur, Rajasthan">Jaipur, Rajasthan</option>
+                                <option value="Kochi, Kerala">Kochi, Kerala</option>
+                                <option value="Trivandrum, Kerala">Trivandrum, Kerala</option>
+                                <option value="Coimbatore, Tamil Nadu">Coimbatore, Tamil Nadu</option>
+                              </select>
                             </div>
                             {errors.location && (
                               <p className="text-sm text-red-600 font-medium flex items-center gap-1">
@@ -1031,7 +700,7 @@ export default function CompanyJobsPage() {
                         <button
                           type="button"
                           onClick={() => setActiveSection('details')}
-                          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
+                          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2 cursor-pointer"
                         >
                           Next: Job Details
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1079,12 +748,13 @@ export default function CompanyJobsPage() {
                             </label>
                             <div className="relative">
                               <BriefcaseIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                              <ChevronDownIcon className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                               <select
                                 id="jobType"
                                 name="jobType"
                                 value={formData.jobType}
                                 onChange={handleInputChange}
-                                className="block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none"
+                                className="block w-full pl-12 pr-12 py-3.5 text-base text-gray-900 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none"
                               >
                                 <option value="full-time">Full-time</option>
                                 <option value="part-time">Part-time</option>
@@ -1103,12 +773,13 @@ export default function CompanyJobsPage() {
                             </label>
                             <div className="relative">
                               <UserIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                              <ChevronDownIcon className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                               <select
                                 id="experienceLevel"
                                 name="experienceLevel"
                                 value={formData.experienceLevel}
                                 onChange={handleInputChange}
-                                className="block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none"
+                                className="block w-full pl-12 pr-12 py-3.5 text-base text-gray-900 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none"
                               >
                                 <option value="internship">Internship</option>
                                 <option value="entry">Entry Level (0-2 years)</option>
@@ -1154,7 +825,7 @@ export default function CompanyJobsPage() {
                         <button
                           type="button"
                           onClick={() => setActiveSection('requirements')}
-                          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
+                          className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center gap-2 cursor-pointer"
                         >
                           Next: Requirements
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1289,7 +960,7 @@ We are looking for a passionate developer to join our team. In this role, you wi
                       <button
                         type="submit"
                         disabled={posting}
-                        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+                        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
                       >
                         {posting ? (
                           <>

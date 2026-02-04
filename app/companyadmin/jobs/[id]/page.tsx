@@ -15,8 +15,10 @@ import {
   ArrowLeft,
   Edit,
   Trash2,
+  FileText
 } from 'lucide-react';
 import { jobsAPI, companiesAPI } from '../../../api/companies';
+import EditJobModal from '../../../components/EditJobModal';
 
 interface Job {
   _id: string;
@@ -59,6 +61,7 @@ export default function JobDetailsPage() {
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     if (jobId) {
@@ -162,11 +165,18 @@ export default function JobDetailsPage() {
                 Back to Jobs
               </button>
             </div>
-          </div>
         </div>
       </div>
-    );
-  }
+
+      <EditJobModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={fetchJobDetails}
+        jobId={jobId}
+      />
+    </div>
+  );
+}
 
   return (
     <div className="space-y-6">
@@ -186,13 +196,21 @@ export default function JobDetailsPage() {
           </div>
         </div>
         <div className="flex space-x-3">
-          <button className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-gray-700 font-medium">
-            <Edit className="h-4 w-4 mr-2" />
-            Edit Job
+          <button
+            onClick={() => router.push(`/companyadmin/jobs/${jobId}/rounds`)}
+            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer font-medium"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Manage Rounds
+          </button>
+          <button
+            onClick={() => setShowEditModal(true)}
+            className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-gray-700 font-medium"
+          >
+            <Edit className="h-4 w-4" />
           </button>
           <button className="flex items-center px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete Job
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -370,6 +388,13 @@ export default function JobDetailsPage() {
           </div>
         </div>
       </div>
+
+      <EditJobModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onSuccess={fetchJobDetails}
+        jobId={jobId}
+      />
     </div>
   );
 }

@@ -594,4 +594,59 @@ export const jobsAPI = {
 
     return response.json();
   },
+
+  updateJob: async (jobId: string, jobData: any) => {
+    let token = localStorage.getItem('access_token');
+
+    if (!token || token === null) {
+      throw new Error('No access token found');
+    }
+
+    // Check if token is expired
+    if (isTokenExpired(token!)) {
+      console.log('Access token expired, attempting refresh...');
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        throw new Error('No refresh token found');
+      }
+
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!refreshResponse.ok) {
+          throw new Error('Token refresh failed');
+        }
+
+        const refreshData = await refreshResponse.json();
+        token = refreshData.accessToken;
+        localStorage.setItem('access_token', token!);
+        console.log('Token refreshed successfully');
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        throw new Error('Session expired, please login again');
+      }
+    }
+
+    const response = await fetch(`${API_BASE_URL}/jobs/${jobId}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(jobData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update job');
+    }
+
+    return response.json();
+  },
 };
