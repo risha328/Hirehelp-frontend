@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { roundsAPI } from '../../../../api/rounds';
+import { roundsAPI, Round } from '../../../../api/rounds';
 import { jobsAPI, companiesAPI } from '../../../../api/companies';
 import {
   PlusIcon,
@@ -25,22 +25,7 @@ import {
   QueueListIcon
 } from '@heroicons/react/24/outline';
 
-interface Round {
-  _id: string;
-  name: string;
-  description?: string;
-  jobId: string | {
-    _id: string;
-    title: string;
-    companyId: string;
-  };
-  order: number;
-  isArchived: boolean;
-  isActive: boolean;
-  archivedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 interface Job {
   _id: string;
@@ -82,6 +67,8 @@ export default function JobRoundsPage() {
     description: '',
     jobId: jobId,
     order: 0,
+    type: 'interview' as 'mcq' | 'interview' | 'technical' | 'hr',
+    googleFormLink: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -157,11 +144,13 @@ export default function JobRoundsPage() {
           name: formData.name,
           description: formData.description,
           order: formData.order,
+          type: formData.type,
+          googleFormLink: formData.googleFormLink,
         });
 
         setRounds(prev => prev.map(round =>
           round._id === editingRound._id
-            ? { ...round, name: formData.name, description: formData.description, order: formData.order, updatedAt: new Date().toISOString() }
+            ? { ...round, name: formData.name, description: formData.description, order: formData.order, type: formData.type, googleFormLink: formData.googleFormLink, updatedAt: new Date().toISOString() }
             : round
         ));
       } else {
@@ -170,6 +159,8 @@ export default function JobRoundsPage() {
           description: formData.description,
           jobId: jobId,
           order: formData.order,
+          type: formData.type,
+          googleFormLink: formData.googleFormLink,
         });
 
         setRounds(prev => [...prev, newRound].sort((a, b) => a.order - b.order));
@@ -191,6 +182,8 @@ export default function JobRoundsPage() {
       description: '',
       jobId: jobId,
       order: rounds.length > 0 ? Math.max(...rounds.map(r => r.order)) + 1 : 1,
+      type: 'interview',
+      googleFormLink: '',
     });
     setEditingRound(null);
     setErrors({});
@@ -203,6 +196,8 @@ export default function JobRoundsPage() {
       description: round.description || '',
       jobId: jobId,
       order: round.order,
+      type: round.type,
+      googleFormLink: round.googleFormLink || '',
     });
     setShowModal(true);
   };
@@ -498,10 +493,10 @@ export default function JobRoundsPage() {
                           </div>
                           
                           {round.description && (
-                            <p className="text-gray-700 mb-4 pl-13">{round.description}</p>
+                            <p className="text-gray-700 mb-4 pl-12">{round.description}</p>
                           )}
                           
-                          <div className="flex items-center space-x-4 text-sm text-gray-500 pl-13">
+                          <div className="flex items-center space-x-4 text-sm text-gray-500 pl-12">
                             <span className="flex items-center">
                               <CalendarIcon className="w-3 h-3 mr-1" />
                               Created {new Date(round.createdAt).toLocaleDateString()}
@@ -570,7 +565,7 @@ export default function JobRoundsPage() {
                           </div>
                           
                           {round.description && (
-                            <p className="text-gray-600 mb-4 pl-13">{round.description}</p>
+                            <p className="text-gray-600 mb-4 pl-12">{round.description}</p>
                           )}
                         </div>
                         
@@ -696,6 +691,50 @@ export default function JobRoundsPage() {
                     </div>
                     <p className="mt-2 text-xs text-gray-500">Position in the interview sequence (1 = first round)</p>
                   </div>
+
+                  <div>
+                    <label htmlFor="type" className="block text-sm font-semibold text-gray-900 mb-2">
+                      Round Type <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="type"
+                      name="type"
+                      value={formData.type}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    >
+                      <option value="interview">Interview</option>
+                      <option value="technical">Technical</option>
+                      <option value="hr">HR</option>
+                      <option value="mcq">MCQ Assessment</option>
+                    </select>
+                  </div>
+
+                  {formData.type === 'mcq' && (
+                    <div>
+                      <label htmlFor="googleFormLink" className="block text-sm font-semibold text-gray-900 mb-2">
+                        Google Form Link <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="googleFormLink"
+                        name="googleFormLink"
+                        type="url"
+                        required={formData.type === 'mcq'}
+                        value={formData.googleFormLink}
+                        onChange={handleInputChange}
+                        placeholder="https://docs.google.com/forms/d/..."
+                        className={`w-full px-4 py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
+                          errors.googleFormLink ? 'border-red-300' : 'border-gray-300'
+                        }`}
+                      />
+                      {errors.googleFormLink && (
+                        <p className="mt-2 text-sm text-red-600 flex items-center">
+                          <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+                          {errors.googleFormLink}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
                   <div>
                     <label htmlFor="description" className="block text-sm font-semibold text-gray-900 mb-2">

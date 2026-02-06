@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List } from 'lucide-react';
+import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List, FileQuestion, Edit, Save, X } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
+import { roundsAPI, MCQResponse, RoundEvaluation, EvaluationStatus } from '../../api/rounds';
 import { API_BASE_URL } from '../../api/config';
 import KanbanBoard from '../../components/KanbanBoard';
 
@@ -15,10 +16,25 @@ export default function ApplicationsPage() {
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'kanban'>('kanban');
+  const [activeTab, setActiveTab] = useState<'applications' | 'google-responses'>('applications');
+  const [mcqResponses, setMcqResponses] = useState<MCQResponse[]>([]);
+  const [mcqLoading, setMcqLoading] = useState(false);
+  const [editingEvaluation, setEditingEvaluation] = useState<string | null>(null);
+  const [evaluationNotes, setEvaluationNotes] = useState<string>('');
+  const [evaluationStatus, setEvaluationStatus] = useState<EvaluationStatus>('pending');
+  const [googleSheetUrl, setGoogleSheetUrl] = useState<string>('');
+  const [googleSheetData, setGoogleSheetData] = useState<any[]>([]);
+  const [googleSheetLoading, setGoogleSheetLoading] = useState(false);
 
   useEffect(() => {
     fetchApplications();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'google-responses') {
+      fetchMcqResponses();
+    }
+  }, [activeTab]);
 
   const fetchApplications = async () => {
     setLoading(true);
@@ -51,6 +67,39 @@ export default function ApplicationsPage() {
     } catch (err) {
       console.error('Failed to update application status:', err);
       setError('Failed to update application status. Please try again.');
+    }
+  };
+
+  const fetchMcqResponses = async () => {
+    setMcqLoading(true);
+    try {
+      // Use the new endpoint to get all MCQ responses
+      const allResponses = await roundsAPI.getAllMcqResponses();
+      console.log('All MCQ responses:', allResponses);
+      setMcqResponses(allResponses);
+    } catch (err) {
+      console.error('Failed to fetch MCQ responses:', err);
+      setError('Failed to load MCQ responses. Please try again.');
+    } finally {
+      setMcqLoading(false);
+    }
+  };
+
+  const fetchGoogleSheetData = async () => {
+    if (!googleSheetUrl.trim()) {
+      setError('Please enter a Google Sheets URL');
+      return;
+    }
+    setGoogleSheetLoading(true);
+    setError(null);
+    try {
+      const data = await roundsAPI.fetchGoogleSheetData(googleSheetUrl.trim());
+      setGoogleSheetData(data);
+    } catch (err) {
+      console.error('Failed to fetch Google Sheets data:', err);
+      setError('Failed to fetch Google Sheets data. Please check the URL and try again.');
+    } finally {
+      setGoogleSheetLoading(false);
     }
   };
 
@@ -125,38 +174,66 @@ export default function ApplicationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-gray-900">Job Applications</h1>
-        <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-600">
-            {applications.length} application{applications.length !== 1 ? 's' : ''}
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'table'
-                  ? 'bg-indigo-100 text-indigo-600'
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-              title="Table View"
-            >
-              <List className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewMode === 'kanban'
-                  ? 'bg-indigo-100 text-indigo-600'
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-              title="Kanban View"
-            >
-              <Grid3X3 className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+      {/* Tabs */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('applications')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'applications'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Applications
+          </button>
+          <button
+            onClick={() => setActiveTab('google-responses')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'google-responses'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Google Responses
+          </button>
+        </nav>
       </div>
+
+      {activeTab === 'applications' && (
+        <>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">Job Applications</h1>
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-600">
+                {applications.length} application{applications.length !== 1 ? 's' : ''}
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    viewMode === 'table'
+                      ? 'bg-indigo-100 text-indigo-600'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                  title="Table View"
+                >
+                  <List className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => setViewMode('kanban')}
+                  className={`p-2 rounded-lg transition-colors ${
+                    viewMode === 'kanban'
+                      ? 'bg-indigo-100 text-indigo-600'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                  title="Kanban View"
+                >
+                  <Grid3X3 className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
 
       {applications.length === 0 ? (
         <div className="text-center py-12">
@@ -254,6 +331,172 @@ export default function ApplicationsPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+        </>
+      )}
+
+      {activeTab === 'google-responses' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">Google Responses</h1>
+            <div className="text-sm text-gray-600">
+              {mcqResponses.length} response{mcqResponses.length !== 1 ? 's' : ''}
+            </div>
+          </div>
+
+          {/* Google Sheets URL Input */}
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Fetch Google Sheets Data</h2>
+            <div className="flex gap-4">
+              <input
+                type="url"
+                value={googleSheetUrl}
+                onChange={(e) => setGoogleSheetUrl(e.target.value)}
+                placeholder="Enter Google Sheets URL"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <button
+                onClick={fetchGoogleSheetData}
+                disabled={googleSheetLoading}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {googleSheetLoading ? 'Fetching...' : 'Fetch Data'}
+              </button>
+            </div>
+          </div>
+
+          {/* Google Sheets Data Table */}
+          {googleSheetData.length > 0 && (
+            <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Google Sheets Data</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      {googleSheetData[0]?.map((header: any, index: number) => (
+                        <th key={index} className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Column {index + 1}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {googleSheetData.map((row: any[], rowIndex: number) => (
+                      <tr key={rowIndex} className="hover:bg-gray-50">
+                        {row.map((cell: any, cellIndex: number) => (
+                          <td key={cellIndex} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {cell || '-'}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* MCQ Responses Section */}
+          <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">MCQ Responses</h3>
+            </div>
+            {mcqLoading ? (
+              <div className="flex items-center justify-center min-h-96">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+              </div>
+            ) : mcqResponses.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FileQuestion className="h-10 w-10 text-gray-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">No MCQ Responses Yet</h2>
+                <p className="text-gray-600">MCQ responses will appear here once candidates submit their answers.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Candidate
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Round
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Answers
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Score
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Evaluation
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {mcqResponses.map((response) => (
+                      <tr key={response._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                <User className="h-5 w-5 text-gray-600" />
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {response.applicationId.candidateId.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {response.applicationId.candidateId.email}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{response.roundId.name}</div>
+                          <div className="text-sm text-gray-500">{response.applicationId.jobId.title}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            {response.answers.length} answers
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            Correct: {response.isCorrect?.filter(Boolean).length || 0}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{response.score?.toFixed(1)}%</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm text-gray-500">Pending</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => {
+                              setSelectedApplication(response.applicationId as any);
+                              setShowModal(true);
+                            }}
+                            className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

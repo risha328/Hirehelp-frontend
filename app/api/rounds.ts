@@ -10,6 +10,8 @@ export interface Round {
     companyId: string;
   };
   order: number;
+  type: 'mcq' | 'interview' | 'technical' | 'hr';
+  googleFormLink?: string;
   isArchived: boolean;
   isActive: boolean;
   archivedAt?: string;
@@ -22,12 +24,67 @@ export interface CreateRoundDto {
   description?: string;
   jobId: string;
   order?: number;
+  type?: 'mcq' | 'interview' | 'technical' | 'hr';
+  googleFormLink?: string;
 }
 
 export interface UpdateRoundDto {
   name?: string;
   description?: string;
   order?: number;
+  type?: 'mcq' | 'interview' | 'technical' | 'hr';
+  googleFormLink?: string;
+}
+
+export interface MCQResponse {
+  _id: string;
+  roundId: {
+    _id: string;
+    name: string;
+    googleFormLink?: string;
+  };
+  applicationId: {
+    _id: string;
+    candidateId: {
+      _id: string;
+      name: string;
+      email: string;
+    };
+    jobId: {
+      _id: string;
+      title: string;
+    };
+  };
+  answers: number[];
+  isCorrect?: boolean[];
+  score?: number;
+  isSubmitted: boolean;
+  submittedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubmitMcqDto {
+  applicationId: string;
+  answers: number[];
+}
+
+export type EvaluationStatus = 'pending' | 'in_progress' | 'completed' | 'passed' | 'failed' | 'skipped';
+
+export interface RoundEvaluation {
+  _id: string;
+  roundId: string;
+  applicationId: string;
+  evaluatorId: string;
+  status: EvaluationStatus;
+  score?: number;
+  notes?: string;
+  feedback?: string;
+  scheduledAt?: string;
+  completedAt?: string;
+  isFinal: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const getAuthHeaders = () => {
@@ -138,6 +195,74 @@ export const roundsAPI = {
 
     if (!response.ok) {
       throw new Error('Failed to activate round');
+    }
+
+    return response.json();
+  },
+
+  getMcqResponses: async (roundId: string): Promise<MCQResponse[]> => {
+    const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/mcq/responses`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch MCQ responses');
+    }
+
+    return response.json();
+  },
+
+  updateEvaluationStatus: async (evaluationId: string, status: EvaluationStatus, notes?: string): Promise<RoundEvaluation> => {
+    const response = await fetch(`${API_BASE_URL}/rounds/evaluation/${evaluationId}/status`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status, notes }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update evaluation status');
+    }
+
+    return response.json();
+  },
+
+  getAllMcqResponses: async (): Promise<MCQResponse[]> => {
+    const response = await fetch(`${API_BASE_URL}/rounds/mcq/responses/all`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch all MCQ responses');
+    }
+
+    return response.json();
+  },
+
+  submitMcqResponse: async (roundId: string, data: SubmitMcqDto): Promise<MCQResponse> => {
+    const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/mcq/submit`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to submit MCQ response');
+    }
+
+    return response.json();
+  },
+
+  fetchGoogleSheetData: async (googleSheetUrl: string): Promise<any[]> => {
+    const response = await fetch(`${API_BASE_URL}/rounds/fetch-google-sheet`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ googleSheetUrl }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch Google Sheets data');
     }
 
     return response.json();
