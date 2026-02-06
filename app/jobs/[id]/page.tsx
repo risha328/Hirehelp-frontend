@@ -33,6 +33,8 @@ import {
 import Link from 'next/link';
 import { publicJobsAPI } from '../../api/jobs';
 import { applicationsAPI } from '../../api/applications';
+import { useAuth } from '../../contexts/AuthContext';
+import { useRouter } from 'next/navigation';
 
 interface Job {
   _id: string;
@@ -796,6 +798,7 @@ Best regards,
 export default function JobDetailsPage() {
   const params = useParams();
   const jobId = params.id as string;
+  const { user } = useAuth();
 
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
@@ -841,12 +844,29 @@ export default function JobDetailsPage() {
   };
 
   const checkApplicationStatus = async () => {
+    // Only check application status if user is authenticated and is a candidate
+    if (!user || user.role !== 'CANDIDATE') {
+      setHasApplied(false);
+      return;
+    }
+
     try {
       const applications = await applicationsAPI.getApplicationsByCandidate();
       const hasAppliedForJob = applications.some(app => app.jobId._id === jobId);
       setHasApplied(hasAppliedForJob);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to check application status:', err);
+      // If unauthorized, redirect to login
+      if (err.message?.includes('401') || err.status === 401) {
+        console.log('Unauthorized access, redirecting to login');
+        // Clear invalid token
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        // Redirect to login page
+        window.location.href = '/auth/login';
+        return;
+      }
       setHasApplied(false);
     }
   };
