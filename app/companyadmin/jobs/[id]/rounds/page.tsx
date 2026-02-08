@@ -88,6 +88,11 @@ export default function JobRoundsPage() {
     meetingLink: '',
     newInterviewerName: '',
     newInterviewerEmail: '',
+    venueName: '',
+    address: '',
+    city: '',
+    landmark: '',
+    reportingTime: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -166,6 +171,14 @@ export default function JobRoundsPage() {
       newErrors.duration = 'Duration is required for online interviews';
     }
 
+    if ((formData.type === 'technical' || formData.type === 'hr') && formData.interviewMode === 'offline') {
+      if (!formData.venueName) newErrors.venueName = 'Venue Name is required';
+      if (!formData.address) newErrors.address = 'Address is required';
+      if (!formData.city) newErrors.city = 'City is required';
+      if (!formData.scheduledDate) newErrors.scheduledDate = 'Date is required';
+      if (!formData.scheduledTime) newErrors.scheduledTime = 'Time is required';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -199,7 +212,7 @@ export default function JobRoundsPage() {
           interviewType: formData.interviewType,
           scheduledAt: (formData.scheduledDate && formData.scheduledTime) ? new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString() : undefined,
           interviewers: formData.interviewers.length > 0 ? formData.interviewers : undefined,
-          meetingLink: formData.meetingLink || undefined,
+          meetingLink: formData.interviewMode === 'online' ? (formData.meetingLink || undefined) : undefined,
         } : {}),
       };
 
@@ -251,6 +264,11 @@ export default function JobRoundsPage() {
       meetingLink: '',
       newInterviewerName: '',
       newInterviewerEmail: '',
+      venueName: '',
+      address: '',
+      city: '',
+      landmark: '',
+      reportingTime: '',
     });
     setEditingRound(null);
     setErrors({});
@@ -280,6 +298,11 @@ export default function JobRoundsPage() {
       meetingLink: round.meetingLink || '',
       newInterviewerName: '',
       newInterviewerEmail: '',
+      venueName: round.locationDetails?.venueName || '',
+      address: round.locationDetails?.address || '',
+      city: round.locationDetails?.city || '',
+      landmark: round.locationDetails?.landmark || '',
+      reportingTime: round.scheduling?.reportingTime || '',
     });
     setShowModal(true);
   };
@@ -806,7 +829,7 @@ export default function JobRoundsPage() {
                       <div>
                         <label className="block text-sm font-semibold text-gray-900 mb-2">Interview Mode</label>
                         <div className="flex space-x-4">
-                          <label className="inline-flex items-center">
+                          <label className="inline-flex items-center cursor-pointer">
                             <input
                               type="radio"
                               name="interviewMode"
@@ -817,7 +840,7 @@ export default function JobRoundsPage() {
                             />
                             <span className="ml-2 text-gray-700">Online</span>
                           </label>
-                          <label className="inline-flex items-center">
+                          <label className="inline-flex items-center cursor-pointer">
                             <input
                               type="radio"
                               name="interviewMode"
@@ -856,6 +879,66 @@ export default function JobRoundsPage() {
                         </div>
                       )}
 
+                      {/* Location Details (Offline Only) */}
+                      {formData.interviewMode === 'offline' && (
+                        <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-5 shadow-sm">
+                          <h5 className="text-lg font-bold text-gray-900 flex items-center border-b border-gray-200 pb-3">
+                            <MapPinIcon className="w-5 h-5 mr-2 text-blue-600" />
+                            Location Details
+                          </h5>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                              <label className="block text-sm font-bold text-gray-800 mb-1.5">Venue Name <span className="text-red-500">*</span></label>
+                              <input
+                                type="text"
+                                name="venueName"
+                                value={formData.venueName}
+                                onChange={handleInputChange}
+                                placeholder="e.g. Head Office, Conference Room A"
+                                className={`w-full px-4 py-2.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white ${errors.venueName ? 'border-red-300' : 'border-gray-300'}`}
+                              />
+                              {errors.venueName && <p className="mt-1 text-xs text-red-600">{errors.venueName}</p>}
+                            </div>
+                            <div>
+                              <label className="block text-sm font-bold text-gray-800 mb-1.5">City <span className="text-red-500">*</span></label>
+                              <input
+                                type="text"
+                                name="city"
+                                value={formData.city}
+                                onChange={handleInputChange}
+                                placeholder="e.g. Bangalore"
+                                className={`w-full px-4 py-2.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white ${errors.city ? 'border-red-300' : 'border-gray-300'}`}
+                              />
+                              {errors.city && <p className="mt-1 text-xs text-red-600">{errors.city}</p>}
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-bold text-gray-800 mb-1.5">Address <span className="text-red-500">*</span></label>
+                              <textarea
+                                name="address"
+                                value={formData.address}
+                                onChange={handleInputChange}
+                                rows={2}
+                                placeholder="Full address of the venue"
+                                className={`w-full px-4 py-2.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white ${errors.address ? 'border-red-300' : 'border-gray-300'}`}
+                              />
+                              {errors.address && <p className="mt-1 text-xs text-red-600">{errors.address}</p>}
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-bold text-gray-800 mb-1.5">Landmark</label>
+                              <input
+                                type="text"
+                                name="landmark"
+                                value={formData.landmark}
+                                onChange={handleInputChange}
+                                placeholder="e.g. Near Metro Station"
+                                className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Interview Configuration Box */}
                       <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-5 shadow-sm">
                         <h5 className="text-lg font-bold text-gray-900 flex items-center border-b border-gray-200 pb-3">
@@ -879,27 +962,28 @@ export default function JobRoundsPage() {
                             </select>
                           </div>
 
-                          {/* Platform */}
-                          <div>
-                            <label htmlFor="platform" className="block text-sm font-bold text-gray-800 mb-1.5">Platform / Venue</label>
-                            <select
-                              id="platform"
-                              name="platform"
-                              value={formData.platform}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                            >
-                              <option value="">Select Platform</option>
-                              <option value="Gmeet">Google Meet</option>
-                              <option value="Zoom">Zoom</option>
-                              <option value="Ms Teams">Microsoft Teams</option>
-                              <option value="In-Person">In-Person</option>
-                            </select>
-                          </div>
+                          {/* Platform (Only if Online) */}
+                          {formData.interviewMode === 'online' && (
+                            <div>
+                              <label htmlFor="platform" className="block text-sm font-bold text-gray-800 mb-1.5">Platform</label>
+                              <select
+                                id="platform"
+                                name="platform"
+                                value={formData.platform}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                              >
+                                <option value="">Select Platform</option>
+                                <option value="Gmeet">Google Meet</option>
+                                <option value="Zoom">Zoom</option>
+                                <option value="Ms Teams">Microsoft Teams</option>
+                              </select>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Meeting Link - Dynamically shown */}
-                        {['Gmeet', 'Zoom', 'Ms Teams'].includes(formData.platform) && (
+                        {/* Meeting Link - Dynamically shown (Online only) */}
+                        {formData.interviewMode === 'online' && ['Gmeet', 'Zoom', 'Ms Teams'].includes(formData.platform) && (
                           <div>
                             <label htmlFor="meetingLink" className="block text-sm font-bold text-gray-800 mb-1.5">Meeting Link</label>
                             <div className="relative">
@@ -920,29 +1004,44 @@ export default function JobRoundsPage() {
                         )}
 
                         {/* Date & Time */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className={`grid grid-cols-1 ${formData.interviewMode === 'offline' ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-5`}>
                           <div>
-                            <label htmlFor="scheduledDate" className="block text-sm font-bold text-gray-800 mb-1.5">Date</label>
+                            <label htmlFor="scheduledDate" className="block text-sm font-bold text-gray-800 mb-1.5">Date <span className="text-red-500">*</span></label>
                             <input
                               type="date"
                               id="scheduledDate"
                               name="scheduledDate"
                               value={formData.scheduledDate}
                               onChange={handleInputChange}
-                              className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                              className={`w-full px-4 py-2.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white ${errors.scheduledDate ? 'border-red-300' : 'border-gray-300'}`}
                             />
+                            {errors.scheduledDate && <p className="mt-1 text-xs text-red-600">{errors.scheduledDate}</p>}
                           </div>
                           <div>
-                            <label htmlFor="scheduledTime" className="block text-sm font-bold text-gray-800 mb-1.5">Time</label>
+                            <label htmlFor="scheduledTime" className="block text-sm font-bold text-gray-800 mb-1.5">Time <span className="text-red-500">*</span></label>
                             <input
                               type="time"
                               id="scheduledTime"
                               name="scheduledTime"
                               value={formData.scheduledTime}
                               onChange={handleInputChange}
-                              className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                              className={`w-full px-4 py-2.5 text-sm text-gray-900 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white ${errors.scheduledTime ? 'border-red-300' : 'border-gray-300'}`}
                             />
+                            {errors.scheduledTime && <p className="mt-1 text-xs text-red-600">{errors.scheduledTime}</p>}
                           </div>
+                          {formData.interviewMode === 'offline' && (
+                            <div>
+                              <label htmlFor="reportingTime" className="block text-sm font-bold text-gray-800 mb-1.5">Reporting Time</label>
+                              <input
+                                type="time"
+                                id="reportingTime"
+                                name="reportingTime"
+                                value={formData.reportingTime}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                              />
+                            </div>
+                          )}
                         </div>
 
                         {/* Interviewers Section */}
