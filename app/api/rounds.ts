@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './config';
+import { isTokenExpired } from './auth';
 
 export interface Round {
   _id: string;
@@ -16,6 +17,11 @@ export interface Round {
   platform?: string;
   duration?: string;
   instructions?: string;
+  interviewMode?: string;
+  interviewType?: string;
+  scheduledAt?: string;
+  interviewers?: { name: string; email: string }[];
+  meetingLink?: string;
   isArchived: boolean;
   isActive: boolean;
   archivedAt?: string;
@@ -34,6 +40,11 @@ export interface CreateRoundDto {
   platform?: string;
   duration?: string;
   instructions?: string;
+  interviewMode?: string;
+  interviewType?: string;
+  scheduledAt?: string;
+  interviewers?: { name: string; email: string }[];
+  meetingLink?: string;
 }
 
 export interface UpdateRoundDto {
@@ -46,6 +57,11 @@ export interface UpdateRoundDto {
   platform?: string;
   duration?: string;
   instructions?: string;
+  interviewMode?: string;
+  interviewType?: string;
+  scheduledAt?: string;
+  interviewers?: { name: string; email: string }[];
+  meetingLink?: string;
 }
 
 export interface MCQResponse {
@@ -99,8 +115,37 @@ export interface RoundEvaluation {
   updatedAt: string;
 }
 
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('access_token');
+const getAuthHeaders = async () => {
+  let token = localStorage.getItem('access_token');
+
+  if (token && isTokenExpired(token)) {
+    console.log('Access token expired, attempting refresh...');
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    if (refreshToken) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          token = data.accessToken;
+          localStorage.setItem('access_token', token as string);
+          console.log('Token refreshed successfully');
+        } else {
+          console.error('Token refresh failed');
+        }
+      } catch (error) {
+        console.error('Error refreshing token', error);
+      }
+    }
+  }
+
   return {
     'Content-Type': 'application/json',
     'Authorization': token ? `Bearer ${token}` : '',
@@ -109,173 +154,187 @@ const getAuthHeaders = () => {
 
 export const roundsAPI = {
   createRound: async (data: CreateRoundDto): Promise<Round> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create round');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Failed to create round: ${response.status}`);
     }
 
     return response.json();
   },
 
   getAllRounds: async (): Promise<Round[]> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch rounds');
+      throw new Error(`Failed to fetch rounds: ${response.status}`);
     }
 
     return response.json();
   },
 
   getRoundsByJob: async (jobId: string): Promise<Round[]> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/job/${jobId}`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch rounds for job');
+      throw new Error(`Failed to fetch rounds for job: ${response.status}`);
     }
 
     return response.json();
   },
 
   getRoundById: async (id: string): Promise<Round> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/${id}`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch round');
+      throw new Error(`Failed to fetch round: ${response.status}`);
     }
 
     return response.json();
   },
 
   updateRound: async (id: string, data: UpdateRoundDto): Promise<Round> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/${id}`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || 'Failed to update round');
+      throw new Error(errorData.message || `Failed to update round: ${response.status}`);
     }
 
     return response.json();
   },
 
   deleteRound: async (id: string): Promise<void> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/${id}`, {
       method: 'DELETE',
-      headers: getAuthHeaders(),
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to delete round');
+      throw new Error(`Failed to delete round: ${response.status}`);
     }
   },
 
   archiveRound: async (id: string): Promise<Round> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/${id}/archive`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to archive round');
+      throw new Error(`Failed to archive round: ${response.status}`);
     }
 
     return response.json();
   },
 
   activateRound: async (id: string): Promise<Round> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/${id}/activate`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to activate round');
+      throw new Error(`Failed to activate round: ${response.status}`);
     }
 
     return response.json();
   },
 
   getMcqResponses: async (roundId: string): Promise<MCQResponse[]> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/mcq/responses`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch MCQ responses');
+      throw new Error(`Failed to fetch MCQ responses: ${response.status}`);
     }
 
     return response.json();
   },
 
   updateEvaluationStatus: async (evaluationId: string, status: EvaluationStatus, notes?: string): Promise<RoundEvaluation> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/evaluation/${evaluationId}/status`, {
       method: 'PATCH',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify({ status, notes }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update evaluation status');
+      throw new Error(`Failed to update evaluation status: ${response.status}`);
     }
 
     return response.json();
   },
 
   getAllMcqResponses: async (): Promise<MCQResponse[]> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/mcq/responses/all`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers,
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch all MCQ responses');
+      throw new Error(`Failed to fetch all MCQ responses: ${response.status}`);
     }
 
     return response.json();
   },
 
   submitMcqResponse: async (roundId: string, data: SubmitMcqDto): Promise<MCQResponse> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/mcq/submit`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to submit MCQ response');
+      throw new Error(`Failed to submit MCQ response: ${response.status}`);
     }
 
     return response.json();
   },
 
   fetchGoogleSheetData: async (googleSheetUrl: string): Promise<any[]> => {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/fetch-google-sheet`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify({ googleSheetUrl }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch Google Sheets data');
+      throw new Error(`Failed to fetch Google Sheets data: ${response.status}`);
     }
 
     return response.json();
