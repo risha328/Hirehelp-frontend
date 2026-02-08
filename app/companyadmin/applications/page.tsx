@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List, FileQuestion, Edit, Save, X } from 'lucide-react';
+import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List, FileQuestion, Edit, Save, X, Briefcase } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
-import { roundsAPI, MCQResponse, RoundEvaluation, EvaluationStatus } from '../../api/rounds';
+import { roundsAPI, MCQResponse, RoundEvaluation, EvaluationStatus, Round } from '../../api/rounds';
 import { API_BASE_URL } from '../../api/config';
 import KanbanBoard from '../../components/KanbanBoard';
 
@@ -25,10 +25,21 @@ export default function ApplicationsPage() {
   const [googleSheetUrl, setGoogleSheetUrl] = useState<string>('');
   const [googleSheetData, setGoogleSheetData] = useState<any[]>([]);
   const [googleSheetLoading, setGoogleSheetLoading] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<string>('all');
+  const [rounds, setRounds] = useState<Round[]>([]);
 
   useEffect(() => {
     fetchApplications();
+    fetchMcqResponses();
   }, []);
+
+  useEffect(() => {
+    if (selectedJobId !== 'all') {
+      fetchRounds(selectedJobId);
+    } else {
+      setRounds([]);
+    }
+  }, [selectedJobId]);
 
   useEffect(() => {
     if (activeTab === 'google-responses') {
@@ -57,6 +68,17 @@ export default function ApplicationsPage() {
       setError('Failed to load applications. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRounds = async (jobId: string) => {
+    try {
+      const data = await roundsAPI.getRoundsByJob(jobId);
+      setRounds(data.sort((a, b) => a.order - b.order));
+    } catch (err) {
+      console.error('Failed to fetch rounds:', err);
+      // Don't show error to user as it might just mean no rounds
+      setRounds([]);
     }
   };
 
@@ -152,6 +174,33 @@ export default function ApplicationsPage() {
     }
   };
 
+  // Extract unique jobs from applications
+  const uniqueJobs = useMemo(() => {
+    const jobsMap = new Map();
+    applications.forEach(app => {
+      if (app.jobId && !jobsMap.has(app.jobId._id)) {
+        jobsMap.set(app.jobId._id, {
+          id: app.jobId._id,
+          title: app.jobId.title,
+          count: 0
+        });
+      }
+      if (app.jobId && jobsMap.has(app.jobId._id)) {
+        const job = jobsMap.get(app.jobId._id);
+        job.count++;
+      }
+    });
+    return Array.from(jobsMap.values());
+  }, [applications]);
+
+  // Filter applications based on selected job
+  const filteredApplications = useMemo(() => {
+    if (selectedJobId === 'all') {
+      return applications;
+    }
+    return applications.filter(app => app.jobId._id === selectedJobId);
+  }, [applications, selectedJobId]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
@@ -173,21 +222,20 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full flex flex-col">
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-gray-200 flex-shrink-0">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab('applications')}
-            className={`py-2 px-1 border-b-2 font-medium text-sm ${
-              activeTab === 'applications'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-            }`}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'applications'
+              ? 'border-indigo-500 text-indigo-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
           >
             Applications
           </button>
-          <button
+          {/* <button
             onClick={() => setActiveTab('google-responses')}
             className={`py-2 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'google-responses'
@@ -196,144 +244,197 @@ export default function ApplicationsPage() {
             }`}
           >
             Google Responses
-          </button>
+          </button> */}
         </nav>
       </div>
 
       {activeTab === 'applications' && (
         <>
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">Job Applications</h1>
-            <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-600">
-                {applications.length} application{applications.length !== 1 ? 's' : ''}
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setViewMode('table')}
-                  className={`p-2 rounded-lg transition-colors ${
-                    viewMode === 'table'
+          <div className="flex flex-col space-y-4 flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <h1 className="text-3xl font-bold text-gray-900">Job Applications</h1>
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-gray-600">
+                  {filteredApplications.length} application{filteredApplications.length !== 1 ? 's' : ''}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setViewMode('table')}
+                    className={`p-2 rounded-lg transition-colors ${viewMode === 'table'
                       ? 'bg-indigo-100 text-indigo-600'
                       : 'text-gray-400 hover:text-gray-600'
-                  }`}
-                  title="Table View"
-                >
-                  <List className="h-5 w-5" />
-                </button>
-                <button
-                  onClick={() => setViewMode('kanban')}
-                  className={`p-2 rounded-lg transition-colors ${
-                    viewMode === 'kanban'
+                      }`}
+                    title="Table View"
+                  >
+                    <List className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('kanban')}
+                    className={`p-2 rounded-lg transition-colors ${viewMode === 'kanban'
                       ? 'bg-indigo-100 text-indigo-600'
                       : 'text-gray-400 hover:text-gray-600'
-                  }`}
-                  title="Kanban View"
-                >
-                  <Grid3X3 className="h-5 w-5" />
-                </button>
+                      }`}
+                    title="Kanban View"
+                  >
+                    <Grid3X3 className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Job Filters */}
+            {uniqueJobs.length > 0 && (
+              <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+                <button
+                  onClick={() => setSelectedJobId('all')}
+                  className={`flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedJobId === 'all'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                    }`}
+                >
+                  <Briefcase className="w-4 h-4 mr-2" />
+                  All Jobs
+                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${selectedJobId === 'all' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600'
+                    }`}>
+                    {applications.length}
+                  </span>
+                </button>
+                {uniqueJobs.map((job) => (
+                  <button
+                    key={job.id}
+                    onClick={() => setSelectedJobId(job.id)}
+                    className={`flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedJobId === job.id
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                      }`}
+                  >
+                    {job.title}
+                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${selectedJobId === job.id ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                      {job.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-      {applications.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <FileText className="h-10 w-10 text-gray-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Applications Yet</h2>
-          <p className="text-gray-600">Applications for your jobs will appear here.</p>
-        </div>
-      ) : viewMode === 'kanban' ? (
-        <KanbanBoard
-          applications={applications}
-          onApplicationUpdate={fetchApplications}
-          onViewDetails={(application) => {
-            setSelectedApplication(application);
-            setShowModal(true);
-          }}
-        />
-      ) : (
-        <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Candidate
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Job Position
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Applied Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {applications.map((application) => (
-                  <tr key={application._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <User className="h-5 w-5 text-gray-600" />
+          {filteredApplications.length === 0 ? (
+            <div className="text-center py-12 flex-grow flex flex-col justify-center">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText className="h-10 w-10 text-gray-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">No Applications Found</h2>
+              <p className="text-gray-600">
+                {selectedJobId === 'all'
+                  ? 'Applications for your jobs will appear here.'
+                  : 'No applications found for the selected job.'}
+              </p>
+              {selectedJobId !== 'all' && (
+                <button
+                  onClick={() => setSelectedJobId('all')}
+                  className="mt-4 text-indigo-600 hover:text-indigo-800 font-medium"
+                >
+                  View all applications
+                </button>
+              )}
+            </div>
+          ) : viewMode === 'kanban' ? (
+            <div className="flex-grow overflow-hidden">
+              <KanbanBoard
+                applications={filteredApplications}
+                rounds={rounds}
+                mcqResponses={mcqResponses}
+                onApplicationUpdate={fetchApplications}
+                onViewDetails={(application) => {
+                  setSelectedApplication(application);
+                  setShowModal(true);
+                }}
+              />
+            </div>
+
+          ) : (
+            <div className="bg-white shadow-sm rounded-lg overflow-hidden flex-grow">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Candidate
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Job Position
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Applied Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredApplications.map((application) => (
+                      <tr key={application._id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                <User className="h-5 w-5 text-gray-600" />
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">
+                                {application.candidateId.name}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {application.candidateId.email}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {application.candidateId.name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">{application.jobId.title}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
+                            {getStatusIcon(application.status)}
+                            <span className="ml-1">{application.status}</span>
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {new Date(application.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => router.push(`/companyadmin/candidates/${application.candidateId._id}`)}
+                              className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            {application.resumeUrl && (
+                              <a
+                                href={`${API_BASE_URL}${application.resumeUrl}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-gray-600 hover:text-gray-900"
+                              >
+                                <Download className="h-4 w-4" />
+                              </a>
+                            )}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {application.candidateId.email}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{application.jobId.title}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(application.status)}`}>
-                        {getStatusIcon(application.status)}
-                        <span className="ml-1">{application.status}</span>
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(application.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => router.push(`/companyadmin/candidates/${application.candidateId._id}`)}
-                          className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        {application.resumeUrl && (
-                          <a
-                            href={`${API_BASE_URL}${application.resumeUrl}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-600 hover:text-gray-900"
-                          >
-                            <Download className="h-4 w-4" />
-                          </a>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </>
       )}
 
