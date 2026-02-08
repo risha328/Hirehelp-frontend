@@ -12,7 +12,8 @@ import {
   Shield,
   CheckCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Users
 } from 'lucide-react';
 import { companiesAPI } from '../../api/companies';
 import { API_BASE_URL } from '../../api/config';
@@ -23,6 +24,7 @@ export default function CompanyProfilePage() {
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [admins, setAdmins] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCompany();
@@ -32,6 +34,14 @@ export default function CompanyProfilePage() {
     try {
       const response = await companiesAPI.getMyCompany();
       setCompany(response.company);
+      if (response.company) {
+        try {
+          const adminsResponse = await companiesAPI.getCompanyAdmins(response.company._id);
+          setAdmins(adminsResponse);
+        } catch (adminError) {
+          console.error('Failed to fetch admins:', adminError);
+        }
+      }
     } catch (error) {
       console.error('Failed to fetch company:', error);
     } finally {
@@ -262,6 +272,50 @@ export default function CompanyProfilePage() {
                     <div className="text-xs text-gray-500">Phone</div>
                     <div className="text-sm font-medium text-gray-900">{company.phone}</div>
                   </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Company Admins */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 lg:col-span-2">
+            <div className="flex items-center mb-6">
+              <div className="p-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-lg">
+                <Users className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 ml-3">Company Admins</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {admins && admins.length > 0 ? (
+                admins.map((admin) => (
+                  <div key={admin._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-semibold">
+                        {admin.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{admin.name}</div>
+                        <div className="text-xs text-gray-500">{admin.role.replace('_', ' ')}</div>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600 space-y-1 mt-2">
+                      <div className="flex items-center">
+                        <Mail className="h-3 w-3 mr-2 text-gray-400" />
+                        <span className="truncate">{admin.email}</span>
+                      </div>
+                      {admin.phone && (
+                        <div className="flex items-center">
+                          <Phone className="h-3 w-3 mr-2 text-gray-400" />
+                          <span>{admin.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  No other admins found.
                 </div>
               )}
             </div>
