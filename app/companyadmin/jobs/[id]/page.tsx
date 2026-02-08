@@ -18,6 +18,7 @@ import {
   FileText
 } from 'lucide-react';
 import { jobsAPI, companiesAPI } from '../../../api/companies';
+import { API_BASE_URL } from '../../../api/config';
 import EditJobModal from '../../../components/EditJobModal';
 
 interface Job {
@@ -226,13 +227,15 @@ export default function JobDetailsPage() {
               <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
                 <img
                   src={getCompanyInfo(job)?.logoUrl
-                    ? `${process.env.NEXT_PUBLIC_API_URL}${getCompanyInfo(job)?.logoUrl}`
+                    ? `${API_BASE_URL}${getCompanyInfo(job)?.logoUrl}`
                     : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(job))}&backgroundColor=6366f1`
                   }
                   alt={getCompanyName(job)}
-                  className="w-14 h-14"
+                  className="w-14 h-14 object-cover"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(job))}`;
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null; // Prevent infinite loop
+                    target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(job))}`;
                   }}
                 />
               </div>
@@ -331,13 +334,15 @@ export default function JobDetailsPage() {
                   <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
                     <img
                       src={getCompanyInfo(job)?.logoUrl
-                        ? `${process.env.NEXT_PUBLIC_API_URL}${getCompanyInfo(job)?.logoUrl}`
+                        ? `${API_BASE_URL}${getCompanyInfo(job)?.logoUrl}`
                         : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(job))}`
                       }
                       alt={getCompanyName(job)}
-                      className="w-10 h-10"
+                      className="w-10 h-10 object-cover"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(job))}`;
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null; // Prevent infinite loop
+                        target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(job))}`;
                       }}
                     />
                   </div>

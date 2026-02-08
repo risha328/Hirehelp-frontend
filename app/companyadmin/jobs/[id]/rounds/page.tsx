@@ -612,7 +612,7 @@ export default function JobRoundsPage() {
                         </div>
 
                         <div className="flex items-center space-x-2 mt-4 lg:mt-0 lg:ml-4">
-                          {(round.type === 'mcq' || round.type === 'coding') && (
+                          {(round.type === 'mcq' || round.type === 'coding' || round.type === 'interview') && (
                             <button
                               onClick={() => router.push(`/companyadmin/jobs/${jobId}/rounds/${round._id}`)}
                               className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200 rounded-lg transition-colors duration-200 cursor-pointer"

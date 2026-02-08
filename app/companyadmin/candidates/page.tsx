@@ -59,8 +59,10 @@ export default function CandidatesPage() {
         }
         const candidate = candidateMap.get(candidateId)!;
         candidate.applications.push(application);
-        candidate.positions.push(application.jobId.title);
-        if (application.resumeUrl) {
+        if (!candidate.positions.includes(application.jobId.title)) {
+          candidate.positions.push(application.jobId.title);
+        }
+        if (application.resumeUrl && !candidate.resumeUrls.includes(application.resumeUrl)) {
           candidate.resumeUrls.push(application.resumeUrl);
         }
       });
@@ -155,28 +157,56 @@ export default function CandidatesPage() {
                       <div className="text-sm text-gray-900">{candidate.candidateId.email}</div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {candidate.positions.join(', ')}
+                      <div className="flex flex-wrap gap-2">
+                        {candidate.positions.slice(0, 2).map((position, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100"
+                          >
+                            {position}
+                          </span>
+                        ))}
+                        {candidate.positions.length > 2 && (
+                          <span
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200 cursor-help"
+                            title={candidate.positions.slice(2).join(', ')}
+                          >
+                            +{candidate.positions.length - 2} more
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {candidate.resumeUrls.length > 0 ? (
-                        <div className="flex space-x-2">
-                          {candidate.resumeUrls.map((url, index) => (
-                            <a
-                              key={index}
-                              href={`${API_BASE_URL}${url}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title={`Download Resume ${index + 1}`}
+                        candidate.resumeUrls.length === 1 ? (
+                          <a
+                            href={`${API_BASE_URL}${candidate.resumeUrls[0]}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-900"
+                          >
+                            <FileText className="h-4 w-4 mr-1.5" />
+                            View Resume
+                          </a>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className="bg-indigo-50 text-indigo-700 text-xs font-medium px-2.5 py-0.5 rounded-full border border-indigo-100">
+                              {candidate.resumeUrls.length} Resumes
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedCandidate(candidate);
+                                setShowModal(true);
+                              }}
+                              className="text-xs text-gray-500 hover:text-indigo-600 underline"
                             >
-                              <Download className="h-4 w-4" />
-                            </a>
-                          ))}
-                        </div>
+                              View all
+                            </button>
+                          </div>
+                        )
                       ) : (
-                        <span className="text-gray-400">No resume</span>
+                        <span className="text-sm text-gray-400 italic">No resume</span>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -200,8 +230,8 @@ export default function CandidatesPage() {
 
       {/* Candidate Details Modal */}
       {showModal && selectedCandidate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+          <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">Candidate Details</h2>
@@ -236,45 +266,97 @@ export default function CandidatesPage() {
                 </div>
 
                 {/* Applications */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Applications</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Briefcase className="h-5 w-5 text-gray-500" />
+                    Applications History
+                  </h3>
                   <div className="space-y-4">
-                    {selectedCandidate.applications.map((application) => (
-                      <div key={application._id} className="border border-gray-200 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-md font-medium text-gray-900">{application.jobId.title}</h4>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            application.status === 'APPLIED' ? 'bg-blue-100 text-blue-800' :
-                            application.status === 'UNDER_REVIEW' ? 'bg-yellow-100 text-yellow-800' :
-                            application.status === 'SHORTLISTED' ? 'bg-purple-100 text-purple-800' :
-                            application.status === 'HIRED' ? 'bg-green-100 text-green-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {application.status}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          Applied on: {new Date(application.createdAt).toLocaleDateString()}
-                        </p>
-                        {application.coverLetter && (
-                          <div className="mb-2">
-                            <label className="block text-sm font-medium text-gray-700">Cover Letter</label>
-                            <p className="text-sm text-gray-700 whitespace-pre-line">{application.coverLetter}</p>
+                    {selectedCandidate.applications.map((application) => {
+                      const getStatusColor = (status: string) => {
+                        switch (status) {
+                          case 'APPLIED': return 'bg-blue-100 text-blue-800 border-blue-200';
+                          case 'UNDER_REVIEW': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                          case 'SHORTLISTED': return 'bg-purple-100 text-purple-800 border-purple-200';
+                          case 'HIRED': return 'bg-green-100 text-green-800 border-green-200';
+                          case 'REJECTED': return 'bg-red-100 text-red-800 border-red-200';
+                          default: return 'bg-gray-100 text-gray-800 border-gray-200';
+                        }
+                      };
+
+                      return (
+                        <div key={application._id} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-200">
+                          <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+                            <div>
+                              <h4 className="text-lg font-semibold text-gray-900">{application.jobId?.title || 'Unknown Position'}</h4>
+                              <p className="text-sm text-gray-500 mt-1">
+                                Applied on {application.createdAt ? new Date(application.createdAt).toLocaleDateString(undefined, {
+                                  weekday: 'long',
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                }) : 'N/A'}
+                              </p>
+                            </div>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(application.status)}`}>
+                              {(application.status || 'UNKNOWN').replace(/_/g, ' ')}
+                            </span>
                           </div>
-                        )}
-                        {application.resumeUrl && (
-                          <a
-                            href={`${API_BASE_URL}${application.resumeUrl}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center px-3 py-1 bg-indigo-600 text-white text-sm font-medium rounded hover:bg-indigo-700 transition-colors"
-                          >
-                            <Download className="h-4 w-4 mr-1" />
-                            Resume
-                          </a>
-                        )}
-                      </div>
-                    ))}
+
+                          <div className="p-6 grid gap-6">
+                            {/* Stats/Details Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              <div>
+                                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Application Details</h5>
+                                <div className="space-y-3">
+                                  <div className="flex items-start gap-2">
+                                    <div className="mt-0.5">
+                                      {application.resumeUrl ? (
+                                        <a
+                                          href={`${API_BASE_URL}${application.resumeUrl}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                                        >
+                                          <FileText className="h-4 w-4 mr-2" />
+                                          View Provided Resume
+                                        </a>
+                                      ) : (
+                                        <span className="text-sm text-gray-400 italic">No resume specific to this application</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {application.currentRound && (
+                                <div>
+                                  <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Current Stage</h5>
+                                  <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100 inline-block">
+                                    <span className="text-sm font-medium text-indigo-900">
+                                      {application.currentRound.name || 'Unknown Round'}
+                                    </span>
+                                    <p className="text-xs text-indigo-700 mt-1">
+                                      {(application.currentRound.type || '').replace(/_/g, ' ')}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Cover Letter */}
+                            {application.coverLetter && (
+                              <div className="border-t border-gray-100 pt-4">
+                                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Cover Letter</h5>
+                                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 whitespace-pre-line leading-relaxed border border-gray-100">
+                                  {application.coverLetter}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
