@@ -28,6 +28,11 @@ export interface Application {
   resumeUrl?: string;
   status: 'APPLIED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'HIRED' | 'REJECTED';
   notes?: string;
+  currentRound?: {
+    _id: string;
+    name: string;
+    type: string;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -131,11 +136,11 @@ export const applicationsAPI = {
     return response.json();
   },
 
-  updateApplicationStatus: async (id: string, status: string, notes?: string): Promise<Application> => {
+  updateApplicationStatus: async (id: string, status: string, notes?: string, currentRound?: string): Promise<Application> => {
     const response = await fetch(`${API_BASE_URL}/applications/${id}/status`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ status, notes }),
+      body: JSON.stringify({ status, notes, currentRound }),
     });
 
     if (!response.ok) {
