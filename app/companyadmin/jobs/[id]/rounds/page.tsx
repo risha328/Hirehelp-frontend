@@ -311,7 +311,7 @@ export default function JobRoundsPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push('/companyadmin/jobs')}
-            className="inline-flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg transition-colors duration-200"
+            className="inline-flex items-center text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 shadow-sm px-4 py-2 rounded-lg transition-all duration-200 cursor-pointer"
           >
             <ArrowLeftIcon className="w-4 h-4 mr-2" />
             Back to Jobs
@@ -331,7 +331,7 @@ export default function JobRoundsPage() {
                 resetForm();
                 setShowModal(true);
               }}
-              className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md"
+              className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
             >
               <PlusIcon className="w-4 h-4 mr-2" />
               Add Round
@@ -533,10 +533,10 @@ export default function JobRoundsPage() {
                         </div>
 
                         <div className="flex items-center space-x-2 mt-4 lg:mt-0 lg:ml-4">
-                          {round.type === 'mcq' && (
+                          {(round.type === 'mcq' || round.type === 'coding') && (
                             <button
                               onClick={() => router.push(`/companyadmin/jobs/${jobId}/rounds/${round._id}`)}
-                              className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200 rounded-lg transition-colors duration-200"
+                              className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200 rounded-lg transition-colors duration-200 cursor-pointer"
                             >
                               <EyeIcon className="w-4 h-4 mr-2" />
                               View
@@ -544,14 +544,14 @@ export default function JobRoundsPage() {
                           )}
                           <button
                             onClick={() => handleEdit(round)}
-                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors duration-200"
+                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors duration-200 cursor-pointer"
                           >
                             <PencilSquareIcon className="w-4 h-4 mr-2" />
                             Edit
                           </button>
                           <button
                             onClick={() => handleArchive(round._id)}
-                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-lg transition-colors duration-200"
+                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-lg transition-colors duration-200 cursor-pointer"
                           >
                             <ArchiveBoxIcon className="w-4 h-4 mr-2" />
                             Archive
