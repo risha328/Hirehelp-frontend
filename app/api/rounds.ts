@@ -11,7 +11,8 @@ export interface Round {
   };
   order: number;
   type: 'mcq' | 'interview' | 'technical' | 'hr';
-  googleFormLink?: string;
+  googleFormLink?: string | null;
+  googleSheetLink?: string | null;
   isArchived: boolean;
   isActive: boolean;
   archivedAt?: string;
@@ -25,7 +26,8 @@ export interface CreateRoundDto {
   jobId: string;
   order?: number;
   type?: 'mcq' | 'interview' | 'technical' | 'hr';
-  googleFormLink?: string;
+  googleFormLink?: string | null;
+  googleSheetLink?: string | null;
 }
 
 export interface UpdateRoundDto {
@@ -33,7 +35,8 @@ export interface UpdateRoundDto {
   description?: string;
   order?: number;
   type?: 'mcq' | 'interview' | 'technical' | 'hr';
-  googleFormLink?: string;
+  googleFormLink?: string | null;
+  googleSheetLink?: string | null;
 }
 
 export interface MCQResponse {
@@ -157,7 +160,8 @@ export const roundsAPI = {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to update round');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to update round');
     }
 
     return response.json();

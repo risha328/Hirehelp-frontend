@@ -165,35 +165,37 @@ export default function JobDetailsPage() {
                 Back to Jobs
               </button>
             </div>
+          </div>
         </div>
-      </div>
 
-      <EditJobModal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        onSuccess={fetchJobDetails}
-        jobId={jobId}
-      />
-    </div>
-  );
-}
+        <EditJobModal
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onSuccess={fetchJobDetails}
+          jobId={jobId}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
+      {/* Back Button */}
+      <div>
+        <button
+          onClick={() => router.push('/companyadmin/jobs')}
+          className="flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-gray-700 font-medium bg-white"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Jobs
+        </button>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => router.push('/companyadmin/jobs')}
-            className="flex items-center px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-gray-700 font-medium"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Jobs
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Job Details</h1>
-            <p className="text-gray-600">View and manage your job posting</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Job Details</h1>
+          <p className="text-gray-600">View and manage your job posting</p>
         </div>
         <div className="flex space-x-3">
           <button

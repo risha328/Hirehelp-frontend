@@ -98,7 +98,7 @@ export default function JobRoundsPage() {
         const roundJobId = typeof round.jobId === 'string' ? round.jobId : round.jobId._id;
         return roundJobId === jobId;
       });
-      
+
       // Sort by order
       jobRounds.sort((a, b) => a.order - b.order);
       setRounds(jobRounds);
@@ -280,7 +280,7 @@ export default function JobRoundsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
       {/* Page Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button - Moved above header */}
         <div className="mb-6">
           <button
@@ -299,7 +299,7 @@ export default function JobRoundsPage() {
               <h1 className="text-2xl font-bold text-gray-900">Interview Process</h1>
               <p className="text-gray-600 mt-1">Manage interview rounds for <span className="font-semibold text-gray-900">{job.title}</span></p>
             </div>
-            
+
             <button
               onClick={() => {
                 resetForm();
@@ -342,15 +342,14 @@ export default function JobRoundsPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-sm text-gray-600">Job Status</div>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  job.status === 'active' ? 'bg-green-100 text-green-800' : 
-                  job.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
-                  'bg-gray-100 text-gray-800'
-                }`}>
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${job.status === 'active' ? 'bg-green-100 text-green-800' :
+                  job.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
                   {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                 </div>
               </div>
@@ -371,7 +370,7 @@ export default function JobRoundsPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center mr-4">
@@ -383,7 +382,7 @@ export default function JobRoundsPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center mr-4">
@@ -395,7 +394,7 @@ export default function JobRoundsPage() {
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center mr-4">
@@ -404,12 +403,12 @@ export default function JobRoundsPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Last Updated</p>
                 <p className="text-lg font-bold text-gray-900 mt-1">
-                  {rounds.length > 0 
-                    ? new Date(rounds[0].updatedAt).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })
+                  {rounds.length > 0
+                    ? new Date(rounds[0].updatedAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })
                     : 'Never'
                   }
                 </p>
@@ -425,21 +424,19 @@ export default function JobRoundsPage() {
             <div className="flex">
               <button
                 onClick={() => setActiveTab('active')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                  activeTab === 'active'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'active'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Active Rounds ({activeRounds.length})
               </button>
               <button
                 onClick={() => setActiveTab('archived')}
-                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${
-                  activeTab === 'archived'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors duration-200 ${activeTab === 'archived'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
               >
                 Archived ({archivedRounds.length})
               </button>
@@ -491,11 +488,11 @@ export default function JobRoundsPage() {
                               </div>
                             </div>
                           </div>
-                          
+
                           {round.description && (
                             <p className="text-gray-700 mb-4 pl-12">{round.description}</p>
                           )}
-                          
+
                           <div className="flex items-center space-x-4 text-sm text-gray-500 pl-12">
                             <span className="flex items-center">
                               <CalendarIcon className="w-3 h-3 mr-1" />
@@ -508,8 +505,17 @@ export default function JobRoundsPage() {
                             </span>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2 mt-4 lg:mt-0 lg:ml-4">
+                          {round.type === 'mcq' && (
+                            <button
+                              onClick={() => router.push(`/companyadmin/jobs/${jobId}/rounds/${round._id}`)}
+                              className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 border border-blue-200 rounded-lg transition-colors duration-200"
+                            >
+                              <EyeIcon className="w-4 h-4 mr-2" />
+                              View
+                            </button>
+                          )}
                           <button
                             onClick={() => handleEdit(round)}
                             className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors duration-200"
@@ -563,12 +569,12 @@ export default function JobRoundsPage() {
                               </div>
                             </div>
                           </div>
-                          
+
                           {round.description && (
                             <p className="text-gray-600 mb-4 pl-12">{round.description}</p>
                           )}
                         </div>
-                        
+
                         <button
                           onClick={() => handleActivate(round._id)}
                           className="inline-flex items-center px-3 py-2 text-sm font-medium text-green-600 hover:text-green-700 hover:bg-green-50 border border-green-200 rounded-lg transition-colors duration-200 mt-4 lg:mt-0 lg:ml-4"
@@ -613,10 +619,10 @@ export default function JobRoundsPage() {
 
       {/* Create/Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="fixed inset-0 z-[1000] overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
-            <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" onClick={() => setShowModal(false)} />
-            
+            <div className="fixed inset-0 bg-gray-900/75 backdrop-blur-md transition-opacity" onClick={() => setShowModal(false)} />
+
             <div className="relative w-full max-w-md transform rounded-2xl bg-white shadow-2xl transition-all">
               {/* Modal Header */}
               <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-gray-50 rounded-t-2xl">
@@ -662,9 +668,8 @@ export default function JobRoundsPage() {
                       value={formData.name}
                       onChange={handleInputChange}
                       placeholder="e.g., Technical Screening, Final Interview, HR Discussion"
-                      className={`w-full px-4 py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                        errors.name ? 'border-red-300' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50 placeholder-gray-500 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.name ? 'border-red-300' : 'border-gray-300'
+                        }`}
                     />
                     {errors.name && (
                       <p className="mt-2 text-sm text-red-600 flex items-center">
@@ -686,7 +691,7 @@ export default function JobRoundsPage() {
                         min="1"
                         value={formData.order}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                       />
                     </div>
                     <p className="mt-2 text-xs text-gray-500">Position in the interview sequence (1 = first round)</p>
@@ -701,7 +706,7 @@ export default function JobRoundsPage() {
                       name="type"
                       value={formData.type}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                      className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                     >
                       <option value="interview">Interview</option>
                       <option value="technical">Technical</option>
@@ -711,29 +716,96 @@ export default function JobRoundsPage() {
                   </div>
 
                   {formData.type === 'mcq' && (
-                    <div>
-                      <label htmlFor="googleFormLink" className="block text-sm font-semibold text-gray-900 mb-2">
-                        Google Form Link <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="googleFormLink"
-                        name="googleFormLink"
-                        type="url"
-                        required={formData.type === 'mcq'}
-                        value={formData.googleFormLink}
-                        onChange={handleInputChange}
-                        placeholder="https://docs.google.com/forms/d/..."
-                        className={`w-full px-4 py-3 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
-                          errors.googleFormLink ? 'border-red-300' : 'border-gray-300'
-                        }`}
-                      />
-                      {errors.googleFormLink && (
-                        <p className="mt-2 text-sm text-red-600 flex items-center">
-                          <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
-                          {errors.googleFormLink}
+                    <>
+                      <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
+                        <h4 className="flex items-center text-red-800 font-bold mb-2">
+                          <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+                          Important Instructions for MCQ Assessment
+                        </h4>
+                        <p className="text-sm text-red-700 mb-3">
+                          Please follow the rules below carefully. Incorrect Google Form settings may cause responses or scores to not appear correctly.
                         </p>
-                      )}
-                    </div>
+
+                        <div className="space-y-3">
+                          <div className="flex items-start">
+                            <span className="mr-2 text-lg">🔴</span>
+                            <div>
+                              <span className="text-sm font-bold text-red-800">Google Form must be created as a Quiz</span>
+                              <p className="text-xs text-red-700 mt-0.5">Enable “Make this a quiz” in Google Form settings.</p>
+                              <p className="text-xs text-red-700">Assign correct answers and marks for each MCQ.</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start">
+                            <span className="mr-2 text-lg">🔴</span>
+                            <div>
+                              <span className="text-sm font-bold text-red-800">Candidate Email is Mandatory</span>
+                              <p className="text-xs text-red-700 mt-0.5">Enable “Collect email addresses”.</p>
+                              <p className="text-xs text-red-700">This email will be used to identify candidates and send further communication.</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start">
+                            <span className="mr-2 text-lg">🔴</span>
+                            <div>
+                              <span className="text-sm font-bold text-red-800">Use the Original Form (Edit) Link</span>
+                              <p className="text-xs text-red-700 mt-0.5">Do NOT use the public “viewform” link.</p>
+                              <p className="text-xs text-red-700">Only the original Google Form should be linked to this round.</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start">
+                            <span className="mr-2 text-lg">🔴</span>
+                            <div>
+                              <span className="text-sm font-bold text-red-800">Responses are Stored in Google Sheets</span>
+                              <p className="text-xs text-red-700 mt-0.5">All candidate responses and scores are automatically stored in the linked Google Sheet.</p>
+                              <p className="text-xs text-red-700">PASS / FAIL status is calculated automatically based on the cutoff score.</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start">
+                            <span className="mr-2 text-lg">🔴</span>
+                            <div>
+                              <span className="text-sm font-bold text-red-800">MCQ Result Evaluation</span>
+                              <p className="text-xs text-red-700 mt-0.5">Candidates scoring equal to or above the cutoff are marked as PASS.</p>
+                              <p className="text-xs text-red-700">Candidates below the cutoff are marked as FAIL.</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start">
+                            <span className="mr-2 text-lg">🔴</span>
+                            <div>
+                              <span className="text-sm font-bold text-red-800">Next Round Shortlisting</span>
+                              <p className="text-xs text-red-700 mt-0.5">Only PASS candidates will be considered for the next round.</p>
+                              <p className="text-xs text-red-700">Shortlisted candidates may receive automated or manual email notifications</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="googleFormLink" className="block text-sm font-semibold text-gray-900 mb-2">
+                          Google Form Link <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          id="googleFormLink"
+                          name="googleFormLink"
+                          type="url"
+                          required={formData.type === 'mcq'}
+                          value={formData.googleFormLink}
+                          onChange={handleInputChange}
+                          placeholder="https://docs.google.com/forms/d/..."
+                          className={`w-full px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50 placeholder-gray-500 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.googleFormLink ? 'border-red-300' : 'border-gray-300'
+                            }`}
+                        />
+                        {errors.googleFormLink && (
+                          <p className="mt-2 text-sm text-red-600 flex items-center">
+                            <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+                            {errors.googleFormLink}
+                          </p>
+                        )}
+                      </div>
+                    </>
                   )}
 
                   <div>
@@ -747,7 +819,7 @@ export default function JobRoundsPage() {
                       value={formData.description}
                       onChange={handleInputChange}
                       placeholder="Describe what this round entails, expectations, assessment criteria, and any specific instructions for interviewers..."
-                      className="w-full px-4 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
+                      className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50 placeholder-gray-500 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none"
                     />
                   </div>
                 </div>
