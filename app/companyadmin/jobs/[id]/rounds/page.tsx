@@ -793,6 +793,29 @@ export default function JobRoundsPage() {
                           className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                         />
                       </div>
+
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mt-6">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <ExclamationTriangleIcon className="h-5 w-5 text-yellow-600" aria-hidden="true" />
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-yellow-800">
+                              You can configure the coding platform name, test duration, and instructions for this round.
+                            </h3>
+                            <div className="mt-2 text-sm text-yellow-700">
+                              <p className="mb-2 font-medium">Once this round is created:</p>
+                              <ul className="list-disc pl-5 space-y-1 mb-3">
+                                <li>Candidates’ application status will be updated from MCQ Round to Coding Test Round</li>
+                                <li>A shortlisting notification email will be automatically sent to the shortlisted candidates on their registered email address</li>
+                              </ul>
+                              <p className="text-xs font-semibold text-yellow-800">
+                                📌 You can later share the exact test date, time, and test link manually from the Company Admin panel.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
