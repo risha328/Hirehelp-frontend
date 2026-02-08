@@ -508,7 +508,7 @@ export default function CompanyAdminPage() {
         </div>
       </div> */}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
         {/* Company Status Banner */}
         <div className="mb-8">
           {company ? (
@@ -574,7 +574,7 @@ export default function CompanyAdminPage() {
                       </div>
                     ) : (
                       <button
-                         onClick={() => setShowEditModal(true)}
+                        onClick={() => setShowEditModal(true)}
                         className="inline-flex items-center px-3 py-3 bg-white text-indigo-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
                         title="Edit Company Info"
                       >
@@ -627,7 +627,7 @@ export default function CompanyAdminPage() {
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-4">Welcome to Company Admin</h2>
                 <p className="text-white/90 mb-8">
-                  Register your company to start managing your hiring process, posting jobs, 
+                  Register your company to start managing your hiring process, posting jobs,
                   and connecting with talented candidates.
                 </p>
                 <button
@@ -709,7 +709,7 @@ export default function CompanyAdminPage() {
 
         {/* Main Content */}
         {company ? (
-          <div className="max-w-7xl mx-auto">
+          <div className="w-full">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Recent Activity */}
               <div className="bg-white rounded-2xl border border-gray-200 p-6">
@@ -804,9 +804,8 @@ export default function CompanyAdminPage() {
         ) : (
           <div className="max-w-3xl mx-auto">
             <div className="bg-white rounded-2xl border border-gray-200 p-8 text-center">
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${
-                company?.verificationStatus === 'pending' ? 'bg-amber-100' : 'bg-red-100'
-              }`}>
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 ${company?.verificationStatus === 'pending' ? 'bg-amber-100' : 'bg-red-100'
+                }`}>
                 {company?.verificationStatus === 'pending' ? (
                   <Clock className="h-10 w-10 text-amber-600" />
                 ) : (
