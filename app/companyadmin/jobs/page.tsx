@@ -21,7 +21,9 @@ import {
   TagIcon,
   UserIcon,
   GlobeAltIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon
 } from '@heroicons/react/24/outline';
 
 interface Job {
@@ -64,6 +66,16 @@ export default function CompanyJobsPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeSection, setActiveSection] = useState<'basic' | 'details' | 'requirements'>('basic');
+
+  // Search and filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useState({
+    location: '',
+    jobType: '',
+    experienceLevel: '',
+    status: '',
+  });
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -309,6 +321,23 @@ export default function CompanyJobsPage() {
     });
   };
 
+  // Filter and search logic
+  const filteredJobs = jobs.filter(job => {
+    // Search query
+    const matchesSearch = searchQuery === '' ||
+      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (job.skills && job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase())));
+
+    // Filters
+    const matchesLocation = filters.location === '' || job.location === filters.location;
+    const matchesJobType = filters.jobType === '' || job.jobType === filters.jobType;
+    const matchesExperienceLevel = filters.experienceLevel === '' || job.experienceLevel === filters.experienceLevel;
+    const matchesStatus = filters.status === '' || job.status === filters.status;
+
+    return matchesSearch && matchesLocation && matchesJobType && matchesExperienceLevel && matchesStatus;
+  });
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
@@ -319,16 +348,15 @@ export default function CompanyJobsPage() {
               <h1 className="text-3xl font-bold text-gray-900">Job Postings</h1>
               <p className="text-gray-600 mt-2">Manage and track your company's job listings</p>
             </div>
-            
+
             <div className="mt-4 md:mt-0">
               <button
                 onClick={() => setShowModal(true)}
                 disabled={company.verificationStatus !== 'verified'}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
-                  company.verificationStatus === 'verified'
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg cursor-pointer'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${company.verificationStatus === 'verified'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg cursor-pointer'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
                 title={company.verificationStatus !== 'verified' ? 'Company must be verified by admin to post jobs' : ''}
               >
                 <PlusIcon className="w-5 h-5" />
@@ -385,11 +413,10 @@ export default function CompanyJobsPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Company Status</p>
                   <p className="text-lg font-semibold mt-2 capitalize">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      company.verificationStatus === 'verified' 
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-amber-100 text-amber-800'
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-sm ${company.verificationStatus === 'verified'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-amber-100 text-amber-800'
+                      }`}>
                       {company.verificationStatus}
                     </span>
                   </p>
@@ -405,115 +432,237 @@ export default function CompanyJobsPage() {
         {/* Jobs List Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Current Job Listings</h2>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <h2 className="text-xl font-semibold text-gray-900">Current Job Listings</h2>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search jobs..."
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64 text-gray-900 bg-white placeholder-gray-500"
+                  />
+                </div>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${showFilters
+                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                  <FunnelIcon className="w-5 h-5" />
+                  <span>Filters</span>
+                  <ChevronDownIcon className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* Expanded Filters */}
+            {showFilters && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-100">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Location</label>
+                  <select
+                    value={filters.location}
+                    onChange={(e) => setFilters(prev => ({ ...prev, location: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white"
+                  >
+                    <option value="">All Locations</option>
+                    <option value="Bengaluru, Karnataka">Bengaluru, Karnataka</option>
+                    <option value="Hyderabad, Telangana">Hyderabad, Telangana</option>
+                    <option value="Pune, Maharashtra">Pune, Maharashtra</option>
+                    <option value="Mumbai, Maharashtra">Mumbai, Maharashtra</option>
+                    <option value="Chennai, Tamil Nadu">Chennai, Tamil Nadu</option>
+                    <option value="Noida, Uttar Pradesh">Noida, Uttar Pradesh</option>
+                    <option value="Gurugram, Haryana">Gurugram, Haryana</option>
+                    <option value="Delhi (NCR)">Delhi (NCR)</option>
+                    <option value="Kolkata, West Bengal">Kolkata, West Bengal</option>
+                    <option value="Ahmedabad, Gujarat">Ahmedabad, Gujarat</option>
+                    <option value="Indore, Madhya Pradesh">Indore, Madhya Pradesh</option>
+                    <option value="Jaipur, Rajasthan">Jaipur, Rajasthan</option>
+                    <option value="Kochi, Kerala">Kochi, Kerala</option>
+                    <option value="Trivandrum, Kerala">Trivandrum, Kerala</option>
+                    <option value="Coimbatore, Tamil Nadu">Coimbatore, Tamil Nadu</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Job Type</label>
+                  <select
+                    value={filters.jobType}
+                    onChange={(e) => setFilters(prev => ({ ...prev, jobType: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white"
+                  >
+                    <option value="">All Types</option>
+                    <option value="full-time">Full-time</option>
+                    <option value="part-time">Part-time</option>
+                    <option value="contract">Contract</option>
+                    <option value="internship">Internship</option>
+                    <option value="remote">Remote</option>
+                    <option value="hybrid">Hybrid</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Experience Level</label>
+                  <select
+                    value={filters.experienceLevel}
+                    onChange={(e) => setFilters(prev => ({ ...prev, experienceLevel: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white"
+                  >
+                    <option value="">All Levels</option>
+                    <option value="internship">Internship</option>
+                    <option value="entry">Entry Level</option>
+                    <option value="mid">Mid Level</option>
+                    <option value="senior">Senior Level</option>
+                    <option value="executive">Executive Level</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Status</label>
+                  <select
+                    value={filters.status}
+                    onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white"
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            )}
           </div>
 
-          {jobs.length === 0 ? (
-            <div className="text-center py-16 px-4">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <BriefcaseIcon className="w-12 h-12 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Jobs Posted Yet</h3>
-              <p className="text-gray-600 max-w-md mx-auto mb-6">
-                Get started by posting your first job listing. Reach qualified candidates for your open positions.
-              </p>
-              <button
-                onClick={() => setShowModal(true)}
-                disabled={company.verificationStatus !== 'verified'}
-                className={`px-6 py-3 rounded-lg font-medium ${
-                  company.verificationStatus === 'verified'
+          <div>
+            {jobs.length === 0 ? (
+              <div className="text-center py-16 px-4">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <BriefcaseIcon className="w-12 h-12 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Jobs Posted Yet</h3>
+                <p className="text-gray-600 max-w-md mx-auto mb-6">
+                  Get started by posting your first job listing. Reach qualified candidates for your open positions.
+                </p>
+                <button
+                  onClick={() => setShowModal(true)}
+                  disabled={company.verificationStatus !== 'verified'}
+                  className={`px-6 py-3 rounded-lg font-medium ${company.verificationStatus === 'verified'
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
                     : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                Post Your First Job
-              </button>
-            </div>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {jobs.map(job => (
-                <div key={job._id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h3>
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
-                          <span className="flex items-center gap-1">
-                            <MapPinIcon className="w-4 h-4" />
-                            {job.location}
-                          </span>
-                          <span className="px-2 py-1 bg-gray-100 rounded-md text-gray-700">
-                            {job.jobType}
-                          </span>
-                          <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
-                            {job.experienceLevel}
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="text-gray-700 mb-4 line-clamp-2">{job.description}</p>
-
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                        {job.salary && (
-                          <span className="flex items-center gap-1 font-medium text-green-700">
-                            <CurrencyDollarIcon className="w-4 h-4" />
-                            {job.salary}
-                          </span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <CalendarIcon className="w-4 h-4" />
-                          Posted {formatDate(job.createdAt)}
-                        </span>
-                        {job.applicationDeadline && (
-                          <span className="flex items-center gap-1">
-                            <ClockIcon className="w-4 h-4" />
-                            Apply by {formatDate(job.applicationDeadline)}
-                          </span>
-                        )}
-                      </div>
-
-                      {job.skills && job.skills.length > 0 && (
-                        <div className="mt-4">
-                          <div className="flex flex-wrap gap-2">
-                            {job.skills.slice(0, 5).map((skill, index) => (
-                              <span 
-                                key={index}
-                                className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                            {job.skills.length > 5 && (
-                              <span className="px-3 py-1 text-sm text-gray-500">
-                                +{job.skills.length - 5} more
-                              </span>
-                            )}
+                    }`}
+                >
+                  Post Your First Job
+                </button>
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div className="text-center py-16 px-4">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <BriefcaseIcon className="w-12 h-12 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Jobs Match Your Search</h3>
+                <p className="text-gray-600 max-w-md mx-auto mb-6">
+                  Try adjusting your search or filters to find more jobs.
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setFilters({ location: '', jobType: '', experienceLevel: '', status: '' });
+                  }}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {filteredJobs.map(job => (
+                  <div key={job._id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="mb-3">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h3>
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
+                            <span className="flex items-center gap-1">
+                              <MapPinIcon className="w-4 h-4" />
+                              {job.location}
+                            </span>
+                            <span className="px-2 py-1 bg-gray-100 rounded-md text-gray-700">
+                              {job.jobType}
+                            </span>
+                            <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
+                              {job.experienceLevel}
+                            </span>
                           </div>
                         </div>
-                      )}
-                    </div>
 
-                    <div className="flex flex-col gap-3">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        job.status === 'active'
+                        <p className="text-gray-700 mb-4 line-clamp-2">{job.description}</p>
+
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                          {job.salary && (
+                            <span className="flex items-center gap-1 font-medium text-green-700">
+                              <CurrencyDollarIcon className="w-4 h-4" />
+                              {job.salary}
+                            </span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <CalendarIcon className="w-4 h-4" />
+                            Posted {formatDate(job.createdAt)}
+                          </span>
+                          {job.applicationDeadline && (
+                            <span className="flex items-center gap-1">
+                              <ClockIcon className="w-4 h-4" />
+                              Apply by {formatDate(job.applicationDeadline)}
+                            </span>
+                          )}
+                        </div>
+
+                        {job.skills && job.skills.length > 0 && (
+                          <div className="mt-4">
+                            <div className="flex flex-wrap gap-2">
+                              {job.skills.slice(0, 5).map((skill, index) => (
+                                <span
+                                  key={index}
+                                  className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                              {job.skills.length > 5 && (
+                                <span className="px-3 py-1 text-sm text-gray-500">
+                                  +{job.skills.length - 5} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-3">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${job.status === 'active'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {job.status}
-                      </span>
-                      <button
-                        onClick={() => router.push(`/companyadmin/jobs/${job._id}`)}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium cursor-pointer"
-                      >
-                        <EyeIcon className="w-4 h-4" />
-                        View Details
-                      </button>
+                          }`}>
+                          {job.status}
+                        </span>
+                        <button
+                          onClick={() => router.push(`/companyadmin/jobs/${job._id}`)}
+                          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium cursor-pointer"
+                        >
+                          <EyeIcon className="w-4 h-4" />
+                          View Details
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -554,11 +703,10 @@ export default function CompanyJobsPage() {
                 <nav className="flex px-6">
                   <button
                     onClick={() => setActiveSection('basic')}
-                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-all ${
-                      activeSection === 'basic'
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-all ${activeSection === 'basic'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <BriefcaseIcon className="w-4 h-4" />
@@ -567,11 +715,10 @@ export default function CompanyJobsPage() {
                   </button>
                   <button
                     onClick={() => setActiveSection('details')}
-                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-all ${
-                      activeSection === 'details'
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-all ${activeSection === 'details'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <DocumentTextIcon className="w-4 h-4" />
@@ -580,11 +727,10 @@ export default function CompanyJobsPage() {
                   </button>
                   <button
                     onClick={() => setActiveSection('requirements')}
-                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-all ${
-                      activeSection === 'requirements'
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
+                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-all ${activeSection === 'requirements'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <TagIcon className="w-4 h-4" />
@@ -602,7 +748,7 @@ export default function CompanyJobsPage() {
                     <span className="font-medium">Required fields are marked with *</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                       style={{ width: activeSection === 'basic' ? '33%' : activeSection === 'details' ? '66%' : '100%' }}
                     ></div>
@@ -618,7 +764,7 @@ export default function CompanyJobsPage() {
                           <BriefcaseIcon className="w-5 h-5 text-blue-600" />
                           Job Basic Information
                         </h4>
-                        
+
                         <div className="space-y-6">
                           {/* Job Title - Prominent */}
                           <div className="space-y-3">
@@ -636,9 +782,8 @@ export default function CompanyJobsPage() {
                                 value={formData.title}
                                 onChange={handleInputChange}
                                 placeholder="e.g. Senior Frontend Developer, Marketing Manager"
-                                className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                                  errors.title ? 'border-red-300' : 'border-gray-300'
-                                }`}
+                                className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.title ? 'border-red-300' : 'border-gray-300'
+                                  }`}
                               />
                             </div>
                             {errors.title && (
@@ -663,9 +808,8 @@ export default function CompanyJobsPage() {
                                 required
                                 value={formData.location}
                                 onChange={handleInputChange}
-                                className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none ${
-                                  errors.location ? 'border-red-300' : 'border-gray-300'
-                                }`}
+                                className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none ${errors.location ? 'border-red-300' : 'border-gray-300'
+                                  }`}
                               >
                                 <option value="">Select a location</option>
                                 <option value="Bengaluru, Karnataka">Bengaluru, Karnataka</option>
@@ -719,7 +863,7 @@ export default function CompanyJobsPage() {
                           <DocumentTextIcon className="w-5 h-5 text-blue-600" />
                           Job Details & Compensation
                         </h4>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {/* Salary */}
                           <div className="space-y-3">
@@ -844,7 +988,7 @@ export default function CompanyJobsPage() {
                           <TagIcon className="w-5 h-5 text-blue-600" />
                           Job Requirements & Description
                         </h4>
-                        
+
                         <div className="space-y-6">
                           {/* Skills */}
                           <div className="space-y-3">
@@ -866,7 +1010,7 @@ export default function CompanyJobsPage() {
                             </div>
                             <div className="flex flex-wrap gap-2 mt-2">
                               {formData.skills.split(',').filter(skill => skill.trim()).map((skill, index) => (
-                                <span 
+                                <span
                                   key={index}
                                   className="px-3 py-1.5 bg-blue-100 text-blue-800 text-sm font-medium rounded-lg"
                                 >
@@ -906,9 +1050,8 @@ We are looking for a passionate developer to join our team. In this role, you wi
 • Flexible working hours
 • Professional development opportunities
 • Collaborative and innovative environment`}
-                                className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                                  errors.description ? 'border-red-300' : 'border-gray-300'
-                                }`}
+                                className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.description ? 'border-red-300' : 'border-gray-300'
+                                  }`}
                               />
                             </div>
                             {errors.description && (
