@@ -153,6 +153,11 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
     // Check for confirmations
     let requiresConfirmation = false;
 
+    // Get current round ID for comparison
+    const currentRoundId = application.currentRound
+      ? (typeof application.currentRound === 'object' ? application.currentRound._id : application.currentRound)
+      : null;
+
     // Status change confirmations
     if (application.status !== newStatus) {
       const confirmTransitions = [
@@ -164,6 +169,10 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
       requiresConfirmation = confirmTransitions.some(
         transition => transition.from === application.status && transition.to === newStatus
       );
+    }
+    // Round change confirmations (same status, different round)
+    else if (newRoundId && String(currentRoundId) !== String(newRoundId)) {
+      requiresConfirmation = true;
     }
 
     if (requiresConfirmation) {
@@ -338,13 +347,40 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
       {showConfirmModal && confirmData && (
         <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900">Confirm Status Change</h3>
+            <h3 className="text-lg font-semibold mb-4 text-gray-900">
+              {confirmData.application.status === confirmData.newStatus ? 'Confirm Round Change' : 'Confirm Status Change'}
+            </h3>
             <p className="mb-6 text-gray-700">
-              Are you sure you want to change the status from {getStatusConfig(confirmData.application.status).title} to {
-                confirmData.newRoundId
-                  ? rounds.find(r => r._id === confirmData.newRoundId)?.name || 'Next Round'
-                  : getStatusConfig(confirmData.newStatus).title
-              }?
+              {confirmData.application.status === confirmData.newStatus ? (
+                // Round change within same status
+                <>
+                  Are you sure you want to move this candidate from{' '}
+                  <strong>
+                    {confirmData.application.currentRound
+                      ? rounds.find(r => r._id === (typeof confirmData.application.currentRound === 'object'
+                        ? confirmData.application.currentRound._id
+                        : confirmData.application.currentRound))?.name || 'Current Round'
+                      : 'Current Round'}
+                  </strong>
+                  {' '}to{' '}
+                  <strong>
+                    {confirmData.newRoundId
+                      ? rounds.find(r => r._id === confirmData.newRoundId)?.name || 'Next Round'
+                      : 'Next Round'}
+                  </strong>?
+                </>
+              ) : (
+                // Status change
+                <>
+                  Are you sure you want to change the status from{' '}
+                  <strong>{getStatusConfig(confirmData.application.status).title}</strong> to{' '}
+                  <strong>
+                    {confirmData.newRoundId
+                      ? rounds.find(r => r._id === confirmData.newRoundId)?.name || 'Next Round'
+                      : getStatusConfig(confirmData.newStatus).title}
+                  </strong>?
+                </>
+              )}
             </p>
             <div className="flex justify-end space-x-3">
               <button

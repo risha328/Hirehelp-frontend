@@ -67,8 +67,11 @@ export default function JobRoundsPage() {
     description: '',
     jobId: jobId,
     order: 0,
-    type: 'interview' as 'mcq' | 'interview' | 'technical' | 'hr',
+    type: 'interview' as 'mcq' | 'interview' | 'technical' | 'hr' | 'coding',
     googleFormLink: '',
+    platform: '',
+    duration: '',
+    instructions: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -145,12 +148,26 @@ export default function JobRoundsPage() {
           description: formData.description,
           order: formData.order,
           type: formData.type,
-          googleFormLink: formData.googleFormLink,
+          googleFormLink: formData.googleFormLink || undefined,
+          platform: formData.platform || undefined,
+          duration: formData.duration || undefined,
+          instructions: formData.instructions || undefined,
         });
 
         setRounds(prev => prev.map(round =>
           round._id === editingRound._id
-            ? { ...round, name: formData.name, description: formData.description, order: formData.order, type: formData.type, googleFormLink: formData.googleFormLink, updatedAt: new Date().toISOString() }
+            ? {
+              ...round,
+              name: formData.name,
+              description: formData.description,
+              order: formData.order,
+              type: formData.type,
+              googleFormLink: formData.googleFormLink || undefined,
+              platform: formData.platform || undefined,
+              duration: formData.duration || undefined,
+              instructions: formData.instructions || undefined,
+              updatedAt: new Date().toISOString()
+            }
             : round
         ));
       } else {
@@ -160,7 +177,10 @@ export default function JobRoundsPage() {
           jobId: jobId,
           order: formData.order,
           type: formData.type,
-          googleFormLink: formData.googleFormLink,
+          ...(formData.googleFormLink && { googleFormLink: formData.googleFormLink }),
+          ...(formData.platform && { platform: formData.platform }),
+          ...(formData.duration && { duration: formData.duration }),
+          ...(formData.instructions && { instructions: formData.instructions }),
         });
 
         setRounds(prev => [...prev, newRound].sort((a, b) => a.order - b.order));
@@ -184,6 +204,9 @@ export default function JobRoundsPage() {
       order: rounds.length > 0 ? Math.max(...rounds.map(r => r.order)) + 1 : 1,
       type: 'interview',
       googleFormLink: '',
+      platform: '',
+      duration: '',
+      instructions: '',
     });
     setEditingRound(null);
     setErrors({});
@@ -198,6 +221,9 @@ export default function JobRoundsPage() {
       order: round.order,
       type: round.type,
       googleFormLink: round.googleFormLink || '',
+      platform: round.platform || '',
+      duration: round.duration || '',
+      instructions: round.instructions || '',
     });
     setShowModal(true);
   };
@@ -712,8 +738,63 @@ export default function JobRoundsPage() {
                       <option value="technical">Technical</option>
                       <option value="hr">HR</option>
                       <option value="mcq">MCQ Assessment</option>
+                      <option value="coding">Coding Test</option>
                     </select>
                   </div>
+
+                  {formData.type === 'coding' && (
+                    <div className="space-y-5 bg-blue-50 border border-blue-200 rounded-xl p-5">
+                      <h4 className="font-semibold text-blue-900 border-b border-blue-200 pb-2 mb-4">Coding Test Configuration</h4>
+
+                      <div>
+                        <label htmlFor="platform" className="block text-sm font-semibold text-gray-900 mb-2">
+                          Platform Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          id="platform"
+                          name="platform"
+                          type="text"
+                          required={formData.type === 'coding'}
+                          value={formData.platform}
+                          onChange={handleInputChange}
+                          placeholder="e.g., HackerRank, LeetCode, CoderByte"
+                          className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="duration" className="block text-sm font-semibold text-gray-900 mb-2">
+                          Duration <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          id="duration"
+                          name="duration"
+                          type="text"
+                          required={formData.type === 'coding'}
+                          value={formData.duration}
+                          onChange={handleInputChange}
+                          placeholder="e.g., 60 Mins, 2 Hours"
+                          className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        />
+                      </div>
+
+                      <div>
+                        <label htmlFor="instructions" className="block text-sm font-semibold text-gray-900 mb-2">
+                          Instructions <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          id="instructions"
+                          name="instructions"
+                          required={formData.type === 'coding'}
+                          value={formData.instructions}
+                          onChange={handleInputChange}
+                          rows={4}
+                          placeholder="Enter specific instructions for the candidate..."
+                          className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        />
+                      </div>
+                    </div>
+                  )}
 
                   {formData.type === 'mcq' && (
                     <>
