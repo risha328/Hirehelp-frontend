@@ -22,6 +22,17 @@ export interface Round {
   scheduledAt?: string;
   interviewers?: { name: string; email: string }[];
   meetingLink?: string;
+  locationDetails?: {
+    venueName: string;
+    address: string;
+    city: string;
+    landmark: string;
+  };
+  scheduling?: {
+    interviewDate: string;
+    interviewTime: string;
+    reportingTime: string;
+  };
   isArchived: boolean;
   isActive: boolean;
   archivedAt?: string;
@@ -45,6 +56,17 @@ export interface CreateRoundDto {
   scheduledAt?: string;
   interviewers?: { name: string; email: string }[];
   meetingLink?: string;
+  locationDetails?: {
+    venueName: string;
+    address: string;
+    city: string;
+    landmark: string;
+  };
+  scheduling?: {
+    interviewDate: string;
+    interviewTime: string;
+    reportingTime: string;
+  };
 }
 
 export interface UpdateRoundDto {
@@ -62,6 +84,17 @@ export interface UpdateRoundDto {
   scheduledAt?: string;
   interviewers?: { name: string; email: string }[];
   meetingLink?: string;
+  locationDetails?: {
+    venueName: string;
+    address: string;
+    city: string;
+    landmark: string;
+  };
+  scheduling?: {
+    interviewDate: string;
+    interviewTime: string;
+    reportingTime: string;
+  };
 }
 
 export interface MCQResponse {
