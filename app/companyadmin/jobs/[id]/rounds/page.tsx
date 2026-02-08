@@ -22,7 +22,15 @@ import {
   CalendarIcon,
   ChevronRightIcon,
   TrashIcon,
-  QueueListIcon
+  QueueListIcon,
+  UserGroupIcon,
+  VideoCameraIcon,
+  MapPinIcon,
+  UserPlusIcon,
+  UserMinusIcon,
+  LinkIcon,
+  CalendarDaysIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline';
 
 
@@ -72,6 +80,14 @@ export default function JobRoundsPage() {
     platform: '',
     duration: '',
     instructions: '',
+    interviewMode: 'online',
+    interviewType: 'one-to-one',
+    scheduledDate: '',
+    scheduledTime: '',
+    interviewers: [] as { name: string; email: string }[],
+    meetingLink: '',
+    newInterviewerName: '',
+    newInterviewerEmail: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -121,11 +137,33 @@ export default function JobRoundsPage() {
     }
   };
 
+  const handleAddInterviewer = () => {
+    if (formData.newInterviewerName && formData.newInterviewerEmail) {
+      setFormData(prev => ({
+        ...prev,
+        interviewers: [...prev.interviewers, { name: prev.newInterviewerName, email: prev.newInterviewerEmail }],
+        newInterviewerName: '',
+        newInterviewerEmail: ''
+      }));
+    }
+  };
+
+  const handleRemoveInterviewer = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      interviewers: prev.interviewers.filter((_, i) => i !== index)
+    }));
+  };
+
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = 'Round name is required';
+    }
+
+    if ((formData.type === 'technical' || formData.type === 'hr') && formData.interviewMode === 'online' && !formData.duration) {
+      newErrors.duration = 'Duration is required for online interviews';
     }
 
     setErrors(newErrors);
@@ -142,45 +180,43 @@ export default function JobRoundsPage() {
     setPosting(true);
 
     try {
+      let type = formData.type;
+      if (formData.type === 'technical' || formData.type === 'hr') {
+        type = 'interview';
+      }
+
+      const commonData = {
+        name: formData.name,
+        description: formData.description,
+        order: formData.order,
+        type,
+        instructions: formData.instructions || undefined,
+        platform: formData.platform || undefined,
+        duration: formData.duration || undefined,
+        googleFormLink: formData.googleFormLink || undefined,
+        ...(formData.type === 'technical' || formData.type === 'hr' ? {
+          interviewMode: formData.interviewMode,
+          interviewType: formData.interviewType,
+          scheduledAt: (formData.scheduledDate && formData.scheduledTime) ? new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString() : undefined,
+          interviewers: formData.interviewers.length > 0 ? formData.interviewers : undefined,
+          meetingLink: formData.meetingLink || undefined,
+        } : {}),
+      };
+
       if (editingRound) {
         await roundsAPI.updateRound(editingRound._id, {
-          name: formData.name,
-          description: formData.description,
-          order: formData.order,
-          type: formData.type,
-          googleFormLink: formData.googleFormLink || undefined,
-          platform: formData.platform || undefined,
-          duration: formData.duration || undefined,
-          instructions: formData.instructions || undefined,
+          ...commonData,
         });
 
         setRounds(prev => prev.map(round =>
           round._id === editingRound._id
-            ? {
-              ...round,
-              name: formData.name,
-              description: formData.description,
-              order: formData.order,
-              type: formData.type,
-              googleFormLink: formData.googleFormLink || undefined,
-              platform: formData.platform || undefined,
-              duration: formData.duration || undefined,
-              instructions: formData.instructions || undefined,
-              updatedAt: new Date().toISOString()
-            }
+            ? { ...round, ...commonData, updatedAt: new Date().toISOString() }
             : round
         ));
       } else {
         const newRound = await roundsAPI.createRound({
-          name: formData.name,
-          description: formData.description,
+          ...commonData,
           jobId: jobId,
-          order: formData.order,
-          type: formData.type,
-          ...(formData.googleFormLink && { googleFormLink: formData.googleFormLink }),
-          ...(formData.platform && { platform: formData.platform }),
-          ...(formData.duration && { duration: formData.duration }),
-          ...(formData.instructions && { instructions: formData.instructions }),
         });
 
         setRounds(prev => [...prev, newRound].sort((a, b) => a.order - b.order));
@@ -207,6 +243,14 @@ export default function JobRoundsPage() {
       platform: '',
       duration: '',
       instructions: '',
+      interviewMode: 'online',
+      interviewType: 'one-to-one',
+      scheduledDate: '',
+      scheduledTime: '',
+      interviewers: [],
+      meetingLink: '',
+      newInterviewerName: '',
+      newInterviewerEmail: '',
     });
     setEditingRound(null);
     setErrors({});
@@ -214,6 +258,10 @@ export default function JobRoundsPage() {
 
   const handleEdit = (round: Round) => {
     setEditingRound(round);
+
+    const scheduledDate = round.scheduledAt ? new Date(round.scheduledAt).toISOString().split('T')[0] : '';
+    const scheduledTime = round.scheduledAt ? new Date(round.scheduledAt).toTimeString().slice(0, 5) : '';
+
     setFormData({
       name: round.name,
       description: round.description || '',
@@ -224,6 +272,14 @@ export default function JobRoundsPage() {
       platform: round.platform || '',
       duration: round.duration || '',
       instructions: round.instructions || '',
+      interviewMode: round.interviewMode || 'online',
+      interviewType: round.interviewType || 'one-to-one',
+      scheduledDate,
+      scheduledTime,
+      interviewers: round.interviewers || [],
+      meetingLink: round.meetingLink || '',
+      newInterviewerName: '',
+      newInterviewerEmail: '',
     });
     setShowModal(true);
   };
@@ -734,13 +790,226 @@ export default function JobRoundsPage() {
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                     >
-                      <option value="interview">Interview</option>
-                      <option value="technical">Technical</option>
-                      <option value="hr">HR</option>
+                      <option value="interview">General Interview</option>
+                      <option value="technical">Technical Interview</option>
+                      <option value="hr">HR Interview</option>
                       <option value="mcq">MCQ Assessment</option>
                       <option value="coding">Coding Test</option>
                     </select>
                   </div>
+
+                  {(formData.type === 'technical' || formData.type === 'hr') && (
+                    <div className="space-y-5 bg-blue-50 border border-blue-200 rounded-xl p-5">
+                      <h4 className="font-semibold text-blue-900 border-b border-blue-200 pb-2 mb-4">Interview Configuration</h4>
+
+                      {/* Interview Mode */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900 mb-2">Interview Mode</label>
+                        <div className="flex space-x-4">
+                          <label className="inline-flex items-center">
+                            <input
+                              type="radio"
+                              name="interviewMode"
+                              value="online"
+                              checked={formData.interviewMode === 'online'}
+                              onChange={handleInputChange}
+                              className="form-radio text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-gray-700">Online</span>
+                          </label>
+                          <label className="inline-flex items-center">
+                            <input
+                              type="radio"
+                              name="interviewMode"
+                              value="offline"
+                              checked={formData.interviewMode === 'offline'}
+                              onChange={handleInputChange}
+                              className="form-radio text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-gray-700">Offline</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Duration (Only if Online) */}
+                      {formData.interviewMode === 'online' && (
+                        <div>
+                          <label htmlFor="duration" className="block text-sm font-semibold text-gray-900 mb-2">
+                            Duration <span className="text-red-500">*</span>
+                          </label>
+                          <select
+                            id="duration"
+                            name="duration"
+                            value={formData.duration}
+                            onChange={handleInputChange}
+                            className={`w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.duration ? 'border-red-300' : 'border-gray-300'}`}
+                          >
+                            <option value="">Select Duration</option>
+                            <option value="15 Mins">15 Mins</option>
+                            <option value="30 Mins">30 Mins</option>
+                            <option value="45 Mins">45 Mins</option>
+                            <option value="60 Mins">60 Mins</option>
+                          </select>
+                          {errors.duration && (
+                            <p className="mt-2 text-sm text-red-600">{errors.duration}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Interview Configuration Box */}
+                      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-5 shadow-sm">
+                        <h5 className="text-lg font-bold text-gray-900 flex items-center border-b border-gray-200 pb-3">
+                          <CalendarDaysIcon className="w-5 h-5 mr-2 text-blue-600" />
+                          Details & Schedule
+                        </h5>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          {/* Interview Type */}
+                          <div>
+                            <label htmlFor="interviewType" className="block text-sm font-bold text-gray-800 mb-1.5">Interview Type</label>
+                            <select
+                              id="interviewType"
+                              name="interviewType"
+                              value={formData.interviewType}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                            >
+                              <option value="one-to-one">One to One</option>
+                              <option value="panel">Panel</option>
+                            </select>
+                          </div>
+
+                          {/* Platform */}
+                          <div>
+                            <label htmlFor="platform" className="block text-sm font-bold text-gray-800 mb-1.5">Platform / Venue</label>
+                            <select
+                              id="platform"
+                              name="platform"
+                              value={formData.platform}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                            >
+                              <option value="">Select Platform</option>
+                              <option value="Gmeet">Google Meet</option>
+                              <option value="Zoom">Zoom</option>
+                              <option value="Ms Teams">Microsoft Teams</option>
+                              <option value="In-Person">In-Person</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Meeting Link - Dynamically shown */}
+                        {['Gmeet', 'Zoom', 'Ms Teams'].includes(formData.platform) && (
+                          <div>
+                            <label htmlFor="meetingLink" className="block text-sm font-bold text-gray-800 mb-1.5">Meeting Link</label>
+                            <div className="relative">
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <LinkIcon className="h-5 w-5 text-gray-500" />
+                              </div>
+                              <input
+                                type="url"
+                                id="meetingLink"
+                                name="meetingLink"
+                                value={formData.meetingLink}
+                                onChange={handleInputChange}
+                                placeholder="https://meet.google.com/..."
+                                className="w-full pl-10 px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Date & Time */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <div>
+                            <label htmlFor="scheduledDate" className="block text-sm font-bold text-gray-800 mb-1.5">Date</label>
+                            <input
+                              type="date"
+                              id="scheduledDate"
+                              name="scheduledDate"
+                              value={formData.scheduledDate}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                            />
+                          </div>
+                          <div>
+                            <label htmlFor="scheduledTime" className="block text-sm font-bold text-gray-800 mb-1.5">Time</label>
+                            <input
+                              type="time"
+                              id="scheduledTime"
+                              name="scheduledTime"
+                              value={formData.scheduledTime}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Interviewers Section */}
+                        <div className="border-t border-gray-200 pt-5 mt-2">
+                          <label className="block text-sm font-bold text-gray-800 mb-3">Interviewers</label>
+
+                          {/* List of added interviewers */}
+                          {formData.interviewers.length > 0 && (
+                            <ul className="mb-4 space-y-2">
+                              {formData.interviewers.map((interviewer, idx) => (
+                                <li key={idx} className="flex justify-between items-center bg-blue-50 px-4 py-3 rounded-lg border border-blue-100 text-sm">
+                                  <div>
+                                    <span className="font-semibold text-gray-900">{interviewer.name}</span>
+                                    <span className="text-gray-600 ml-2 text-xs">({interviewer.email})</span>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveInterviewer(idx)}
+                                    className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-full transition-colors"
+                                  >
+                                    <TrashIcon className="w-4 h-4" />
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {/* Add Interviewer Inputs */}
+                          <div className="flex flex-col gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <input
+                                type="text"
+                                name="newInterviewerName"
+                                value={formData.newInterviewerName}
+                                onChange={handleInputChange}
+                                placeholder="Interviewer Name"
+                                className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white placeholder-gray-400"
+                              />
+                              <input
+                                type="email"
+                                name="newInterviewerEmail"
+                                value={formData.newInterviewerEmail}
+                                onChange={handleInputChange}
+                                placeholder="Interviewer Email"
+                                className="w-full px-4 py-2.5 text-sm text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white placeholder-gray-400"
+                              />
+                            </div>
+                            <div className="flex justify-end">
+                              <button
+                                type="button"
+                                onClick={handleAddInterviewer}
+                                disabled={!formData.newInterviewerName || !formData.newInterviewerEmail}
+                                className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-semibold text-sm rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center shadow-sm"
+                              >
+                                <UserPlusIcon className="w-5 h-5 mr-2 text-blue-600" />
+                                Add Interviewer
+                              </button>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-3 flex items-center">
+                            <InformationCircleIcon className="w-4 h-4 mr-1 text-blue-500" />
+                            Interviewers will receive an email notification immediately upon creating this round.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {formData.type === 'coding' && (
                     <div className="space-y-5 bg-blue-50 border border-blue-200 rounded-xl p-5">
