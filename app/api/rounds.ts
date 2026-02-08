@@ -10,9 +10,12 @@ export interface Round {
     companyId: string;
   };
   order: number;
-  type: 'mcq' | 'interview' | 'technical' | 'hr';
+  type: 'mcq' | 'interview' | 'technical' | 'hr' | 'coding';
   googleFormLink?: string | null;
   googleSheetLink?: string | null;
+  platform?: string;
+  duration?: string;
+  instructions?: string;
   isArchived: boolean;
   isActive: boolean;
   archivedAt?: string;
@@ -25,18 +28,24 @@ export interface CreateRoundDto {
   description?: string;
   jobId: string;
   order?: number;
-  type?: 'mcq' | 'interview' | 'technical' | 'hr';
+  type?: 'mcq' | 'interview' | 'technical' | 'hr' | 'coding';
   googleFormLink?: string | null;
   googleSheetLink?: string | null;
+  platform?: string;
+  duration?: string;
+  instructions?: string;
 }
 
 export interface UpdateRoundDto {
   name?: string;
   description?: string;
   order?: number;
-  type?: 'mcq' | 'interview' | 'technical' | 'hr';
+  type?: 'mcq' | 'interview' | 'technical' | 'hr' | 'coding';
   googleFormLink?: string | null;
   googleSheetLink?: string | null;
+  platform?: string;
+  duration?: string;
+  instructions?: string;
 }
 
 export interface MCQResponse {
