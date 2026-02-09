@@ -17,7 +17,8 @@ import {
   Award,
   Sparkles,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { jobsAPI } from '../api/companies';
@@ -36,6 +37,7 @@ interface Job {
   isUrgent: boolean;
   tags: string[];
   description: string;
+  applicationDeadline?: string;
 }
 
 const jobTypes = [
@@ -99,6 +101,7 @@ export default function JobsPage() {
         isUrgent: false, // You can add urgent logic later
         tags: job.skills || [],
         description: job.description,
+        applicationDeadline: job.applicationDeadline,
       }));
 
       setJobs(transformedJobs);
@@ -245,18 +248,16 @@ export default function JobsPage() {
                 <button
                   key={type.id}
                   onClick={() => setActiveJobType(type.id)}
-                  className={`p-4 rounded-xl text-left transition-all duration-300 ${
-                    activeJobType === type.id
-                      ? 'bg-white border-2 border-indigo-500 shadow-lg shadow-indigo-100'
-                      : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'
-                  }`}
+                  className={`p-4 rounded-xl text-left transition-all duration-300 ${activeJobType === type.id
+                    ? 'bg-white border-2 border-indigo-500 shadow-lg shadow-indigo-100'
+                    : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'
+                    }`}
                 >
                   <div className="flex items-start space-x-3">
-                    <div className={`p-2 rounded-lg ${
-                      activeJobType === type.id
-                        ? 'bg-indigo-100 text-indigo-600'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
+                    <div className={`p-2 rounded-lg ${activeJobType === type.id
+                      ? 'bg-indigo-100 text-indigo-600'
+                      : 'bg-gray-100 text-gray-600'
+                      }`}>
                       <Icon className="h-5 w-5" />
                     </div>
                     <div>
@@ -378,11 +379,10 @@ export default function JobsPage() {
                       <button
                         key={type.id}
                         onClick={() => setActiveJobType(type.id)}
-                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                          activeJobType === type.id
-                            ? 'bg-indigo-50 text-indigo-700 font-medium'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${activeJobType === type.id
+                          ? 'bg-indigo-50 text-indigo-700 font-medium'
+                          : 'text-gray-700 hover:bg-gray-50'
+                          }`}
                       >
                         {type.label}
                       </button>
@@ -461,11 +461,10 @@ export default function JobsPage() {
                 {filteredJobs.map((job) => (
                   <div
                     key={job.id}
-                    className={`bg-white rounded-xl border transition-all duration-300 hover:shadow-lg ${
-                      job.isFeatured
-                        ? 'border-l-4 border-l-indigo-500 border-r border-t border-b'
-                        : 'border-gray-200'
-                    }`}
+                    className={`bg-white rounded-xl border transition-all duration-300 hover:shadow-lg ${job.isFeatured
+                      ? 'border-l-4 border-l-indigo-500 border-r border-t border-b'
+                      : 'border-gray-200'
+                      } ${job.applicationDeadline && new Date(job.applicationDeadline) < new Date() ? 'opacity-75 grayscale' : ''}`}
                   >
                     <div className="p-6">
                       <div className="flex items-start justify-between">
@@ -497,6 +496,12 @@ export default function JobsPage() {
                               {job.isUrgent && (
                                 <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
                                   Urgent
+                                </span>
+                              )}
+                              {job.applicationDeadline && new Date(job.applicationDeadline) < new Date() && (
+                                <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                                  <AlertCircle className="h-3 w-3 mr-1 text-gray-500" />
+                                  Deadline Crossed
                                 </span>
                               )}
                             </div>
@@ -546,11 +551,10 @@ export default function JobsPage() {
                               <div className="flex items-center space-x-3">
                                 <button
                                   onClick={() => toggleSaveJob(job.id)}
-                                  className={`p-2 rounded-lg transition-colors ${
-                                    savedJobs.has(job.id)
-                                      ? 'text-indigo-600 bg-indigo-50'
-                                      : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                                  }`}
+                                  className={`p-2 rounded-lg transition-colors ${savedJobs.has(job.id)
+                                    ? 'text-indigo-600 bg-indigo-50'
+                                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                                    }`}
                                 >
                                   <Bookmark className="h-5 w-5" />
                                 </button>

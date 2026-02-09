@@ -57,6 +57,7 @@ interface Job {
     industry?: string;
     size?: string;
   };
+  applicationDeadline?: string;
 }
 
 interface ApplyModalProps {
@@ -143,7 +144,7 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
 
   const validateStep1 = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!formData.email.trim()) {
@@ -163,7 +164,7 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
 
   const validateStep2 = () => {
     const newErrors: Record<string, string> = {};
-    
+
     if (!resumeFile) newErrors.resume = 'Resume is required';
     if (formData.portfolioUrl && !/^https?:\/\/.+/.test(formData.portfolioUrl)) {
       newErrors.portfolioUrl = 'Please enter a valid URL starting with http:// or https://';
@@ -178,7 +179,7 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (step === 1) {
       if (validateStep1()) {
         setStep(2);
@@ -219,7 +220,7 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
 
       // Submit application
       await applicationsAPI.submitApplication(applicationData);
-      
+
       setUploadProgress(100);
       setTimeout(() => {
         clearInterval(progressInterval);
@@ -261,7 +262,7 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
         {/* Backdrop */}
-        <div 
+        <div
           className="fixed inset-0 bg-gray-900/75 backdrop-blur-sm transition-opacity"
           onClick={onClose}
         ></div>
@@ -294,33 +295,29 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                 {[1, 2].map((stepNumber) => (
                   <div key={stepNumber} className="flex items-center flex-1">
                     <div className="flex items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                        stepNumber < step
-                          ? 'bg-white border-white'
-                          : stepNumber === step
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${stepNumber < step
+                        ? 'bg-white border-white'
+                        : stepNumber === step
                           ? 'bg-white border-white'
                           : 'bg-transparent border-white/30'
-                      }`}>
+                        }`}>
                         {stepNumber < step ? (
                           <CheckCircle className="h-5 w-5 text-blue-600" />
                         ) : (
-                          <span className={`font-semibold ${
-                            stepNumber <= step ? 'text-blue-600' : 'text-white/50'
-                          }`}>
+                          <span className={`font-semibold ${stepNumber <= step ? 'text-blue-600' : 'text-white/50'
+                            }`}>
                             {stepNumber}
                           </span>
                         )}
                       </div>
-                      <div className={`ml-3 text-sm font-medium ${
-                        stepNumber <= step ? 'text-white' : 'text-white/60'
-                      }`}>
+                      <div className={`ml-3 text-sm font-medium ${stepNumber <= step ? 'text-white' : 'text-white/60'
+                        }`}>
                         {stepNumber === 1 ? 'Personal Info' : 'Documents & Links'}
                       </div>
                     </div>
                     {stepNumber < 2 && (
-                      <div className={`flex-1 h-0.5 mx-4 ${
-                        stepNumber < step ? 'bg-white' : 'bg-white/30'
-                      }`}></div>
+                      <div className={`flex-1 h-0.5 mx-4 ${stepNumber < step ? 'bg-white' : 'bg-white/30'
+                        }`}></div>
                     )}
                   </div>
                 ))}
@@ -336,7 +333,7 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                 <span className="text-sm font-medium text-gray-700">{uploadProgress}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${uploadProgress}%` }}
                 ></div>
@@ -375,9 +372,8 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                           required
                           value={formData.firstName}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                            errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                          }`}
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
                           placeholder="Enter your first name"
                         />
                       </div>
@@ -402,9 +398,8 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                           required
                           value={formData.lastName}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                            errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                          }`}
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
                           placeholder="Enter your last name"
                         />
                       </div>
@@ -429,9 +424,8 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                           required
                           value={formData.email}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                            errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                          }`}
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
                           placeholder="you@example.com"
                         />
                       </div>
@@ -456,9 +450,8 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                           required
                           value={formData.phone}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                            errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                          }`}
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
                           placeholder="+1 (555) 123-4567"
                         />
                       </div>
@@ -517,15 +510,14 @@ Best regards,
                         <span className="ml-2 text-sm font-normal text-red-600">- {errors.resume}</span>
                       )}
                     </label>
-                    
-                    <div 
-                      className={`relative border-3 border-dashed rounded-2xl p-8 text-center transition-all ${
-                        resumeFile 
-                          ? 'border-green-500 bg-green-50' 
-                          : errors.resume 
-                          ? 'border-red-300 bg-red-50' 
+
+                    <div
+                      className={`relative border-3 border-dashed rounded-2xl p-8 text-center transition-all ${resumeFile
+                        ? 'border-green-500 bg-green-50'
+                        : errors.resume
+                          ? 'border-red-300 bg-red-50'
                           : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
-                      }`}
+                        }`}
                       onClick={() => document.getElementById('resume-upload')?.click()}
                     >
                       <input
@@ -535,18 +527,17 @@ Best regards,
                         accept=".pdf,.doc,.docx"
                         onChange={(e) => handleFileChange(e, 'resume')}
                       />
-                      
+
                       <div className="flex flex-col items-center justify-center space-y-4">
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                          resumeFile ? 'bg-green-100' : 'bg-blue-100'
-                        }`}>
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${resumeFile ? 'bg-green-100' : 'bg-blue-100'
+                          }`}>
                           {resumeFile ? (
                             <CheckCircle className="h-8 w-8 text-green-600" />
                           ) : (
                             <Upload className="h-8 w-8 text-blue-600" />
                           )}
                         </div>
-                        
+
                         <div>
                           {resumeFile ? (
                             <>
@@ -564,7 +555,7 @@ Best regards,
                             </>
                           )}
                         </div>
-                        
+
                         {!resumeFile && (
                           <button
                             type="button"
@@ -583,17 +574,16 @@ Best regards,
                       Cover Letter (Optional)
                       {errors.coverLetter && (
                         <span className="ml-2 text-sm font-normal text-red-600">- {errors.coverLetter}</span>
-                        )}
+                      )}
                     </label>
-                    
-                    <div 
-                      className={`relative border-3 border-dashed rounded-2xl p-8 text-center transition-all ${
-                        coverLetterFile 
-                          ? 'border-purple-500 bg-purple-50' 
-                          : errors.coverLetter 
-                          ? 'border-red-300 bg-red-50' 
+
+                    <div
+                      className={`relative border-3 border-dashed rounded-2xl p-8 text-center transition-all ${coverLetterFile
+                        ? 'border-purple-500 bg-purple-50'
+                        : errors.coverLetter
+                          ? 'border-red-300 bg-red-50'
                           : 'border-gray-300 hover:border-purple-400 hover:bg-purple-50'
-                      }`}
+                        }`}
                       onClick={() => document.getElementById('coverletter-upload')?.click()}
                     >
                       <input
@@ -603,18 +593,17 @@ Best regards,
                         accept=".pdf,.doc,.docx,.txt"
                         onChange={(e) => handleFileChange(e, 'coverLetter')}
                       />
-                      
+
                       <div className="flex flex-col items-center justify-center space-y-4">
-                        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-                          coverLetterFile ? 'bg-purple-100' : 'bg-purple-100'
-                        }`}>
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${coverLetterFile ? 'bg-purple-100' : 'bg-purple-100'
+                          }`}>
                           {coverLetterFile ? (
                             <CheckCircle className="h-8 w-8 text-purple-600" />
                           ) : (
                             <Paperclip className="h-8 w-8 text-purple-600" />
                           )}
                         </div>
-                        
+
                         <div>
                           {coverLetterFile ? (
                             <>
@@ -632,7 +621,7 @@ Best regards,
                             </>
                           )}
                         </div>
-                        
+
                         {!coverLetterFile && (
                           <button
                             type="button"
@@ -665,9 +654,8 @@ Best regards,
                           type="url"
                           value={formData.portfolioUrl}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                            errors.portfolioUrl ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                          }`}
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.portfolioUrl ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
                           placeholder="https://yourportfolio.com"
                         />
                       </div>
@@ -684,7 +672,7 @@ Best regards,
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                           </svg>
                         </div>
                         <input
@@ -693,9 +681,8 @@ Best regards,
                           type="url"
                           value={formData.linkedinUrl}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                            errors.linkedinUrl ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                          }`}
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.linkedinUrl ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
                           placeholder="https://linkedin.com/in/yourprofile"
                         />
                       </div>
@@ -759,7 +746,7 @@ Best regards,
                   </button>
                 )}
               </div>
-              
+
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -998,17 +985,21 @@ export default function JobDetailsPage() {
             <div className="flex flex-col space-y-3">
               <button
                 onClick={() => setShowApplyModal(true)}
-                disabled={hasApplied}
-                className={`px-8 py-4 font-semibold rounded-xl transition-all duration-300 transform hover:scale-[1.02] ${
-                  hasApplied
-                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                    : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-lg hover:shadow-xl'
-                }`}
+                disabled={hasApplied || (job.applicationDeadline ? new Date(job.applicationDeadline) < new Date() : false)}
+                className={`px-8 py-4 font-semibold rounded-xl transition-all duration-300 transform hover:scale-[1.02] ${hasApplied || (job.applicationDeadline && new Date(job.applicationDeadline) < new Date())
+                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                  : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-lg hover:shadow-xl'
+                  }`}
               >
                 {hasApplied ? (
                   <span className="flex items-center justify-center">
                     <CheckCircle className="h-5 w-5 mr-2" />
                     Applied Successfully
+                  </span>
+                ) : (job.applicationDeadline && new Date(job.applicationDeadline) < new Date()) ? (
+                  <span className="flex items-center justify-center">
+                    <AlertCircle className="h-5 w-5 mr-2" />
+                    Deadline Crossed
                   </span>
                 ) : (
                   'Apply Now'
@@ -1018,11 +1009,10 @@ export default function JobDetailsPage() {
               <div className="flex space-x-2">
                 <button
                   onClick={toggleSave}
-                  className={`flex-1 px-4 py-3 rounded-xl transition-colors flex items-center justify-center ${
-                    isBookmarked
-                      ? 'bg-white/20 backdrop-blur-sm text-white border border-white/30'
-                      : 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20'
-                  }`}
+                  className={`flex-1 px-4 py-3 rounded-xl transition-colors flex items-center justify-center ${isBookmarked
+                    ? 'bg-white/20 backdrop-blur-sm text-white border border-white/30'
+                    : 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20'
+                    }`}
                 >
                   <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
                   <span className="ml-2">Save</span>
@@ -1333,6 +1323,16 @@ export default function JobDetailsPage() {
                     {new Date(job.createdAt).toLocaleDateString()}
                   </span>
                 </div>
+
+                <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+                  <div className="flex items-center">
+                    <Clock className="h-5 w-5 text-red-600 mr-3" />
+                    <span className="text-gray-700">Deadline</span>
+                  </div>
+                  <span className={`font-semibold ${job.applicationDeadline && new Date(job.applicationDeadline) < new Date() ? 'text-red-600' : 'text-gray-900'}`}>
+                    {job.applicationDeadline ? new Date(job.applicationDeadline).toLocaleDateString() : 'No Deadline'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -1343,12 +1343,12 @@ export default function JobDetailsPage() {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Ready to Apply?</h3>
               <p className="text-indigo-100 mb-6">
-                {hasApplied 
+                {hasApplied
                   ? 'Your application has been submitted successfully!'
                   : 'Take the next step in your career journey'
                 }
               </p>
-              
+
               {hasApplied ? (
                 <div className="space-y-3">
                   <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
@@ -1366,6 +1366,16 @@ export default function JobDetailsPage() {
                   >
                     View Application Status
                   </Link>
+                </div>
+              ) : (job.applicationDeadline && new Date(job.applicationDeadline) < new Date()) ? (
+                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                  <div className="flex items-center justify-center text-white mb-2">
+                    <AlertCircle className="h-5 w-5 mr-2" />
+                    <span className="font-semibold">Application Deadline Passed</span>
+                  </div>
+                  <p className="text-indigo-100 text-sm">
+                    This job is no longer accepting applications.
+                  </p>
                 </div>
               ) : (
                 <button
