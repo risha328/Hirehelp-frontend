@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { 
-  Search, 
-  MapPin, 
-  Briefcase, 
+import {
+  Search,
+  MapPin,
+  Briefcase,
   Filter,
   ArrowRight,
   Sparkles,
@@ -13,6 +13,7 @@ import {
   Building,
   CheckCircle
 } from 'lucide-react';
+import TypingAnimation from './TypingAnimation';
 
 export default function Hero() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -52,17 +53,19 @@ export default function Hero() {
       {/* Main Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16 lg:pb-24">
         <div className="max-w-7xl mx-auto">
-          
+
           {/* Main Heading */}
           <div className="text-center mb-12">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
               Find Your
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500">
-                Dream Career
-              </span>
+              <TypingAnimation
+                words={['Dream Career', 'Perfect Role', 'Next Opportunity', 'Future Path']}
+                className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-cyan-500 pb-2"
+                cursorClassName="text-blue-500"
+              />
             </h1>
             <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Connect with innovative companies and discover opportunities that match 
+              Connect with innovative companies and discover opportunities that match
               your skills, passion, and career aspirations.
             </p>
           </div>
@@ -84,7 +87,7 @@ export default function Hero() {
               <span className="text-lg">Browse Companies</span>
             </Link>
           </div>
-          
+
           {/* Badge */}
           {/* <div className="flex justify-center mb-8">
             <div className="inline-flex items-center px-4 py-2 bg-blue-100/80 backdrop-blur-sm rounded-full border border-blue-200">
@@ -254,14 +257,14 @@ export default function Hero() {
 
       {/* Wave Divider */}
       <div className="absolute bottom-0 left-0 right-0">
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1440 320"
           className="w-full h-24 md:h-32 text-white"
         >
-          <path 
-            fill="currentColor" 
-            fillOpacity="1" 
+          <path
+            fill="currentColor"
+            fillOpacity="1"
             d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,192C672,181,768,139,864,138.7C960,139,1056,181,1152,181.3C1248,181,1344,139,1392,117.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
           ></path>
         </svg>

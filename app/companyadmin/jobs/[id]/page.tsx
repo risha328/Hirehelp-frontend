@@ -143,6 +143,22 @@ export default function JobDetailsPage() {
     return company;
   };
 
+  const handleDelete = async () => {
+    if (!confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await jobsAPI.deleteJob(jobId);
+      router.push('/companyadmin/jobs');
+    } catch (err: any) {
+      console.error('Failed to delete job:', err);
+      setError(err.message || 'Failed to delete job');
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -212,7 +228,10 @@ export default function JobDetailsPage() {
           >
             <Edit className="h-4 w-4" />
           </button>
-          <button className="flex items-center px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+          <button
+            onClick={handleDelete}
+            className="flex items-center px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
+          >
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
