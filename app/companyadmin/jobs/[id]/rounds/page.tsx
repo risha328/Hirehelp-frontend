@@ -211,7 +211,9 @@ export default function JobRoundsPage() {
           interviewMode: formData.interviewMode,
           interviewType: formData.interviewType,
           scheduledAt: (formData.scheduledDate && formData.scheduledTime) ? new Date(`${formData.scheduledDate}T${formData.scheduledTime}`).toISOString() : undefined,
-          interviewers: formData.interviewers.length > 0 ? formData.interviewers : undefined,
+          interviewers: (formData.interviewers.length > 0 || (formData.newInterviewerName && formData.newInterviewerEmail))
+            ? [...formData.interviewers, ...(formData.newInterviewerName && formData.newInterviewerEmail ? [{ name: formData.newInterviewerName, email: formData.newInterviewerEmail }] : [])]
+            : undefined,
           meetingLink: formData.interviewMode === 'online' ? (formData.meetingLink || undefined) : undefined,
         } : {}),
       };
