@@ -369,6 +369,29 @@ export default function InterviewManagementPage() {
                         <h1 className="text-2xl font-bold text-gray-900">Interview Management</h1>
                         <p className="text-sm text-gray-500">Mission control for interviews</p>
                     </div>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => alert('Schedule new interview feature coming soon')}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium cursor-pointer shadow-sm"
+                        >
+                            <CalendarIcon className="w-4 h-4" />
+                            Schedule Now
+                        </button>
+                        <button
+                            onClick={() => router.push('/companyadmin/calendar')}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium cursor-pointer shadow-sm"
+                        >
+                            <CalendarDaysIcon className="w-4 h-4" />
+                            View Calendar
+                        </button>
+                        <button
+                            onClick={() => alert('Export feature coming soon')}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium cursor-pointer shadow-sm"
+                        >
+                            <ChartBarIcon className="w-4 h-4" />
+                            Export Report
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -441,38 +464,7 @@ export default function InterviewManagementPage() {
                         </div>
                     </div>
 
-                    {/* Quick Actions */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 mb-8">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">Quick Actions</h3>
-                                <p className="text-gray-600 text-sm">Manage interviews efficiently</p>
-                            </div>
-                            <div className="flex flex-wrap gap-3">
-                                <button
-                                    onClick={() => alert('Schedule new interview feature coming soon')}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium cursor-pointer"
-                                >
-                                    <CalendarIcon className="w-4 h-4" />
-                                    Schedule New
-                                </button>
-                                <button
-                                    onClick={() => router.push('/companyadmin/calendar')}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium cursor-pointer"
-                                >
-                                    <CalendarDaysIcon className="w-4 h-4" />
-                                    View Calendar
-                                </button>
-                                <button
-                                    onClick={() => alert('Export feature coming soon')}
-                                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium cursor-pointer"
-                                >
-                                    <ChartBarIcon className="w-4 h-4" />
-                                    Export Report
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
                 {/* Main Content */}
