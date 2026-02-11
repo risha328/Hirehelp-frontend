@@ -49,12 +49,13 @@ interface Interview {
     duration: number; // in minutes
     interviewerName: string;
     interviewerEmail: string;
-    status: 'Scheduled' | 'In Progress' | 'Completed' | 'Missed' | 'Rescheduled';
+    status: 'Scheduled' | 'In Progress' | 'Completed' | 'Missed' | 'Rescheduled' | 'Rescheduling';
     feedbackStatus: 'Not Generated' | 'Pending' | 'Submitted' | 'Reviewed';
     feedbackSubmittedAt?: string;
     meetingLink?: string;
     location?: string;
     notes?: string;
+    evaluationId?: string;
 }
 
 export default function InterviewManagementPage() {
@@ -64,6 +65,8 @@ export default function InterviewManagementPage() {
     const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [rescheduleLoading, setRescheduleLoading] = useState(false);
 
     // Filters
     const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'this-week' | 'next-week'>('all');
@@ -98,23 +101,43 @@ export default function InterviewManagementPage() {
             // 3. Filter applications in 'UNDER_REVIEW' status (Interview Status)
             const interviewApps = applications.filter(app => app.status === 'UNDER_REVIEW');
 
-            // 4. Map to Interview interface
+            // 4. Fetch evaluations for these applications to get accurate status
+            const applicationIds = interviewApps.map(app => app._id);
+            let evaluations: any[] = [];
+            if (applicationIds.length > 0) {
+                try {
+                    evaluations = await roundsAPI.getEvaluationsByApplications(applicationIds);
+                } catch (err) {
+                    console.error("Failed to fetch evaluations", err);
+                }
+            }
+
+            // 5. Map to Interview interface
             const mappedInterviews: Interview[] = interviewApps.map(app => {
                 // Find the full round details
                 const currentRoundId = app.currentRound && (typeof app.currentRound === 'object' ? app.currentRound._id : app.currentRound);
                 const round = rounds.find(r => r._id === currentRoundId);
+
+                // Find specific evaluation for this application and round
+                const evaluation = evaluations.find(e =>
+                    e.applicationId === app._id &&
+                    e.roundId._id === currentRoundId
+                );
 
                 // Determine Interview Details from Round or defaults
                 const roundType = round?.type || round?.name || 'Interview';
                 const mode = round?.interviewMode === 'offline' ? 'Offline' : 'Online'; // Default to Online
 
                 // Date and Time parsing
-                // Prefer 'scheduling' object if available
+                // Prefer evaluation scheduling, then round scheduling
                 let date = new Date().toISOString(); // Default to now if missing
                 let time = '09:00'; // Default time
                 let duration = 60; // Default duration in mins
 
-                if (round?.scheduling?.interviewDate) {
+                if (evaluation?.scheduledAt) {
+                    date = evaluation.scheduledAt;
+                    // Extract time from scheduledAt if needed, or stick to round default if not explicit
+                } else if (round?.scheduling?.interviewDate) {
                     date = round.scheduling.interviewDate;
                 } else if (round?.scheduledAt) {
                     date = round.scheduledAt;
@@ -134,9 +157,61 @@ export default function InterviewManagementPage() {
                 const interviewerName = round?.interviewers?.[0]?.name || 'Unassigned';
                 const interviewerEmail = round?.interviewers?.[0]?.email || '';
 
-                // Derive Status (This is tricky without separate scheduling status per candidate)
-                // For now, assume 'Scheduled' if in this round.
-                const status: Interview['status'] = 'Scheduled';
+                // Derive Status
+                // Use evaluation status if available, otherwise default logic
+                let status: Interview['status'] = 'Scheduled';
+
+                if (evaluation) {
+                    if (evaluation.status === 'missed') status = 'Missed';
+                    else if (evaluation.status === 'rescheduling') status = 'Rescheduling';
+                    else if (evaluation.status === 'rescheduled') status = 'Rescheduled';
+                    else if (evaluation.status === 'completed' || evaluation.status === 'passed' || evaluation.status === 'failed') status = 'Completed';
+                    else if (evaluation.status === 'in_progress') status = 'In Progress';
+                }
+
+                // Check if interview is missed (deadline passed and still scheduled)
+                const isScheduled = Boolean(evaluation?.scheduledAt || round?.scheduling?.interviewDate || round?.scheduledAt);
+
+                if (status === 'Scheduled' && isScheduled) {
+                    const interviewDateObj = new Date(date);
+                    // Parse time string (HH:MM) to set exact time
+                    if (time && time.includes(':')) {
+                        const [hours, minutes] = time.split(':').map(Number);
+                        if (!isNaN(hours) && !isNaN(minutes)) {
+                            interviewDateObj.setHours(hours, minutes, 0, 0);
+                        }
+                    }
+
+                    // Add duration to get end time (allow 15 mins buffer or just strict end time)
+                    const durationMs = (duration || 60) * 60 * 1000;
+                    const endTime = new Date(interviewDateObj.getTime() + durationMs);
+
+                    if (new Date() > endTime) {
+                        status = 'Missed';
+                    }
+                }
+
+
+
+                // Determine Feedback Status based on status and evaluation
+                let feedbackStatus: Interview['feedbackStatus'] = 'Not Generated';
+
+                if (evaluation) {
+                    if (evaluation.status === 'completed' || evaluation.status === 'passed' || evaluation.status === 'failed') {
+                        feedbackStatus = 'Submitted';
+                    } else if (evaluation.status === 'reviewed') {
+                        feedbackStatus = 'Reviewed';
+                    } else if (status === 'Completed' || status === 'In Progress') {
+                        // If interview is done/active but evaluation is not final, feedback is pending
+                        feedbackStatus = 'Pending';
+                    } else {
+                        // Scheduled or Missed -> Not Generated (feedback not yet applicable)
+                        feedbackStatus = 'Not Generated';
+                    }
+                } else {
+                    // No evaluation record
+                    feedbackStatus = 'Not Generated';
+                }
 
                 return {
                     id: app._id,
@@ -154,10 +229,11 @@ export default function InterviewManagementPage() {
                     interviewerName: interviewerName,
                     interviewerEmail: interviewerEmail,
                     status: status,
-                    feedbackStatus: 'Not Generated', // Default
+                    feedbackStatus: feedbackStatus,
                     meetingLink: round?.meetingLink,
                     location: round?.locationDetails ? `${round.locationDetails.venueName}, ${round.locationDetails.city}` : undefined,
-                    notes: app.notes
+                    notes: app.notes,
+                    evaluationId: evaluation?._id
                 };
             });
 
@@ -249,6 +325,13 @@ export default function InterviewManagementPage() {
                         Rescheduled
                     </span>
                 );
+            case 'Rescheduling':
+                return (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                        <ArrowPathIcon className="w-3 h-3 mr-1 animate-spin" />
+                        Rescheduling
+                    </span>
+                );
         }
     };
 
@@ -335,6 +418,33 @@ export default function InterviewManagementPage() {
         }
     };
 
+    // Handle rescheduling
+    const handleReschedule = async () => {
+        if (!selectedInterview || !selectedInterview.evaluationId) return;
+
+        setRescheduleLoading(true);
+        try {
+            await roundsAPI.rescheduleRound(selectedInterview.evaluationId);
+
+            // Update local state
+            setInterviews(prev => prev.map(interview =>
+                interview.id === selectedInterview.id
+                    ? { ...interview, status: 'Rescheduled' } // Or 'Rescheduling'
+                    : interview
+            ));
+
+            // Refresh to ensure we are in sync
+            fetchInterviews();
+
+            setShowRescheduleModal(false);
+        } catch (error) {
+            console.error("Failed to reschedule", error);
+            alert("Failed to reschedule. Please try again.");
+        } finally {
+            setRescheduleLoading(false);
+        }
+    };
+
     // Stats
     const stats = {
         total: interviews.length,
@@ -344,7 +454,7 @@ export default function InterviewManagementPage() {
             return interviewDate === today;
         }).length,
         pendingFeedback: interviews.filter(i => i.feedbackStatus === 'Pending').length,
-        inProgress: interviews.filter(i => i.status === 'In Progress').length,
+        completed: interviews.filter(i => i.status === 'Completed').length,
         missed: interviews.filter(i => i.status === 'Missed').length,
     };
 
@@ -415,19 +525,19 @@ export default function InterviewManagementPage() {
                             </div>
                         </div>
 
-                        {/* In Progress */}
+                        {/* Completed */}
                         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600">In Progress</p>
-                                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.inProgress}</p>
+                                    <p className="text-sm font-medium text-gray-600">Completed</p>
+                                    <p className="text-3xl font-bold text-gray-900 mt-2">{stats.completed}</p>
                                 </div>
-                                <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
-                                    <ArrowPathIcon className="w-6 h-6 text-amber-600 animate-spin" />
+                                <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                                    <CheckCircleIcon className="w-6 h-6 text-green-600" />
                                 </div>
                             </div>
                             <div className="mt-4 pt-4 border-t border-gray-100">
-                                <span className="text-sm text-gray-500">Live interviews</span>
+                                <span className="text-sm text-gray-500">Interviews finished</span>
                             </div>
                         </div>
 
@@ -470,34 +580,27 @@ export default function InterviewManagementPage() {
                 {/* Main Content */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     {/* Table Header with Filters */}
-                    <div className="px-6 py-5 border-b border-gray-200 bg-gray-50">
+                    <div className="px-6 py-5 border-b border-gray-200 bg-white">
                         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                             <div>
-                                <h2 className="text-xl font-semibold text-gray-900">Interview Schedule</h2>
+                                <h2 className="text-2xl font-bold text-blue-900">Interview Schedule</h2>
                                 <p className="text-sm text-gray-500 mt-1">Manage and track all interviews</p>
                             </div>
 
                             <div className="flex flex-wrap items-center gap-3">
                                 {/* Search */}
                                 <div className="relative flex-1 min-w-[200px]">
-                                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-600" />
                                     <input
                                         type="text"
                                         placeholder="Search candidates or roles..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium placeholder-gray-500"
                                     />
                                 </div>
 
-                                {/* Filters Button */}
-                                <div className="relative">
-                                    <button className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium cursor-pointer">
-                                        <FunnelIcon className="w-4 h-4" />
-                                        Filters
-                                        <ChevronDownIcon className="w-4 h-4" />
-                                    </button>
-                                </div>
+
                             </div>
                         </div>
 
@@ -508,7 +611,7 @@ export default function InterviewManagementPage() {
                                 <select
                                     value={dateFilter}
                                     onChange={(e) => setDateFilter(e.target.value as any)}
-                                    className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                                    className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                                 >
                                     <option value="today">Today</option>
                                     <option value="tomorrow">Tomorrow</option>
@@ -516,61 +619,73 @@ export default function InterviewManagementPage() {
                                     <option value="next-week">Next Week</option>
                                     <option value="all">All Dates</option>
                                 </select>
-                                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
                             </div>
 
                             {/* Round Filter */}
-                            <select
-                                value={roundFilter}
-                                onChange={(e) => setRoundFilter(e.target.value)}
-                                className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                            >
-                                <option value="all">All Rounds</option>
-                                <option value="MCQ">MCQ</option>
-                                <option value="Coding">Coding</option>
-                                <option value="Technical">Technical</option>
-                                <option value="HR">HR</option>
-                                <option value="Manager">Manager</option>
-                                <option value="Final">Final</option>
-                            </select>
+                            <div className="relative">
+                                <select
+                                    value={roundFilter}
+                                    onChange={(e) => setRoundFilter(e.target.value)}
+                                    className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                                >
+                                    <option value="all">All Rounds</option>
+                                    <option value="MCQ">MCQ</option>
+                                    <option value="Coding">Coding</option>
+                                    <option value="Technical">Technical</option>
+                                    <option value="HR">HR</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Final">Final</option>
+                                </select>
+                                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
+                            </div>
 
                             {/* Status Filter */}
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                            >
-                                <option value="all">All Status</option>
-                                <option value="Scheduled">Scheduled</option>
-                                <option value="In Progress">In Progress</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Missed">Missed</option>
-                                <option value="Rescheduled">Rescheduled</option>
-                            </select>
+                            <div className="relative">
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                                >
+                                    <option value="all">All Status</option>
+                                    <option value="Scheduled">Scheduled</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Missed">Missed</option>
+                                    <option value="Rescheduled">Rescheduled</option>
+                                </select>
+                                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
+                            </div>
 
                             {/* Feedback Filter */}
-                            <select
-                                value={feedbackFilter}
-                                onChange={(e) => setFeedbackFilter(e.target.value)}
-                                className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                            >
-                                <option value="all">All Feedback</option>
-                                <option value="Pending">Pending Feedback</option>
-                                <option value="Submitted">Submitted</option>
-                                <option value="Reviewed">Reviewed</option>
-                            </select>
+                            <div className="relative">
+                                <select
+                                    value={feedbackFilter}
+                                    onChange={(e) => setFeedbackFilter(e.target.value)}
+                                    className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                                >
+                                    <option value="all">All Feedback</option>
+                                    <option value="Pending">Pending Feedback</option>
+                                    <option value="Submitted">Submitted</option>
+                                    <option value="Reviewed">Reviewed</option>
+                                </select>
+                                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
+                            </div>
 
                             {/* Interviewer Filter */}
-                            <select
-                                value={interviewerFilter}
-                                onChange={(e) => setInterviewerFilter(e.target.value)}
-                                className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                            >
-                                <option value="all">All Interviewers</option>
-                                {interviewers.map(interviewer => (
-                                    <option key={interviewer} value={interviewer}>{interviewer}</option>
-                                ))}
-                            </select>
+                            <div className="relative">
+                                <select
+                                    value={interviewerFilter}
+                                    onChange={(e) => setInterviewerFilter(e.target.value)}
+                                    className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                                >
+                                    <option value="all">All Interviewers</option>
+                                    {interviewers.map(interviewer => (
+                                        <option key={interviewer} value={interviewer}>{interviewer}</option>
+                                    ))}
+                                </select>
+                                <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
+                            </div>
 
                             {/* Clear Filters */}
                             {(dateFilter !== 'all' || roundFilter !== 'all' || statusFilter !== 'all' || feedbackFilter !== 'all' || interviewerFilter !== 'all' || searchTerm) && (
@@ -743,6 +858,18 @@ export default function InterviewManagementPage() {
                                                             <CheckCircleIcon className="w-5 h-5" />
                                                         </button>
                                                     )}
+                                                    {interview.status === 'Missed' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedInterview(interview);
+                                                                setShowRescheduleModal(true);
+                                                            }}
+                                                            className="text-gray-400 hover:text-orange-600 transition-colors p-1"
+                                                            title="Reschedule Interview"
+                                                        >
+                                                            <CalendarIcon className="w-5 h-5" />
+                                                        </button>
+                                                    )}
                                                     <a
                                                         href={`mailto:${interview.candidateEmail}`}
                                                         className="text-gray-400 hover:text-gray-900 transition-colors p-1"
@@ -763,6 +890,39 @@ export default function InterviewManagementPage() {
                     )}
                 </div>
             </div>
+
+            {/* Reschedule Confirmation Modal */}
+            {showRescheduleModal && selectedInterview && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4 text-orange-600">
+                            <ExclamationCircleIcon className="w-8 h-8" />
+                            <h3 className="text-lg font-bold">Reschedule Interview?</h3>
+                        </div>
+                        <p className="text-gray-600 mb-6">
+                            Are you sure you want to reschedule the interview for <strong>{selectedInterview.candidateName}</strong>?
+                            This will change the status to 'Rescheduling' and notify the candidate.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowRescheduleModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium cursor-pointer"
+                                disabled={rescheduleLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleReschedule}
+                                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium cursor-pointer flex items-center gap-2"
+                                disabled={rescheduleLoading}
+                            >
+                                {rescheduleLoading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
+                                Confirm Reschedule
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Details Modal */}
             {showDetailsModal && selectedInterview && (

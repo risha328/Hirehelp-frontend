@@ -130,7 +130,8 @@ export interface SubmitMcqDto {
   answers: number[];
 }
 
-export type EvaluationStatus = 'pending' | 'in_progress' | 'completed' | 'passed' | 'failed' | 'skipped';
+
+export type EvaluationStatus = 'pending' | 'in_progress' | 'completed' | 'passed' | 'failed' | 'skipped' | 'missed' | 'rescheduling' | 'rescheduled';
 
 export interface RoundEvaluation {
   _id: string;
@@ -368,6 +369,36 @@ export const roundsAPI = {
 
     if (!response.ok) {
       throw new Error(`Failed to fetch Google Sheets data: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+
+  getEvaluationsByApplications: async (applicationIds: string[]): Promise<RoundEvaluation[]> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/evaluations/by-applications`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ applicationIds }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch evaluations: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  rescheduleRound: async (evaluationId: string): Promise<RoundEvaluation> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/evaluation/${evaluationId}/reschedule`, {
+      method: 'PATCH',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to reschedule round: ${response.status}`);
     }
 
     return response.json();
