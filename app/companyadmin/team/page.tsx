@@ -84,7 +84,7 @@ export default function TeamManagementPage() {
                 </div>
                 <button
                     onClick={() => setShowInviteModal(true)}
-                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
                 >
                     <Plus className="w-5 h-5 mr-2" />
                     Invite Member
@@ -164,7 +164,7 @@ export default function TeamManagementPage() {
                                     <input
                                         type="text"
                                         required
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white text-gray-900 placeholder-gray-500 shadow-sm"
                                         placeholder="John Doe"
                                         value={formData.name}
                                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -179,7 +179,7 @@ export default function TeamManagementPage() {
                                     <input
                                         type="email"
                                         required
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white text-gray-900 placeholder-gray-500 shadow-sm"
                                         placeholder="john@company.com"
                                         value={formData.email}
                                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -192,7 +192,7 @@ export default function TeamManagementPage() {
                                 <div className="relative">
                                     <Shield className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                                     <select
-                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition appearance-none bg-white"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition appearance-none bg-white text-gray-900 shadow-sm"
                                         value={formData.role}
                                         onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                                     >
