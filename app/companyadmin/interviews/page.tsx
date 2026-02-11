@@ -187,8 +187,18 @@ export default function InterviewManagementPage() {
                 }
 
                 // Interviewer Info
-                const interviewerName = round?.interviewers?.[0]?.name || 'Unassigned';
-                const interviewerEmail = round?.interviewers?.[0]?.email || '';
+                let interviewerName = 'Unassigned';
+                let interviewerEmail = '';
+
+                // Check specific assignment in evaluation first
+                if (evaluation && evaluation.assignedInterviewers && evaluation.assignedInterviewers.length > 0) {
+                    interviewerName = evaluation.assignedInterviewers[0].name;
+                    interviewerEmail = evaluation.assignedInterviewers[0].email;
+                } else if (round?.interviewers && round.interviewers.length > 0) {
+                    // Fallback to default round interviewers
+                    interviewerName = round.interviewers[0].name;
+                    interviewerEmail = round.interviewers[0].email;
+                }
 
                 // Derive Status
                 // Use evaluation status if available, otherwise default logic
