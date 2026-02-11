@@ -67,7 +67,9 @@ export default function InterviewManagementPage() {
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+
     const [rescheduleLoading, setRescheduleLoading] = useState(false);
+    const [showCompleteConfirmation, setShowCompleteConfirmation] = useState(false);
 
     // Assignment
     const [availableInterviewers, setAvailableInterviewers] = useState<any[]>([]);
@@ -453,12 +455,25 @@ export default function InterviewManagementPage() {
     };
 
     // Handle mark as completed
+    // Handle mark as completed - Step 1: Show Confirmation
     const handleMarkAsCompleted = (interviewId: string) => {
+        const interview = interviews.find(i => i.id === interviewId);
+        if (interview) {
+            setSelectedInterview(interview);
+            setShowCompleteConfirmation(true);
+        }
+    };
+
+    // Handle mark as completed - Step 2: Confirmation Action
+    const confirmMarkAsCompleted = () => {
+        if (!selectedInterview) return;
+
         setInterviews(prev => prev.map(interview =>
-            interview.id === interviewId
+            interview.id === selectedInterview.id
                 ? { ...interview, status: 'Completed', feedbackStatus: 'Pending' }
                 : interview
         ));
+        setShowCompleteConfirmation(false);
     };
 
     // Handle submit feedback
@@ -894,7 +909,6 @@ export default function InterviewManagementPage() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm font-medium text-gray-900">{interview.jobRole}</div>
-                                                <div className="text-sm text-gray-500">ID: {interview.jobId}</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="space-y-2">
@@ -1358,6 +1372,35 @@ export default function InterviewManagementPage() {
                             >
                                 {assignLoading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
                                 Confirm Assignment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Mark as Completed Confirmation Modal */}
+            {showCompleteConfirmation && selectedInterview && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4 text-green-600">
+                            <CheckCircleIcon className="w-8 h-8" />
+                            <h3 className="text-lg font-bold">Mark as Completed?</h3>
+                        </div>
+                        <p className="text-gray-600 mb-6">
+                            Are you sure you want to mark the interview for <strong>{selectedInterview.candidateName}</strong> as completed?
+                            This will update the status and enable feedback submission.
+                        </p>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowCompleteConfirmation(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium cursor-pointer"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmMarkAsCompleted}
+                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium cursor-pointer"
+                            >
+                                Yes, Mark Completed
                             </button>
                         </div>
                     </div>
