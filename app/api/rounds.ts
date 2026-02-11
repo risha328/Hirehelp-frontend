@@ -403,4 +403,19 @@ export const roundsAPI = {
 
     return response.json();
   },
+
+  assignInterviewer: async (evaluationId: string, interviewerData: { interviewerId: string, interviewerName: string, interviewerEmail: string }): Promise<void> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/evaluations/${evaluationId}/assign`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(interviewerData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to assign interviewer: ${response.status}`);
+    }
+
+    return response.json();
+  },
 };

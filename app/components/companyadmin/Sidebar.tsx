@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   BarChart3,
   Briefcase,
@@ -27,12 +28,11 @@ interface SidebarItem {
 const sidebarItems: SidebarItem[] = [
   { name: 'Overview', href: '/companyadmin', icon: Home },
   { name: 'Jobs', href: '/companyadmin/jobs', icon: Briefcase },
-  // { name: 'Rounds', href: '/companyadmin/rounds', icon: File },
   { name: 'Interview Management', href: '/companyadmin/interviews', icon: Users },
   { name: 'Applications', href: '/companyadmin/applications', icon: FileText },
   { name: 'Candidates', href: '/companyadmin/candidates', icon: UserCheck },
   { name: 'Analytics', href: '/companyadmin/analytics', icon: BarChart3 },
-  // { name: 'Team Management', href: '/companyadmin/team', icon: Users },
+  { name: 'Team Management', href: '/companyadmin/team', icon: Users },
 ];
 
 interface CompanyAdminSidebarProps {
@@ -42,6 +42,14 @@ interface CompanyAdminSidebarProps {
 
 export default function CompanyAdminSidebar({ sidebarOpen, setSidebarOpen }: CompanyAdminSidebarProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  const filteredItems = sidebarItems.filter(item => {
+    if (user?.role === 'INTERVIEWER') {
+      return ['Overview', 'Interview Management'].includes(item.name);
+    }
+    return true;
+  });
 
   return (
     <>
@@ -65,7 +73,7 @@ export default function CompanyAdminSidebar({ sidebarOpen, setSidebarOpen }: Com
 
         <nav className="mt-8 px-4">
           <div className="space-y-2">
-            {sidebarItems.map((item) => {
+            {filteredItems.map((item) => {
               const isActive = item.href === '/companyadmin'
                 ? pathname === item.href
                 : pathname.startsWith(item.href);

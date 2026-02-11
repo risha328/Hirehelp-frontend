@@ -41,7 +41,7 @@ export default function LoginPage() {
       if (storedUser) {
         const user = JSON.parse(storedUser);
         // Redirect based on user role
-        if (user.role === 'COMPANY_ADMIN') {
+        if (user.role === 'COMPANY_ADMIN' || user.role === 'INTERVIEWER') {
           router.push('/companyadmin');
         } else if (user.role === 'SUPER_ADMIN') {
           router.push('/superadmin');

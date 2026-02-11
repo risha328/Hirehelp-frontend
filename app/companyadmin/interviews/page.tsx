@@ -24,7 +24,8 @@ import {
     MapPinIcon,
     BellAlertIcon,
     ChartBarIcon,
-    UsersIcon
+    UsersIcon,
+    UserPlusIcon
 } from '@heroicons/react/24/outline';
 import {
     CheckCircleIcon as CheckCircleSolid,
@@ -68,6 +69,12 @@ export default function InterviewManagementPage() {
     const [showRescheduleModal, setShowRescheduleModal] = useState(false);
     const [rescheduleLoading, setRescheduleLoading] = useState(false);
 
+    // Assignment
+    const [availableInterviewers, setAvailableInterviewers] = useState<any[]>([]);
+    const [showAssignModal, setShowAssignModal] = useState(false);
+    const [assignLoading, setAssignLoading] = useState(false);
+    const [selectedInterviewerId, setSelectedInterviewerId] = useState<string>('');
+
     // Filters
     const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'this-week' | 'next-week'>('all');
     const [roundFilter, setRoundFilter] = useState<string>('all');
@@ -92,11 +99,20 @@ export default function InterviewManagementPage() {
             }
             const companyId = companyData.company._id;
 
-            // 2. Fetch Applications and Rounds in parallel
-            const [applications, rounds] = await Promise.all([
+            // 2. Fetch Applications, Rounds, and Admins in parallel
+            const [applications, rounds, admins] = await Promise.all([
                 applicationsAPI.getApplicationsByCompany(companyId),
-                roundsAPI.getAllRounds()
+                roundsAPI.getAllRounds(),
+                companiesAPI.getCompanyAdmins(companyId).catch(err => {
+                    console.error("Failed to fetch interviewers", err);
+                    return [];
+                })
             ]);
+
+            if (Array.isArray(admins)) {
+                setAvailableInterviewers(admins);
+            }
+
 
             // 3. Filter applications in 'UNDER_REVIEW' status (Interview Status)
             const interviewApps = applications.filter(app => app.status === 'UNDER_REVIEW');
@@ -119,10 +135,11 @@ export default function InterviewManagementPage() {
                 const round = rounds.find(r => r._id === currentRoundId);
 
                 // Find specific evaluation for this application and round
-                const evaluation = evaluations.find(e =>
-                    e.applicationId === app._id &&
-                    e.roundId._id === currentRoundId
-                );
+                const evaluation = evaluations.find(e => {
+                    const eAppId = e.applicationId && typeof e.applicationId === 'object' ? (e.applicationId as any)._id : e.applicationId;
+                    const eRoundId = e.roundId && typeof e.roundId === 'object' ? (e.roundId as any)._id : e.roundId;
+                    return eAppId === app._id && eRoundId === currentRoundId;
+                });
 
                 // Determine Interview Details from Round or defaults
                 const roundType = round?.type || round?.name || 'Interview';
@@ -442,6 +459,62 @@ export default function InterviewManagementPage() {
             alert("Failed to reschedule. Please try again.");
         } finally {
             setRescheduleLoading(false);
+        }
+    };
+
+    // Handle Assign Interviewer
+    const handleAssignInterviewer = async () => {
+        console.log('Assigning interviewer...');
+        if (!selectedInterview) {
+            console.error('No selected interview');
+            return;
+        }
+        if (!selectedInterview.evaluationId) {
+            console.error('No evaluation ID for this interview');
+            alert('Cannot assign interviewer: No evaluation record found for this interview. Please ensure the candidate is in the correct stage.');
+            return;
+        }
+        if (!selectedInterviewerId) {
+            console.error('No interviewer selected');
+            alert('Please select an interviewer first.');
+            return;
+        }
+
+        const interviewer = availableInterviewers.find(i => i._id === selectedInterviewerId);
+        if (!interviewer) {
+            console.error('Selected interviewer not found in list');
+            return;
+        }
+
+        console.log('Sending assignment request...', { evaluationId: selectedInterview.evaluationId, interviewer });
+
+        setAssignLoading(true);
+        try {
+            await roundsAPI.assignInterviewer(selectedInterview.evaluationId, {
+                interviewerId: interviewer._id,
+                interviewerName: interviewer.name,
+                interviewerEmail: interviewer.email
+            });
+
+            // Update local state
+            setInterviews(prev => prev.map(interview =>
+                interview.id === selectedInterview.id
+                    ? {
+                        ...interview,
+                        interviewerName: interviewer.name,
+                        interviewerEmail: interviewer.email
+                    }
+                    : interview
+            ));
+
+            setShowAssignModal(false);
+            setSelectedInterviewerId('');
+            // Optional: Show success toast
+        } catch (error) {
+            console.error("Failed to assign interviewer", error);
+            alert("Failed to assign interviewer. Please try again.");
+        } finally {
+            setAssignLoading(false);
         }
     };
 
@@ -816,9 +889,25 @@ export default function InterviewManagementPage() {
                                                         <UserGroupIcon className="w-4 h-4 text-gray-600" />
                                                     </div>
                                                     <div className="ml-3">
-                                                        <div className="text-sm font-medium text-gray-900">{interview.interviewerName}</div>
+                                                        <div className="text-sm font-medium text-gray-900">
+                                                            {interview.interviewerName === 'Unassigned' ? (
+                                                                <span className="text-gray-400 italic">Unassigned</span>
+                                                            ) : (
+                                                                interview.interviewerName
+                                                            )}
+                                                        </div>
                                                         <div className="text-xs text-gray-500">{interview.interviewerEmail}</div>
                                                     </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedInterview(interview);
+                                                            setSelectedInterviewerId('');
+                                                            setShowAssignModal(true);
+                                                        }}
+                                                        className="ml-auto text-blue-600 hover:text-blue-800 text-xs font-medium px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+                                                    >
+                                                        {interview.interviewerName === 'Unassigned' ? 'Assign' : 'Change'}
+                                                    </button>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -1120,6 +1209,56 @@ export default function InterviewManagementPage() {
                                 className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
                             >
                                 Submit Feedback
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Assign Interviewer Modal */}
+            {showAssignModal && selectedInterview && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4 text-blue-600">
+                            <UserPlusIcon className="w-8 h-8" />
+                            <h3 className="text-lg font-bold">Assign Interviewer</h3>
+                        </div>
+                        <p className="text-gray-600 mb-6">
+                            Assign an interviewer for <strong>{selectedInterview.candidateName}</strong> ({selectedInterview.interviewRound}).
+                            They will receive an email notification with all interview details.
+                        </p>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Select Interviewer</label>
+                            <select
+                                value={selectedInterviewerId}
+                                onChange={(e) => setSelectedInterviewerId(e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                                <option value="">-- Select an interviewer --</option>
+                                {availableInterviewers.map(interviewer => (
+                                    <option key={interviewer._id} value={interviewer._id}>
+                                        {interviewer.name} ({interviewer.email})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowAssignModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium cursor-pointer"
+                                disabled={assignLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleAssignInterviewer}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium cursor-pointer flex items-center gap-2"
+                                disabled={assignLoading || !selectedInterviewerId}
+                            >
+                                {assignLoading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
+                                Confirm Assignment
                             </button>
                         </div>
                     </div>
