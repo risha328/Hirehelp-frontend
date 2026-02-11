@@ -74,6 +74,8 @@ export default function InterviewManagementPage() {
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [assignLoading, setAssignLoading] = useState(false);
     const [selectedInterviewerId, setSelectedInterviewerId] = useState<string>('');
+    const [assignSearchTerm, setAssignSearchTerm] = useState('');
+    const [showAssignDropdown, setShowAssignDropdown] = useState(false);
 
     // Filters
     const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'tomorrow' | 'this-week' | 'next-week'>('all');
@@ -153,15 +155,27 @@ export default function InterviewManagementPage() {
 
                 if (evaluation?.scheduledAt) {
                     date = evaluation.scheduledAt;
-                    // Extract time from scheduledAt if needed, or stick to round default if not explicit
+                    // Extract time from scheduledAt
+                    const dateObj = new Date(evaluation.scheduledAt);
+                    if (!isNaN(dateObj.getTime())) {
+                        const hours = dateObj.getHours().toString().padStart(2, '0');
+                        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+                        time = `${hours}:${minutes}`;
+                    }
+                } else if (round?.scheduledAt) {
+                    date = round.scheduledAt as any; // Type assertion if needed based on API response
+                    // Extract time from scheduledAt
+                    const dateObj = new Date(round.scheduledAt);
+                    if (!isNaN(dateObj.getTime())) {
+                        const hours = dateObj.getHours().toString().padStart(2, '0');
+                        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
+                        time = `${hours}:${minutes}`;
+                    }
                 } else if (round?.scheduling?.interviewDate) {
                     date = round.scheduling.interviewDate;
-                } else if (round?.scheduledAt) {
-                    date = round.scheduledAt;
-                }
-
-                if (round?.scheduling?.interviewTime) {
-                    time = round.scheduling.interviewTime;
+                    if (round.scheduling.interviewTime) {
+                        time = round.scheduling.interviewTime;
+                    }
                 }
 
                 if (round?.duration) {
@@ -190,24 +204,48 @@ export default function InterviewManagementPage() {
                 const isScheduled = Boolean(evaluation?.scheduledAt || round?.scheduling?.interviewDate || round?.scheduledAt);
 
                 if (status === 'Scheduled' && isScheduled) {
-                    const interviewDateObj = new Date(date);
-                    // Parse time string (HH:MM) to set exact time
-                    if (time && time.includes(':')) {
+                    let interviewStart: Date;
+
+                    // Determine accurate start time
+                    if (date.includes('T') && !round?.scheduling?.interviewDate) {
+                        // It's likely a full ISO timestamp from scheduledAt
+                        interviewStart = new Date(date);
+                    } else {
+                        // It's a date string (YYYY-MM-DD or similar), need to combine with time
+                        const dateObj = new Date(date);
                         const [hours, minutes] = time.split(':').map(Number);
-                        if (!isNaN(hours) && !isNaN(minutes)) {
-                            interviewDateObj.setHours(hours, minutes, 0, 0);
+
+                        if (!isNaN(dateObj.getTime()) && !isNaN(hours) && !isNaN(minutes)) {
+                            // Construct local date with specific time
+                            interviewStart = new Date(
+                                dateObj.getFullYear(),
+                                dateObj.getMonth(),
+                                dateObj.getDate(),
+                                hours,
+                                minutes,
+                                0
+                            );
+                        } else {
+                            // Fallback
+                            interviewStart = new Date(date);
                         }
                     }
 
-                    // Add duration to get end time (allow 15 mins buffer or just strict end time)
+                    // Console log for debugging (will appear in browser console)
                     const durationMs = (duration || 60) * 60 * 1000;
-                    const endTime = new Date(interviewDateObj.getTime() + durationMs);
+                    const bufferMs = 15 * 60 * 1000; // 15 mins buffer
 
-                    if (new Date() > endTime) {
-                        status = 'Missed';
+                    if (!isNaN(interviewStart.getTime())) {
+                        const endTime = new Date(interviewStart.getTime() + durationMs + bufferMs);
+                        const now = new Date();
+
+                        // console.log(`Checking Missed: ${app.candidateId.name}`, { start: interviewStart, end: endTime, now, isMissed: now > endTime });
+
+                        if (now > endTime) {
+                            status = 'Missed';
+                        }
                     }
                 }
-
 
 
                 // Determine Feedback Status based on status and evaluation
@@ -1230,18 +1268,79 @@ export default function InterviewManagementPage() {
 
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-700 mb-2">Select Interviewer</label>
-                            <select
-                                value={selectedInterviewerId}
-                                onChange={(e) => setSelectedInterviewerId(e.target.value)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            >
-                                <option value="">-- Select an interviewer --</option>
-                                {availableInterviewers.map(interviewer => (
-                                    <option key={interviewer._id} value={interviewer._id}>
-                                        {interviewer.name} ({interviewer.email})
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="relative">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                                        placeholder="Search interviewer..."
+                                        value={assignSearchTerm}
+                                        onChange={(e) => {
+                                            setAssignSearchTerm(e.target.value);
+                                            setShowAssignDropdown(true);
+                                            if (e.target.value === '') setSelectedInterviewerId('');
+                                        }}
+                                        onFocus={() => setShowAssignDropdown(true)}
+                                        onClick={() => setShowAssignDropdown(true)}
+                                        autoComplete="off"
+                                    />
+                                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+
+                                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                                        {selectedInterviewerId && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedInterviewerId('');
+                                                    setAssignSearchTerm('');
+                                                    setShowAssignDropdown(true);
+                                                }}
+                                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                                            >
+                                                <XCircleIcon className="w-5 h-5" />
+                                            </button>
+                                        )}
+                                        <ChevronDownIcon className="w-4 h-4 text-gray-400 pointer-events-none" />
+                                    </div>
+                                </div>
+
+                                {showAssignDropdown && (
+                                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+                                        {availableInterviewers.length === 0 ? (
+                                            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                                No interviewers found in company
+                                            </div>
+                                        ) : availableInterviewers.filter(i =>
+                                            i.name.toLowerCase().includes(assignSearchTerm.toLowerCase()) ||
+                                            i.email.toLowerCase().includes(assignSearchTerm.toLowerCase())
+                                        ).length > 0 ? (
+                                            availableInterviewers
+                                                .filter(i =>
+                                                    i.name.toLowerCase().includes(assignSearchTerm.toLowerCase()) ||
+                                                    i.email.toLowerCase().includes(assignSearchTerm.toLowerCase())
+                                                )
+                                                .map(interviewer => (
+                                                    <div
+                                                        key={interviewer._id}
+                                                        className={`px-4 py-2 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-0 ${selectedInterviewerId === interviewer._id ? 'bg-blue-50' : ''}`}
+                                                        onClick={() => {
+                                                            setSelectedInterviewerId(interviewer._id);
+                                                            setAssignSearchTerm(interviewer.name);
+                                                            setShowAssignDropdown(false);
+                                                        }}
+                                                    >
+                                                        <div className="font-medium text-gray-900">{interviewer.name}</div>
+                                                        <div className="text-xs text-gray-500">{interviewer.email}</div>
+                                                    </div>
+                                                ))
+                                        ) : (
+                                            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                                No match found for "{assignSearchTerm}"
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <div className="flex justify-end gap-3">
