@@ -42,7 +42,7 @@ export default function CompanyAdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Header */}
       <CompanyAdminHeader />
 
@@ -50,9 +50,9 @@ export default function CompanyAdminLayout({
       <CompanyAdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       {/* Main content */}
-      <div className="lg:pl-64 pt-16">
+      <div className="lg:pl-64 pt-16 max-w-full overflow-x-hidden">
         {/* Page content */}
-        <main className="p-6">
+        <main className="p-6 w-full">
           {children}
         </main>
       </div>
