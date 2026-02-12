@@ -27,6 +27,7 @@ export default function ApplicationsPage() {
   const [googleSheetLoading, setGoogleSheetLoading] = useState(false);
   const [selectedJobId, setSelectedJobId] = useState<string>('all');
   const [rounds, setRounds] = useState<Round[]>([]);
+  const [evaluations, setEvaluations] = useState<RoundEvaluation[]>([]);
 
   useEffect(() => {
     fetchApplications();
@@ -63,6 +64,13 @@ export default function ApplicationsPage() {
 
       const data = await applicationsAPI.getApplicationsByCompany(response.company._id);
       setApplications(data);
+
+      // Fetch evaluations for these applications
+      if (data.length > 0) {
+        const appIds = data.map(app => app._id);
+        const evals = await roundsAPI.getEvaluationsByApplications(appIds);
+        setEvaluations(evals);
+      }
     } catch (err) {
       console.error('Failed to fetch applications:', err);
       setError('Failed to load applications. Please try again.');
@@ -345,6 +353,7 @@ export default function ApplicationsPage() {
                 applications={filteredApplications}
                 rounds={rounds}
                 mcqResponses={mcqResponses}
+                evaluations={evaluations}
                 onApplicationUpdate={fetchApplications}
                 onViewDetails={(application) => {
                   setSelectedApplication(application);

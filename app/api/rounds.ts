@@ -404,12 +404,23 @@ export const roundsAPI = {
     return response.json();
   },
 
-  assignInterviewer: async (evaluationId: string, interviewerData: { interviewerId: string, interviewerName: string, interviewerEmail: string }): Promise<void> => {
+  assignInterviewer: async (evaluationId: string, data: {
+    interviewerId: string;
+    interviewerName: string;
+    interviewerEmail: string;
+    scheduledAt: string;
+    interviewMode: string;
+    interviewType: string;
+    platform?: string;
+    meetingLink?: string;
+    duration?: string;
+    locationDetails?: any;
+  }): Promise<RoundEvaluation> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/evaluations/${evaluationId}/assign`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify(interviewerData),
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
