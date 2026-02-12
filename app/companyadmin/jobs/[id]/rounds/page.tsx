@@ -397,7 +397,11 @@ export default function JobRoundsPage() {
                 resetForm();
                 setShowModal(true);
               }}
-              className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-sm hover:shadow-md cursor-pointer"
+              disabled={!!(job.applicationDeadline && new Date(job.applicationDeadline) < new Date())}
+              className={`inline-flex items-center px-4 py-2.5 font-medium rounded-lg transition-all duration-200 shadow-sm ${job.applicationDeadline && new Date(job.applicationDeadline) < new Date()
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:shadow-md cursor-pointer'
+                }`}
             >
               <PlusIcon className="w-4 h-4 mr-2" />
               Add Round
@@ -448,6 +452,27 @@ export default function JobRoundsPage() {
             </div>
           </div>
         </div>
+
+        {/* Expiration Warning */}
+        {job.applicationDeadline && new Date(job.applicationDeadline) < new Date() && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mt-0.5" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-semibold text-red-800">Job Posting Expired</h3>
+                <p className="text-sm text-red-700 mt-1">
+                  This job's application deadline has passed on {new Date(job.applicationDeadline).toLocaleDateString('en-US', {
+                    month: 'long',
+                    day: 'numeric',
+                    year: 'numeric'
+                  })}. You cannot add new interview rounds to expired job postings.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -552,7 +577,11 @@ export default function JobRoundsPage() {
                       resetForm();
                       setShowModal(true);
                     }}
-                    className="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
+                    disabled={!!(job.applicationDeadline && new Date(job.applicationDeadline) < new Date())}
+                    className={`inline-flex items-center px-5 py-2.5 font-medium rounded-lg transition-all duration-200 ${job.applicationDeadline && new Date(job.applicationDeadline) < new Date()
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
+                      }`}
                   >
                     <PlusIcon className="w-5 h-5 mr-2" />
                     Create First Round
