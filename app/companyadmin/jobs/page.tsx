@@ -580,86 +580,99 @@ export default function CompanyJobsPage() {
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {filteredJobs.map(job => (
-                  <div key={job._id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="mb-3">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h3>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
-                            <span className="flex items-center gap-1">
-                              <MapPinIcon className="w-4 h-4" />
-                              {job.location}
-                            </span>
-                            <span className="px-2 py-1 bg-gray-100 rounded-md text-gray-700">
-                              {job.jobType}
-                            </span>
-                            <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
-                              {job.experienceLevel}
-                            </span>
-                          </div>
-                        </div>
+                {filteredJobs.map(job => {
+                  const isExpired = job.applicationDeadline ? new Date(job.applicationDeadline) < new Date(new Date().setHours(0, 0, 0, 0)) : false;
 
-                        <p className="text-gray-700 mb-4 line-clamp-2">{job.description}</p>
-
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          {job.salary && (
-                            <span className="flex items-center gap-1 font-medium text-green-700">
-                              <CurrencyDollarIcon className="w-4 h-4" />
-                              {job.salary}
-                            </span>
-                          )}
-                          <span className="flex items-center gap-1">
-                            <CalendarIcon className="w-4 h-4" />
-                            Posted {formatDate(job.createdAt)}
-                          </span>
-                          {job.applicationDeadline && (
-                            <span className="flex items-center gap-1">
-                              <ClockIcon className="w-4 h-4" />
-                              Apply by {formatDate(job.applicationDeadline)}
-                            </span>
-                          )}
-                        </div>
-
-                        {job.skills && job.skills.length > 0 && (
-                          <div className="mt-4">
-                            <div className="flex flex-wrap gap-2">
-                              {job.skills.slice(0, 5).map((skill, index) => (
-                                <span
-                                  key={index}
-                                  className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                                >
-                                  {skill}
-                                </span>
-                              ))}
-                              {job.skills.length > 5 && (
-                                <span className="px-3 py-1 text-sm text-gray-500">
-                                  +{job.skills.length - 5} more
+                  return (
+                    <div key={job._id} className={`p-6 transition-colors duration-200 ${isExpired ? 'bg-gray-50 opacity-70' : 'hover:bg-gray-50'}`}>
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="mb-3">
+                            <div className="flex items-center gap-3 mb-1">
+                              <h3 className="text-lg font-semibold text-gray-900">{job.title}</h3>
+                              {isExpired && (
+                                <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                                  Expired
                                 </span>
                               )}
                             </div>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 mb-3">
+                              <span className="flex items-center gap-1">
+                                <MapPinIcon className="w-4 h-4" />
+                                {job.location}
+                              </span>
+                              <span className="px-2 py-1 bg-gray-100 rounded-md text-gray-700">
+                                {job.jobType}
+                              </span>
+                              <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
+                                {job.experienceLevel}
+                              </span>
+                            </div>
                           </div>
-                        )}
-                      </div>
 
-                      <div className="flex flex-col gap-3">
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${job.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-800'
-                          }`}>
-                          {job.status}
-                        </span>
-                        <button
-                          onClick={() => router.push(`/companyadmin/jobs/${job._id}`)}
-                          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium cursor-pointer"
-                        >
-                          <EyeIcon className="w-4 h-4" />
-                          View Details
-                        </button>
+                          <p className="text-gray-700 mb-4 line-clamp-2">{job.description}</p>
+
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                            {job.salary && (
+                              <span className="flex items-center gap-1 font-medium text-green-700">
+                                <CurrencyDollarIcon className="w-4 h-4" />
+                                {job.salary}
+                              </span>
+                            )}
+                            <span className="flex items-center gap-1">
+                              <CalendarIcon className="w-4 h-4" />
+                              Posted {formatDate(job.createdAt)}
+                            </span>
+                            {job.applicationDeadline && (
+                              <span className={`flex items-center gap-1 ${isExpired ? 'text-red-600 font-medium' : ''}`}>
+                                <ClockIcon className="w-4 h-4" />
+                                Apply by {formatDate(job.applicationDeadline)}
+                              </span>
+                            )}
+                          </div>
+
+                          {job.skills && job.skills.length > 0 && (
+                            <div className="mt-4">
+                              <div className="flex flex-wrap gap-2">
+                                {job.skills.slice(0, 5).map((skill, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
+                                {job.skills.length > 5 && (
+                                  <span className="px-3 py-1 text-sm text-gray-500">
+                                    +{job.skills.length - 5} more
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-3">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${isExpired
+                              ? 'bg-red-100 text-red-800'
+                              : job.status === 'active'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                            {isExpired ? 'Expired' : job.status}
+                          </span>
+                          <button
+                            onClick={() => router.push(`/companyadmin/jobs/${job._id}`)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium cursor-pointer"
+                          >
+                            <EyeIcon className="w-4 h-4" />
+                            View Details
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
