@@ -6,11 +6,13 @@ import { Eye, Download, User, FileText, Clock, CheckCircle, XCircle, HelpCircle,
 import { applicationsAPI, Application } from '../api/applications';
 import { Round, MCQResponse } from '../api/rounds';
 import { API_BASE_URL } from '../api/config';
+import ScheduleInterviewModal from './ScheduleInterviewModal';
 
 interface KanbanBoardProps {
   applications: Application[];
   rounds?: Round[];
   mcqResponses?: MCQResponse[];
+  evaluations?: any[]; // Using any[] temporarily to avoid import cycle or strictly import RoundEvaluation
   onApplicationUpdate: () => void;
   onViewDetails: (application: Application) => void;
 }
@@ -25,10 +27,18 @@ interface KanbanColumn {
   applications: Application[];
 }
 
-export default function KanbanBoard({ applications, rounds = [], mcqResponses = [], onApplicationUpdate, onViewDetails }: KanbanBoardProps) {
+export default function KanbanBoard({ applications, rounds = [], mcqResponses = [], evaluations = [], onApplicationUpdate, onViewDetails }: KanbanBoardProps) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmData, setConfirmData] = useState<{ application: Application, newStatus: string, newRoundId?: string } | null>(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [scheduleModalData, setScheduleModalData] = useState<{
+    applicationId: string;
+    roundId: string;
+    candidateName: string;
+    roundName: string;
+    roundType: string;
+  } | null>(null);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -304,6 +314,50 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
                                   </div>
                                 )}
 
+                                {/* Schedule Interview Button/Status */}
+                                {column.roundId && rounds.find(r => r._id === column.roundId)?.type && (['technical', 'hr'].includes(rounds.find(r => r._id === column.roundId)?.type || '') || rounds.find(r => r._id === column.roundId)?.type === 'interview') && (
+                                  (() => {
+                                    const round = rounds.find(r => r._id === column.roundId);
+                                    // Check if evaluation exists and has schedule
+                                    const evaluation = evaluations?.find(e =>
+                                      (typeof e.applicationId === 'object' ? (e.applicationId as any)._id === application._id : e.applicationId === application._id) &&
+                                      (typeof e.roundId === 'object' ? (e.roundId as any)._id === column.roundId : e.roundId === column.roundId)
+                                    );
+
+                                    const isScheduled = evaluation?.scheduledAt || evaluation?.status === 'scheduled';
+
+                                    if (isScheduled) {
+                                      return (
+                                        <div className="mb-3 flex items-center p-2 rounded text-xs font-medium bg-green-50 text-green-700">
+                                          <Clock className="h-3 w-3 mr-1" />
+                                          Scheduled: {evaluation.scheduledAt
+                                            ? new Date(evaluation.scheduledAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
+                                            : 'Date not set'}
+                                        </div>
+                                      );
+                                    } else {
+                                      return (
+                                        <button
+                                          onClick={() => {
+                                            setScheduleModalData({
+                                              applicationId: application._id,
+                                              roundId: column.roundId!,
+                                              candidateName: application.candidateId.name,
+                                              roundName: round?.name || '',
+                                              roundType: round?.type || 'technical'
+                                            });
+                                            setShowScheduleModal(true);
+                                          }}
+                                          className="mb-3 w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded transition-colors shadow-sm flex items-center justify-center cursor-pointer"
+                                        >
+                                          <Clock className="h-3 w-3 mr-2" />
+                                          Schedule Interview
+                                        </button>
+                                      );
+                                    }
+                                  })()
+                                )}
+
                                 <div className="flex items-center justify-between">
                                   <div className="flex space-x-1">
                                     <button
@@ -398,6 +452,25 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
             </div>
           </div>
         </div>
+      )}
+
+      {showScheduleModal && scheduleModalData && (
+        <ScheduleInterviewModal
+          isOpen={showScheduleModal}
+          onClose={() => {
+            setShowScheduleModal(false);
+            setScheduleModalData(null);
+          }}
+          onSuccess={() => {
+            // Refresh applications/evaluations
+            onApplicationUpdate();
+          }}
+          applicationId={scheduleModalData.applicationId}
+          roundId={scheduleModalData.roundId}
+          candidateName={scheduleModalData.candidateName}
+          roundName={scheduleModalData.roundName}
+          roundType={scheduleModalData.roundType}
+        />
       )}
     </div>
   );

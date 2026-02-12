@@ -50,7 +50,7 @@ interface Interview {
     duration: number; // in minutes
     interviewerName: string;
     interviewerEmail: string;
-    status: 'Scheduled' | 'In Progress' | 'Completed' | 'Missed' | 'Rescheduled' | 'Rescheduling';
+    status: 'Pending' | 'Scheduled' | 'In Progress' | 'Completed' | 'Missed' | 'Rescheduled' | 'Rescheduling';
     feedbackStatus: 'Not Generated' | 'Pending' | 'Submitted' | 'Reviewed';
     feedbackSubmittedAt?: string;
     meetingLink?: string;
@@ -202,7 +202,7 @@ export default function InterviewManagementPage() {
 
                 // Derive Status
                 // Use evaluation status if available, otherwise default logic
-                let status: Interview['status'] = 'Scheduled';
+                let status: Interview['status'] = 'Pending';
 
                 if (evaluation) {
                     if (evaluation.status === 'missed') status = 'Missed';
@@ -210,6 +210,8 @@ export default function InterviewManagementPage() {
                     else if (evaluation.status === 'rescheduled') status = 'Rescheduled';
                     else if (evaluation.status === 'completed' || evaluation.status === 'passed' || evaluation.status === 'failed') status = 'Completed';
                     else if (evaluation.status === 'in_progress') status = 'In Progress';
+                    else if (evaluation.status === 'scheduled') status = 'Scheduled';
+                    else if (evaluation.status === 'pending') status = 'Pending';
                 }
 
                 // Check if interview is missed (deadline passed and still scheduled)
@@ -357,6 +359,13 @@ export default function InterviewManagementPage() {
     // Get status badge
     const getStatusBadge = (status: Interview['status']) => {
         switch (status) {
+            case 'Pending':
+                return (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                        <ClockIcon className="w-3 h-3 mr-1" />
+                        Pending
+                    </span>
+                );
             case 'Scheduled':
                 return (
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
@@ -556,7 +565,10 @@ export default function InterviewManagementPage() {
             await roundsAPI.assignInterviewer(selectedInterview.evaluationId, {
                 interviewerId: interviewer._id,
                 interviewerName: interviewer.name,
-                interviewerEmail: interviewer.email
+                interviewerEmail: interviewer.email,
+                scheduledAt: selectedInterview.date, // Assuming date is ISO string or valid date
+                interviewMode: selectedInterview.mode === 'Online' ? 'virtual' : 'in-person',
+                interviewType: selectedInterview.interviewRound
             });
 
             // Update local state
