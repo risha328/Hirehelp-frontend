@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List, FileQuestion, Edit, Save, X, Briefcase } from 'lucide-react';
+import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List, FileQuestion, Edit, Save, X, Briefcase, ChevronDown } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
 import { roundsAPI, MCQResponse, RoundEvaluation, EvaluationStatus, Round } from '../../api/rounds';
 import { API_BASE_URL } from '../../api/config';
@@ -28,6 +28,7 @@ export default function ApplicationsPage() {
   const [selectedJobId, setSelectedJobId] = useState<string>('all');
   const [rounds, setRounds] = useState<Round[]>([]);
   const [evaluations, setEvaluations] = useState<RoundEvaluation[]>([]);
+  const [isJobFilterOpen, setIsJobFilterOpen] = useState(false);
 
   useEffect(() => {
     fetchApplications();
@@ -262,6 +263,79 @@ export default function ApplicationsPage() {
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold text-gray-900">Job Applications</h1>
               <div className="flex items-center space-x-4">
+                {/* Job Filter Dropdown */}
+                {uniqueJobs.length > 0 && (
+                  <div className="relative inline-block text-left w-56">
+                    <button
+                      type="button"
+                      onClick={() => setIsJobFilterOpen(!isJobFilterOpen)}
+                      className="inline-flex justify-between items-center w-full rounded-lg border border-gray-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all"
+                      id="menu-button"
+                      aria-expanded="true"
+                      aria-haspopup="true"
+                    >
+                      <div className="flex items-center truncate">
+                        <Briefcase className="mr-2 h-4 w-4 text-gray-500" />
+                        <span className="truncate">
+                          {selectedJobId === 'all'
+                            ? 'All Jobs'
+                            : uniqueJobs.find(j => j.id === selectedJobId)?.title || 'Select Job'}
+                        </span>
+                      </div>
+                      <ChevronDown className={`ml-2 -mr-1 h-4 w-4 text-gray-400 transition-transform duration-200 ${isJobFilterOpen ? 'transform rotate-180' : ''}`} />
+                    </button>
+
+                    {isJobFilterOpen && (
+                      <div
+                        className="origin-top-right absolute right-0 mt-2 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-20 max-h-80 overflow-y-auto"
+                        role="menu"
+                        aria-orientation="vertical"
+                        aria-labelledby="menu-button"
+                        tabIndex={-1}
+                      >
+                        <div className="py-1" role="none">
+                          <button
+                            onClick={() => {
+                              setSelectedJobId('all');
+                              setIsJobFilterOpen(false);
+                            }}
+                            className={`flex items-center justify-between w-full text-left px-4 py-3 text-sm transition-colors ${selectedJobId === 'all' ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                            role="menuitem"
+                            tabIndex={-1}
+                          >
+                            <span className="font-medium">All Jobs</span>
+                            <span className={`ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium ${selectedJobId === 'all' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600'}`}>
+                              {applications.length}
+                            </span>
+                          </button>
+
+                          {uniqueJobs.map((job) => (
+                            <button
+                              key={job.id}
+                              onClick={() => {
+                                setSelectedJobId(job.id);
+                                setIsJobFilterOpen(false);
+                              }}
+                              className={`flex items-center justify-between w-full text-left px-4 py-3 text-sm transition-colors ${selectedJobId === job.id ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50'}`}
+                              role="menuitem"
+                              tabIndex={-1}
+                            >
+                              <span className="truncate pr-2">{job.title}</span>
+                              <span className={`ml-auto py-0.5 px-2.5 rounded-full text-xs font-medium ${selectedJobId === job.id ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-600'}`}>
+                                {job.count}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Backdrop to close on click outside */}
+                    {isJobFilterOpen && (
+                      <div className="fixed inset-0 z-10" onClick={() => setIsJobFilterOpen(false)} />
+                    )}
+                  </div>
+                )}
                 <div className="text-sm text-gray-600">
                   {filteredApplications.length} application{filteredApplications.length !== 1 ? 's' : ''}
                 </div>
@@ -290,41 +364,7 @@ export default function ApplicationsPage() {
               </div>
             </div>
 
-            {/* Job Filters */}
-            {uniqueJobs.length > 0 && (
-              <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
-                <button
-                  onClick={() => setSelectedJobId('all')}
-                  className={`flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedJobId === 'all'
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-                    }`}
-                >
-                  <Briefcase className="w-4 h-4 mr-2" />
-                  All Jobs
-                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${selectedJobId === 'all' ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600'
-                    }`}>
-                    {applications.length}
-                  </span>
-                </button>
-                {uniqueJobs.map((job) => (
-                  <button
-                    key={job.id}
-                    onClick={() => setSelectedJobId(job.id)}
-                    className={`flex items-center px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedJobId === job.id
-                      ? 'bg-indigo-600 text-white shadow-md'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-                      }`}
-                  >
-                    {job.title}
-                    <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${selectedJobId === job.id ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-600'
-                      }`}>
-                      {job.count}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
+
           </div>
 
           {filteredApplications.length === 0 ? (

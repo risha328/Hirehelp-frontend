@@ -135,8 +135,8 @@ export type EvaluationStatus = 'pending' | 'in_progress' | 'completed' | 'passed
 
 export interface RoundEvaluation {
   _id: string;
-  roundId: string;
-  applicationId: string;
+  roundId: string | { _id: string };
+  applicationId: string | { _id: string };
   evaluatorId: string;
   status: EvaluationStatus;
   score?: number;

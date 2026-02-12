@@ -34,7 +34,7 @@ import {
 } from '@heroicons/react/24/solid';
 import { applicationsAPI, Application } from '../../api/applications';
 import { companiesAPI } from '../../api/companies';
-import { roundsAPI, Round } from '../../api/rounds';
+import { roundsAPI, Round, RoundEvaluation } from '../../api/rounds';
 
 interface Interview {
     id: string;
@@ -115,56 +115,132 @@ export default function CalendarPage() {
                 roundsAPI.getAllRounds()
             ]);
 
-            const interviewApps = applications.filter(app => app.status === 'UNDER_REVIEW');
+            // Filter for relevant applications first to avoid fetching unnecessary evaluations
+            // In interview management page, logic filters mostly by job, but here we want all scheduled items.
+            // We'll fetch evaluations for all active applications.
+            const relevantApps = applications.filter(app =>
+                app.status !== 'REJECTED' && app.status !== 'HIRED'
+            );
 
-            const mappedInterviews: Interview[] = interviewApps.map(app => {
+            let evaluations: RoundEvaluation[] = [];
+            if (relevantApps.length > 0) {
+                const appIds = relevantApps.map(app => app._id);
+                try {
+                    evaluations = await roundsAPI.getEvaluationsByApplications(appIds);
+                } catch (e) {
+                    console.error("Failed to fetch evaluations", e);
+                }
+            }
+
+            const mappedInterviews: Interview[] = [];
+
+            relevantApps.forEach(app => {
                 const currentRoundId = app.currentRound && (typeof app.currentRound === 'object' ? app.currentRound._id : app.currentRound);
                 const round = rounds.find(r => r._id === currentRoundId);
+                const evaluation = evaluations.find(e =>
+                    (typeof e.applicationId === 'object' ? e.applicationId._id === app._id : e.applicationId === app._id) &&
+                    (typeof e.roundId === 'object' ? e.roundId._id === round?._id : e.roundId === round?._id)
+                );
+
+                // Only include if there's an evaluation or the round has scheduling info
+                // And it must be an interview round (or we want to show it on calendar)
+
+                // Determine raw scheduling info
+                let dateStr: string | undefined;
+                let timeStr = '09:00';
+                let durationVal = 60;
+
+                if (evaluation?.scheduledAt) {
+                    dateStr = evaluation.scheduledAt;
+                    const d = new Date(evaluation.scheduledAt);
+                    if (!isNaN(d.getTime())) {
+                        const h = d.getHours().toString().padStart(2, '0');
+                        const m = d.getMinutes().toString().padStart(2, '0');
+                        timeStr = `${h}:${m}`;
+                    }
+                } else if (round?.scheduledAt) {
+                    dateStr = round.scheduledAt;
+                    const d = new Date(round.scheduledAt);
+                    if (!isNaN(d.getTime())) {
+                        const h = d.getHours().toString().padStart(2, '0');
+                        const m = d.getMinutes().toString().padStart(2, '0');
+                        timeStr = `${h}:${m}`;
+                    }
+                } else if (round?.scheduling?.interviewDate) {
+                    dateStr = round.scheduling.interviewDate;
+                    if (round.scheduling.interviewTime) timeStr = round.scheduling.interviewTime;
+                }
+
+                // If no date is determined, skip this entry for the calendar
+                if (!dateStr) return;
 
                 const roundType = round?.type || round?.name || 'Interview';
                 const mode = round?.interviewMode === 'offline' ? 'Offline' : 'Online';
 
-                let dateStr = new Date().toISOString();
-                let time = '09:00';
-                let duration = 60;
-
-                if (round?.scheduling?.interviewDate) {
-                    dateStr = round.scheduling.interviewDate;
-                } else if (round?.scheduledAt) {
-                    dateStr = round.scheduledAt;
-                }
-
-                if (round?.scheduling?.interviewTime) {
-                    time = round.scheduling.interviewTime;
-                }
-
                 if (round?.duration) {
                     const parsedDuration = parseInt(round.duration);
-                    if (!isNaN(parsedDuration)) duration = parsedDuration;
+                    if (!isNaN(parsedDuration)) durationVal = parsedDuration;
                 }
 
-                const interviewerName = round?.interviewers?.length
-                    ? round.interviewers.map(i => i.name).join(', ')
-                    : 'Unassigned';
+                // Interviewer Info
+                let interviewerName = 'Unassigned';
+                let interviewerEmail = '';
 
-                const interviewerEmail = round?.interviewers?.length
-                    ? round.interviewers.map(i => i.email || '').join(', ')
-                    : '';
+                // Check specific assignment in evaluation first (fields might be inside assignedInterviewers or direct on evaluation depends on API, checks rounds.ts it seems RoundEvaluation doesn't have assignedInterviewers explicitly typed but let's assume it matches backend response or fall back to generic)
+                // Actually looking at rounds.ts RoundEvaluation has no interviewers field typed, but checking previous file viewing of interviews/page.tsx line 194 used evaluation.assignedInterviewers.
+                // We'll try to safely access it as any or fallback.
+                const evalAny = evaluation as any;
+                if (evalAny?.assignedInterviewers && evalAny.assignedInterviewers.length > 0) {
+                    interviewerName = evalAny.assignedInterviewers[0].name;
+                    interviewerEmail = evalAny.assignedInterviewers[0].email;
+                } else if (round?.interviewers && round.interviewers.length > 0) {
+                    interviewerName = round.interviewers[0].name;
+                    interviewerEmail = round.interviewers[0].email;
+                }
+
+                // Status Logic
+                let status: Interview['status'] = 'Scheduled'; // Default for calendar items if they have a date
+                if (evaluation) {
+                    if (evaluation.status === 'missed') status = 'Missed';
+                    else if (evaluation.status === 'rescheduling') status = 'Rescheduled'; // Map rescheduling to Rescheduled for UI simplicity? or just Rescheduled
+                    else if (evaluation.status === 'rescheduled') status = 'Rescheduled';
+                    else if (evaluation.status === 'completed' || evaluation.status === 'passed' || evaluation.status === 'failed') status = 'Completed';
+                    else if (evaluation.status === 'in_progress') status = 'In Progress';
+                }
+
+                // Check if missed locally if status is still Scheduled
+                const interviewDate = new Date(dateStr);
+                // Fix for handling dateStr that might be just YYYY-MM-DD
+                let actualDate = interviewDate;
+                if (!dateStr.includes('T')) {
+                    const [h, m] = timeStr.split(':').map(Number);
+                    actualDate = new Date(interviewDate);
+                    actualDate.setHours(h || 9, m || 0, 0, 0);
+                }
+
+                if (status === 'Scheduled' && actualDate < new Date()) {
+                    // status = 'Missed'; // Optional: Auto-mark missed in UI? interviews/page.tsx logic does this.
+                    // Let's keep strict to backend status mostly, but maybe flag it? 
+                    // The user requested "fetch actual data", so let's stick to what's in the system + simple derived.
+                    // Interviews page sets it to Missed if deadline passed.
+                    const bufferTime = actualDate.getTime() + (durationVal * 60 * 1000) + (15 * 60 * 1000); // end time + 15m buffer
+                    if (Date.now() > bufferTime) {
+                        status = 'Missed';
+                    }
+                }
 
                 // Generate avatar URL
                 const candidateAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${app.candidateId.name}`;
 
-                // Determine priority based on round and date
-                const interviewDate = new Date(dateStr);
+                // Priority
                 const today = new Date();
-                const daysDiff = Math.ceil((interviewDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+                const daysDiff = Math.ceil((actualDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
                 let priority: 'High' | 'Medium' | 'Low' = 'Medium';
-
-                if (daysDiff <= 1) priority = 'High';
+                if (daysDiff <= 1 && daysDiff >= -1) priority = 'High';
                 else if (daysDiff <= 3) priority = 'Medium';
                 else priority = 'Low';
 
-                return {
+                mappedInterviews.push({
                     id: app._id,
                     candidateName: app.candidateId.name,
                     candidateEmail: app.candidateId.email || '',
@@ -173,17 +249,17 @@ export default function CalendarPage() {
                     jobId: app.jobId._id,
                     interviewRound: roundType,
                     mode: mode,
-                    date: new Date(dateStr),
-                    time: time,
-                    duration: duration,
+                    date: actualDate,
+                    time: timeStr,
+                    duration: durationVal,
                     interviewerName: interviewerName,
                     interviewerEmail: interviewerEmail,
-                    status: 'Scheduled', // Default status
-                    feedbackStatus: 'Not Generated',
+                    status: status,
+                    feedbackStatus: 'Not Generated', // simplified for now
                     meetingLink: round?.meetingLink,
                     location: round?.locationDetails ? `${round.locationDetails.venueName}, ${round.locationDetails.city}` : undefined,
                     priority: priority
-                };
+                });
             });
 
             // Sort by date
