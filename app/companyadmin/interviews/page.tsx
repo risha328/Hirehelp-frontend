@@ -306,18 +306,24 @@ export default function InterviewManagementPage() {
                         }
                     }
 
-                    // Console log for debugging (will appear in browser console)
-                    const durationMs = (duration || 60) * 60 * 1000;
-                    const bufferMs = 15 * 60 * 1000; // 15 mins buffer
-
                     if (!isNaN(interviewStart.getTime())) {
-                        const endTime = new Date(interviewStart.getTime() + durationMs + bufferMs);
                         const now = new Date();
+                        const durationMs = (duration || 60) * 60 * 1000;
+                        const bufferMs = 15 * 60 * 1000; // 15 mins buffer
 
-                        // console.log(`Checking Missed: ${app.candidateId.name}`, { start: interviewStart, end: endTime, now, isMissed: now > endTime });
+                        const startTime = interviewStart.getTime();
+                        const endTime = startTime + durationMs;
+                        const currentTime = now.getTime();
 
-                        if (now > endTime) {
+                        // Logic for auto-status transition:
+                        // 1. If more than buffer time passed from start and still 'Scheduled' -> Missed
+                        // 2. If past end time and still 'Scheduled' -> Missed
+                        // 3. If past start time and still 'Scheduled' -> In Progress
+
+                        if (currentTime > endTime + bufferMs || currentTime > startTime + bufferMs) {
                             status = 'Missed';
+                        } else if (currentTime > startTime) {
+                            status = 'In Progress';
                         }
                     }
                 }
