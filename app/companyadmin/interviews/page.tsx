@@ -689,6 +689,65 @@ export default function InterviewManagementPage() {
         missed: interviews.filter(i => i.status === 'Missed').length,
     };
 
+    // Export to CSV function
+    const handleExportReport = () => {
+        try {
+            // Prepare CSV headers
+            const headers = [
+                'Candidate Name',
+                'Email',
+                'Job Role',
+                'Round & Mode',
+                'Interview Mode',
+                'Date',
+                'Time',
+                'Duration',
+                'Interviewer',
+                'Interviewer Email',
+                'Status',
+                'Feedback Status'
+            ];
+
+            // Prepare CSV rows from filtered interviews
+            const rows = filteredInterviews.map(interview => [
+                interview.candidateName,
+                interview.candidateEmail,
+                interview.jobRole,
+                interview.interviewRound,
+                interview.mode,
+                new Date(interview.date).toLocaleDateString(),
+                interview.time,
+                `${interview.duration} mins`,
+                interview.interviewerName,
+                interview.interviewerEmail || 'N/A',
+                interview.status,
+                interview.feedbackStatus
+            ]);
+
+            // Combine headers and rows
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+
+            // Create blob and download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+
+            link.setAttribute('href', url);
+            link.setAttribute('download', `interview_report_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Failed to export report:', error);
+            alert('Failed to export report. Please try again.');
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -719,7 +778,7 @@ export default function InterviewManagementPage() {
                             View Calendar
                         </button>
                         <button
-                            onClick={() => alert('Export feature coming soon')}
+                            onClick={handleExportReport}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium cursor-pointer shadow-sm"
                         >
                             <ChartBarIcon className="w-4 h-4" />
