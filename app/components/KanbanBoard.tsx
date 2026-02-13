@@ -324,11 +324,19 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
                                       (typeof e.roundId === 'object' ? (e.roundId as any)._id === column.roundId : e.roundId === column.roundId)
                                     );
 
+                                    const isCompleted = evaluation?.status === 'completed' || evaluation?.status === 'passed' || evaluation?.status === 'failed';
                                     const isScheduled = evaluation?.scheduledAt || evaluation?.status === 'scheduled';
 
-                                    if (isScheduled) {
+                                    if (isCompleted) {
                                       return (
-                                        <div className="mb-3 flex items-center p-2 rounded text-xs font-medium bg-green-50 text-green-700">
+                                        <div className="mb-3 flex items-center p-2 rounded text-xs font-medium bg-green-50 text-green-700 border border-green-200">
+                                          <CheckCircle className="h-3 w-3 mr-1" />
+                                          Completed
+                                        </div>
+                                      );
+                                    } else if (isScheduled) {
+                                      return (
+                                        <div className="mb-3 flex items-center p-2 rounded text-xs font-medium bg-blue-50 text-blue-700">
                                           <Clock className="h-3 w-3 mr-1" />
                                           Scheduled: {evaluation.scheduledAt
                                             ? new Date(evaluation.scheduledAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })
