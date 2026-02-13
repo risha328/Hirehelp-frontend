@@ -534,15 +534,37 @@ export default function InterviewManagementPage() {
     };
 
     // Handle mark as completed - Step 2: Confirmation Action
-    const confirmMarkAsCompleted = () => {
+    const confirmMarkAsCompleted = async () => {
         if (!selectedInterview) return;
 
-        setInterviews(prev => prev.map(interview =>
-            interview.id === selectedInterview.id
-                ? { ...interview, status: 'Completed', feedbackStatus: 'Pending' }
-                : interview
-        ));
-        setShowCompleteConfirmation(false);
+        if (!selectedInterview.evaluationId) {
+            alert('Cannot mark as completed: No evaluation record found for this interview.');
+            setShowCompleteConfirmation(false);
+            return;
+        }
+
+        try {
+            // Update the backend
+            await roundsAPI.updateEvaluationStatus(
+                selectedInterview.evaluationId,
+                'completed'
+            );
+
+            // Update local state
+            setInterviews(prev => prev.map(interview =>
+                interview.id === selectedInterview.id
+                    ? { ...interview, status: 'Completed', feedbackStatus: 'Pending' }
+                    : interview
+            ));
+
+            setShowCompleteConfirmation(false);
+
+            // Optional: Refresh data to ensure sync
+            fetchInterviews();
+        } catch (error) {
+            console.error('Failed to mark interview as completed:', error);
+            alert('Failed to mark interview as completed. Please try again.');
+        }
     };
 
     // Handle submit feedback
@@ -1083,16 +1105,6 @@ export default function InterviewManagementPage() {
                                                             <CalendarIcon className="w-5 h-5" />
                                                         </button>
                                                     )}
-                                                    <a
-                                                        href={`mailto:${interview.candidateEmail}`}
-                                                        className="text-gray-400 hover:text-gray-900 transition-colors p-1"
-                                                        title="Email Candidate"
-                                                    >
-                                                        <span className="sr-only">Email</span>
-                                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                                        </svg>
-                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>
