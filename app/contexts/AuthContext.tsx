@@ -13,7 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -54,6 +54,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = localStorage.getItem('access_token');
 
       if (!token) {
+        setUser(null);
+        localStorage.removeItem('user');
         setIsLoading(false);
         return;
       }
@@ -63,7 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('Fetching profile from backend...');
         const userData = await authAPI.getProfile();
         console.log('Profile fetched successfully:', userData);
-        if (userData && userData.id) {
+        if (userData && (userData.id || userData._id)) {
           const user = {
             id: userData.id || userData._id,
             name: userData.name || 'User',
@@ -73,11 +75,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUser(user);
           // Update localStorage with fresh data from backend
           localStorage.setItem('user', JSON.stringify(user));
+        } else {
+          // If profile fetch fails or returned no user, clear session
+          setUser(null);
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
         }
-        // If no valid user data, keep the current user (from localStorage)
       } catch (error) {
         console.warn('Could not fetch user profile from backend:', error);
-        // Keep the current user (from localStorage)
+        // If it's a 401 Unauthorized, we should clear the user
+        if (error instanceof Error && error.message.includes('401')) {
+          setUser(null);
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -106,11 +119,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    setUser(null);
+  const logout = async () => {
+    try {
+      // Optional: Call backend logout
+      await authAPI.logout().catch(err => console.error('Backend logout failed:', err));
+    } finally {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      setUser(null);
+    }
   };
 
   const value: AuthContextType = {
