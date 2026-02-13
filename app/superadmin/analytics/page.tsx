@@ -10,7 +10,9 @@ import {
   TrendingUp,
   TrendingDown,
   Activity,
+  Filter
 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, LabelList } from 'recharts';
 import { applicationsAPI, Application } from '../../api/applications';
 import { companiesAPI } from '../../api/companies';
 import { usersAPI } from '../../api/users';
@@ -22,6 +24,7 @@ interface AnalyticsData {
   totalJobs: number;
   applicationsByStatus: { [key: string]: number };
   applicationsOverTime: { date: string; count: number }[];
+  applicationsLast30DaysByStatus: { name: string; value: number; color: string }[];
   topCompanies: { name: string; applications: number }[];
 }
 
@@ -49,6 +52,7 @@ export default function AnalyticsPage() {
           totalJobs: 0, // Will be calculated from applications
           applicationsByStatus: {},
           applicationsOverTime: [],
+          applicationsLast30DaysByStatus: [],
           topCompanies: [],
         };
 
@@ -57,21 +61,40 @@ export default function AnalyticsPage() {
           analytics.applicationsByStatus[app.status] = (analytics.applicationsByStatus[app.status] || 0) + 1;
         });
 
-        // Count applications over time (last 30 days)
+        // Count applications over time and status (last 30 days)
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
         const dailyCounts: { [key: string]: number } = {};
+        const statusCounts30Days: { [key: string]: number } = {};
+
         applications.forEach((app: Application) => {
-          const date = new Date(app.createdAt).toISOString().split('T')[0];
-          if (new Date(app.createdAt) >= thirtyDaysAgo) {
+          const appDate = new Date(app.createdAt);
+          const date = appDate.toISOString().split('T')[0];
+
+          if (appDate >= thirtyDaysAgo) {
             dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+            statusCounts30Days[app.status] = (statusCounts30Days[app.status] || 0) + 1;
           }
         });
 
         analytics.applicationsOverTime = Object.entries(dailyCounts)
           .map(([date, count]) => ({ date, count }))
           .sort((a, b) => a.date.localeCompare(b.date));
+
+        const statusColors: { [key: string]: string } = {
+          'APPLIED': '#3b82f6',
+          'UNDER_REVIEW': '#f59e0b',
+          'SHORTLISTED': '#8b5cf6',
+          'HIRED': '#10b981',
+          'REJECTED': '#ef4444',
+        };
+
+        analytics.applicationsLast30DaysByStatus = Object.entries(statusCounts30Days).map(([status, count]) => ({
+          name: status.replace('_', ' '),
+          value: count,
+          color: statusColors[status] || '#6b7280',
+        }));
 
         // Count unique jobs
         const uniqueJobs = new Set(applications.map((app: Application) => app.jobId._id));
@@ -205,51 +228,105 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Application Status Distribution */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Application Status Distribution</h3>
-          <div className="space-y-3">
-            {Object.entries(analyticsData.applicationsByStatus).map(([status, count]) => (
-              <div key={status} className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
-                    {status.replace('_', ' ')}
-                  </span>
-                  <span className="text-sm text-gray-600">{count} applications</span>
-                </div>
-                <div className="text-sm font-medium text-gray-900">
-                  {analyticsData.totalApplications > 0
-                    ? Math.round((count / analyticsData.totalApplications) * 100)
-                    : 0}%
-                </div>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Application Status Distribution</h3>
+              <p className="text-sm text-gray-500">All-time applications by their current stage</p>
+            </div>
+            <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+              <Filter className="h-5 w-5" />
+            </button>
+          </div>
+          <div className="h-64">
+            {Object.keys(analyticsData.applicationsByStatus).length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={Object.entries(analyticsData.applicationsByStatus).map(([status, count]) => ({
+                    name: status.replace('_', ' '),
+                    value: count,
+                    status: status
+                  }))}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
+                  />
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 12, fill: '#64748b', fontWeight: 500 }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: 'rgba(0, 0, 0, 0.02)' }}
+                    contentStyle={{
+                      borderRadius: '12px',
+                      border: 'none',
+                      boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                      padding: '12px'
+                    }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    radius={[6, 6, 0, 0]}
+                    barSize={40}
+                  >
+                    {Object.entries(analyticsData.applicationsByStatus).map(([status, count], index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={{
+                          'APPLIED': '#8b5cf6', // Purple as in design
+                          'UNDER_REVIEW': '#3b82f6', // Blue
+                          'SHORTLISTED': '#10b981', // Green as in design
+                          'HIRED': '#059669', // Darker Green
+                          'REJECTED': '#ef4444', // Red
+                        }[status] || '#6b7280'}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No application data available
               </div>
-            ))}
+            )}
           </div>
         </div>
 
         {/* Applications Over Time */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Applications Over Time (Last 30 Days)</h3>
-          <div className="space-y-2">
-            {analyticsData.applicationsOverTime.length > 0 ? (
-              analyticsData.applicationsOverTime.slice(-7).map((item) => (
-                <div key={item.date} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">
-                    {new Date(item.date).toLocaleDateString()}
-                  </span>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-16 bg-gray-200 rounded-full h-2">
-                      <div
-                        className="bg-blue-600 h-2 rounded-full"
-                        style={{
-                          width: `${Math.min((item.count / Math.max(...analyticsData.applicationsOverTime.map(d => d.count))) * 100, 100)}%`
-                        }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-900">{item.count}</span>
-                  </div>
-                </div>
-              ))
+          <div className="h-64">
+            {analyticsData.applicationsLast30DaysByStatus.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={analyticsData.applicationsLast30DaysByStatus}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {analyticsData.applicationsLast30DaysByStatus.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                  />
+                  <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                </PieChart>
+              </ResponsiveContainer>
             ) : (
-              <p className="text-gray-500 text-center py-8">No applications in the last 30 days</p>
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No applications in the last 30 days
+              </div>
             )}
           </div>
         </div>
