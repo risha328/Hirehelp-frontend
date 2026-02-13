@@ -9,16 +9,12 @@ import {
   FileText,
   Download,
   ChevronRight,
-  AlertCircle,
-  Target,
   MoreVertical,
   Filter,
   Calendar,
   Building,
   Users,
   Briefcase,
-  TrendingUp,
-  TrendingDown
 } from 'lucide-react';
 
 // Chart components
@@ -40,12 +36,11 @@ import {
 import { useState, useEffect } from 'react';
 
 export default function SuperadminDashboardPage() {
-  const [timeRange, setTimeRange] = useState('30d');
   const [kpiData, setKpiData] = useState({
-    companies: { value: '0', change: '+0%', trend: 'up' },
-    candidates: { value: '0', change: '+0%', trend: 'up' },
-    jobs: { value: '0', change: '+0%', trend: 'up' },
-    applications: { value: '0', change: '+0%', trend: 'up' },
+    companies: { value: '0' },
+    candidates: { value: '0' },
+    jobs: { value: '0' },
+    applications: { value: '0' },
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,7 +54,7 @@ export default function SuperadminDashboardPage() {
         // Fetch data from APIs
         const [companies, candidates, jobs, applications] = await Promise.all([
           companiesAPI.getAllCompanies(),
-          usersAPI.getUsersByRole('candidate'),
+          usersAPI.getUsersByRole('CANDIDATE'),
           jobsAPI.getAllJobs(),
           applicationsAPI.getAllApplications(),
         ]);
@@ -72,10 +67,10 @@ export default function SuperadminDashboardPage() {
 
         // For simplicity, using static change values; in a real app, calculate from historical data
         setKpiData({
-          companies: { value: totalCompanies.toString(), change: '+8.3%', trend: 'up' },
-          candidates: { value: totalCandidates.toString(), change: '+12.5%', trend: 'up' },
-          jobs: { value: totalJobs.toString(), change: '+18.7%', trend: 'up' },
-          applications: { value: totalApplications.toString(), change: '+22.1%', trend: 'up' },
+          companies: { value: totalCompanies.toString() },
+          candidates: { value: totalCandidates.toString() },
+          jobs: { value: totalJobs.toString() },
+          applications: { value: totalApplications.toString() },
         });
       } catch (err) {
         console.error('Error fetching KPI data:', err);
@@ -95,8 +90,6 @@ export default function SuperadminDashboardPage() {
       label: 'Total Companies',
       value: loading ? 'Loading...' : kpiData.companies.value,
       icon: Building,
-      change: kpiData.companies.change,
-      trend: kpiData.companies.trend,
       color: 'bg-blue-500'
     },
     {
@@ -104,8 +97,6 @@ export default function SuperadminDashboardPage() {
       label: 'Total Candidates',
       value: loading ? 'Loading...' : kpiData.candidates.value,
       icon: Users,
-      change: kpiData.candidates.change,
-      trend: kpiData.candidates.trend,
       color: 'bg-emerald-500'
     },
     {
@@ -113,17 +104,13 @@ export default function SuperadminDashboardPage() {
       label: 'Active Jobs',
       value: loading ? 'Loading...' : kpiData.jobs.value,
       icon: Briefcase,
-      change: kpiData.jobs.change,
-      trend: kpiData.jobs.trend,
       color: 'bg-purple-500'
     },
     {
       id: 'applications',
-      label: 'Applications (30d)',
+      label: 'Total Applications',
       value: loading ? 'Loading...' : kpiData.applications.value,
       icon: FileText,
-      change: kpiData.applications.change,
-      trend: kpiData.applications.trend,
       color: 'bg-amber-500'
     },
   ];
@@ -202,30 +189,7 @@ export default function SuperadminDashboardPage() {
   const [loadingTopCompanies, setLoadingTopCompanies] = useState(true);
   const [topCompanies, setTopCompanies] = useState<any[]>([]);
 
-  // Platform Insights
-  const platformInsights = [
-    {
-      id: 1,
-      title: 'High Engagement',
-      description: 'Top 3 companies account for 45% of total applications',
-      icon: TrendingUp,
-      color: 'text-emerald-600 bg-emerald-50'
-    },
-    {
-      id: 2,
-      title: 'Attention Required',
-      description: '12 companies inactive for 30+ days',
-      icon: AlertCircle,
-      color: 'text-amber-600 bg-amber-50'
-    },
-    {
-      id: 3,
-      title: 'Growth Opportunity',
-      description: 'Conversion rate increased to 4.2% this month',
-      icon: Target,
-      color: 'text-blue-600 bg-blue-50'
-    },
-  ];
+
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -259,22 +223,8 @@ export default function SuperadminDashboardPage() {
               <p className="text-gray-600 mt-1">Real-time platform metrics and analytics</p>
             </div>
 
-            <div className="mt-4 sm:mt-0 flex items-center space-x-3">
-              <div className="relative">
-                <select
-                  value={timeRange}
-                  onChange={(e) => setTimeRange(e.target.value)}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="7d">Last 7 days</option>
-                  <option value="30d">Last 30 days</option>
-                  <option value="90d">Last quarter</option>
-                  <option value="1y">Last year</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <ChevronRight className="h-4 w-4 rotate-90" />
-                </div>
-              </div>
+
+            <div className="mt-4 sm:mt-0">
               <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">
                 <Download className="h-4 w-4 mr-2" />
                 Export
@@ -296,15 +246,6 @@ export default function SuperadminDashboardPage() {
                   <div className="flex items-start justify-between mb-4">
                     <div className={`p-3 rounded-xl ${kpi.color}`}>
                       <Icon className="h-6 w-6 text-white" />
-                    </div>
-                    <div className={`flex items-center text-sm font-medium ${kpi.trend === 'up' ? 'text-emerald-600' : 'text-red-600'
-                      }`}>
-                      {kpi.trend === 'up' ? (
-                        <TrendingUp className="h-4 w-4 mr-1" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4 mr-1" />
-                      )}
-                      {kpi.change}
                     </div>
                   </div>
 
@@ -550,33 +491,7 @@ export default function SuperadminDashboardPage() {
           </div>
         </div>
 
-        {/* Enhanced Platform Insights */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {platformInsights.map((insight) => {
-            const Icon = insight.icon;
-            return (
-              <div key={insight.id} className="group">
-                <div className="bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 transition-all hover:shadow-sm">
-                  <div className="flex items-start">
-                    <div className={`p-3 rounded-xl ${insight.color.split(' ')[1]}`}>
-                      <Icon className={`h-5 w-5 ${insight.color.split(' ')[0]}`} />
-                    </div>
-                    <div className="ml-4">
-                      <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                        {insight.title}
-                      </h4>
-                      <p className="text-sm text-gray-600 mt-1">{insight.description}</p>
-                      <button className="mt-3 text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center">
-                        Learn more
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+
       </div>
     </div>
   );
