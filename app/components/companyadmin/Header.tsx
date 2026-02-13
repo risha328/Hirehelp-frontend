@@ -1,62 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { LogOut, User, Menu, X } from 'lucide-react';
-import { authAPI } from '../../api/auth';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function CompanyAdminHeader() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, logout } = useAuth();
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
 
-  // Fetch current user on mount
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          setUser(parsedUser);
-        }
-      } catch (error) {
-        console.error('Error parsing stored user:', error);
-      }
-
-      const token = localStorage.getItem('access_token');
-
-      if (!token) {
-        setUser(null);
-        return;
-      }
-
-      try {
-        const userData = await authAPI.getProfile();
-        if (userData && userData.id) {
-          const user = {
-            id: userData.id || userData._id,
-            name: userData.name || 'User',
-            email: userData.email || '',
-            role: userData.role || 'COMPANY',
-          };
-          setUser(user);
-          localStorage.setItem('user', JSON.stringify(user));
-        }
-      } catch (error) {
-        console.warn('Could not fetch user profile from backend:', error);
-      }
-    };
-
-    const timer = setTimeout(fetchUser, 100);
-    return () => clearTimeout(timer);
-  }, []);
+  const handleLogout = async () => {
+    await logout();
+    setIsProfileDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+    router.push('/');
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-60 bg-white shadow-sm border-b border-gray-200">
@@ -98,13 +59,7 @@ export default function CompanyAdminHeader() {
                       <span className="text-sm font-medium">Profile</span>
                     </Link>
                     <button
-                      onClick={() => {
-                        localStorage.removeItem('access_token');
-                        localStorage.removeItem('refresh_token');
-                        setUser(null);
-                        setIsProfileDropdownOpen(false);
-                        window.location.href = '/';
-                      }}
+                      onClick={handleLogout}
                       className="w-full flex items-center px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors text-left"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
@@ -153,13 +108,7 @@ export default function CompanyAdminHeader() {
                   Profile
                 </Link>
                 <button
-                  onClick={() => {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    setUser(null);
-                    setIsMobileMenuOpen(false);
-                    window.location.href = '/';
-                  }}
+                  onClick={handleLogout}
                   className="block w-full px-4 py-3 text-left text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
                 >
                   Logout
