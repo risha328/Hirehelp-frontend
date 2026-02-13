@@ -390,11 +390,21 @@ export const roundsAPI = {
     return response.json();
   },
 
-  rescheduleRound: async (evaluationId: string): Promise<RoundEvaluation> => {
+  rescheduleRound: async (evaluationId: string, data: {
+    scheduledAt: string;
+    notes?: string;
+    interviewMode?: string;
+    platform?: string;
+    meetingLink?: string;
+    duration?: string;
+    reportingTime?: string;
+    locationDetails?: any;
+  }): Promise<RoundEvaluation> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/evaluation/${evaluationId}/reschedule`, {
       method: 'PATCH',
       headers,
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
