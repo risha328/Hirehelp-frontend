@@ -335,9 +335,8 @@ export default function SuperadminDashboardPage() {
                     <div className={`p-3 rounded-xl ${kpi.color}`}>
                       <Icon className="h-6 w-6 text-white" />
                     </div>
-                    <div className={`flex items-center text-sm font-medium ${
-                      kpi.trend === 'up' ? 'text-emerald-600' : 'text-red-600'
-                    }`}>
+                    <div className={`flex items-center text-sm font-medium ${kpi.trend === 'up' ? 'text-emerald-600' : 'text-red-600'
+                      }`}>
                       {kpi.trend === 'up' ? (
                         <TrendingUp className="h-4 w-4 mr-1" />
                       ) : (
@@ -379,8 +378,8 @@ export default function SuperadminDashboardPage() {
                 >
                   <defs>
                     <linearGradient id="colorCompanies" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid
@@ -409,7 +408,7 @@ export default function SuperadminDashboardPage() {
                     strokeWidth={2}
                     fill="url(#colorCompanies)"
                   />
-            </AreaChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
           </div>
@@ -463,7 +462,7 @@ export default function SuperadminDashboardPage() {
                     fill="#10b981"
                     radius={[4, 4, 0, 0]}
                   />
-            </RechartsBar>
+                </RechartsBar>
               </ResponsiveContainer>
             </div>
           </div>
@@ -513,16 +512,14 @@ export default function SuperadminDashboardPage() {
                   <tr key={company.name} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                          index === 0 ? 'bg-amber-50' :
-                          index === 1 ? 'bg-blue-50' :
-                          index === 2 ? 'bg-purple-50' : 'bg-gray-50'
-                        }`}>
-                          <Building className={`h-5 w-5 ${
-                            index === 0 ? 'text-amber-600' :
-                            index === 1 ? 'text-blue-600' :
-                            index === 2 ? 'text-purple-600' : 'text-gray-600'
-                          }`} />
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${index === 0 ? 'bg-amber-50' :
+                            index === 1 ? 'bg-blue-50' :
+                              index === 2 ? 'bg-purple-50' : 'bg-gray-50'
+                          }`}>
+                          <Building className={`h-5 w-5 ${index === 0 ? 'text-amber-600' :
+                              index === 1 ? 'text-blue-600' :
+                                index === 2 ? 'text-purple-600' : 'text-gray-600'
+                            }`} />
                         </div>
                         <div className="ml-3">
                           <div className="font-medium text-gray-900">{company.name}</div>
@@ -550,11 +547,10 @@ export default function SuperadminDashboardPage() {
                       <div className="flex items-center">
                         <div className="w-full bg-gray-200 rounded-full h-1.5">
                           <div
-                            className={`h-1.5 rounded-full ${
-                              company.engagement > 90 ? 'bg-emerald-500' :
-                              company.engagement > 80 ? 'bg-blue-500' :
-                              'bg-amber-500'
-                            }`}
+                            className={`h-1.5 rounded-full ${company.engagement > 90 ? 'bg-emerald-500' :
+                                company.engagement > 80 ? 'bg-blue-500' :
+                                  'bg-amber-500'
+                              }`}
                             style={{ width: `${company.engagement}%` }}
                           ></div>
                         </div>
