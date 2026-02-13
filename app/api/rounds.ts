@@ -414,6 +414,7 @@ export const roundsAPI = {
     platform?: string;
     meetingLink?: string;
     duration?: string;
+    reportingTime?: string;
     locationDetails?: any;
   }): Promise<RoundEvaluation> => {
     const headers = await getAuthHeaders();

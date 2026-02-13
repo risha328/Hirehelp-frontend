@@ -42,6 +42,7 @@ export default function ScheduleInterviewModal({
         interviewType: roundType === 'hr' ? 'HR Interview' : 'Technical Interview',
         scheduledDate: '',
         scheduledTime: '',
+        reportingTime: '', // For offline interviews
         duration: '60', // minutes
         interviewerId: '',
         platform: 'Google Meet',
@@ -116,6 +117,7 @@ export default function ScheduleInterviewModal({
                 platform: formData.interviewMode === 'virtual' ? formData.platform : undefined,
                 meetingLink: formData.interviewMode === 'virtual' ? formData.meetingLink : undefined,
                 duration: formData.duration,
+                reportingTime: formData.interviewMode === 'in-person' ? formData.reportingTime : undefined,
                 locationDetails: formData.interviewMode === 'in-person' ? {
                     venueName: formData.venueName,
                     address: formData.address,
@@ -309,6 +311,23 @@ export default function ScheduleInterviewModal({
                         {formData.interviewMode === 'in-person' && (
                             <div className="md:col-span-2 space-y-4 border-t border-gray-100 pt-4 mt-2">
                                 <h3 className="text-sm font-medium text-gray-900">Location Details</h3>
+
+                                {/* Reporting Time */}
+                                <div className="md:col-span-2">
+                                    <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Reporting Time *</label>
+                                    <div className="relative">
+                                        <Clock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                        <input
+                                            type="time"
+                                            required
+                                            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-gray-900"
+                                            value={formData.reportingTime}
+                                            onChange={(e) => setFormData({ ...formData, reportingTime: e.target.value })}
+                                        />
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Time when candidate should arrive at the venue</p>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="md:col-span-2">
                                         <label className="block text-xs font-medium text-gray-500 uppercase mb-1">Venue Name *</label>
