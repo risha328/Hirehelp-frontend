@@ -323,6 +323,9 @@ export default function CompanyJobsPage() {
 
   // Filter and search logic
   const filteredJobs = jobs.filter(job => {
+    // Check if job is expired
+    const isExpired = job.applicationDeadline ? new Date(job.applicationDeadline) < new Date(new Date().setHours(0, 0, 0, 0)) : false;
+
     // Search query
     const matchesSearch = searchQuery === '' ||
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -333,7 +336,21 @@ export default function CompanyJobsPage() {
     const matchesLocation = filters.location === '' || job.location === filters.location;
     const matchesJobType = filters.jobType === '' || job.jobType === filters.jobType;
     const matchesExperienceLevel = filters.experienceLevel === '' || job.experienceLevel === filters.experienceLevel;
-    const matchesStatus = filters.status === '' || job.status === filters.status;
+
+    // Status filter: treat expired jobs as inactive
+    let matchesStatus = true;
+    if (filters.status !== '') {
+      if (filters.status === 'active') {
+        // Active: must be active AND not expired
+        matchesStatus = job.status === 'active' && !isExpired;
+      } else if (filters.status === 'inactive') {
+        // Inactive: either status is inactive OR job is expired
+        matchesStatus = job.status === 'inactive' || isExpired;
+      } else {
+        // Other statuses
+        matchesStatus = job.status === filters.status;
+      }
+    }
 
     return matchesSearch && matchesLocation && matchesJobType && matchesExperienceLevel && matchesStatus;
   });
@@ -654,10 +671,10 @@ export default function CompanyJobsPage() {
 
                         <div className="flex flex-col gap-3">
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${isExpired
-                              ? 'bg-red-100 text-red-800'
-                              : job.status === 'active'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-gray-100 text-gray-800'
+                            ? 'bg-red-100 text-red-800'
+                            : job.status === 'active'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-gray-100 text-gray-800'
                             }`}>
                             {isExpired ? 'Expired' : job.status}
                           </span>
