@@ -87,6 +87,21 @@ export default function InterviewManagementPage() {
     const [interviewerFilter, setInterviewerFilter] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState('');
 
+    // Helper function to format round type for display
+    const formatRoundType = (type: string): string => {
+        const typeMap: { [key: string]: string } = {
+            'interview': 'Interview',
+            'mcq': 'MCQ',
+            'coding': 'Coding',
+            'case_study': 'Case Study',
+            'group_discussion': 'Group Discussion',
+            'technical': 'Technical',
+            'hr': 'HR'
+        };
+
+        return typeMap[type.toLowerCase()] || type.charAt(0).toUpperCase() + type.slice(1);
+    };
+
     useEffect(() => {
         fetchInterviews();
     }, []);
@@ -138,6 +153,14 @@ export default function InterviewManagementPage() {
                 const currentRoundId = app.currentRound && (typeof app.currentRound === 'object' ? app.currentRound._id : app.currentRound);
                 const round = rounds.find(r => r._id === currentRoundId);
 
+                // Debug logging
+                console.log('Round data for', app.candidateId.name, ':', {
+                    roundId: currentRoundId,
+                    roundType: round?.type,
+                    roundName: round?.name,
+                    fullRound: round
+                });
+
                 // Find specific evaluation for this application and round
                 const evaluation = evaluations.find(e => {
                     const eAppId = e.applicationId && typeof e.applicationId === 'object' ? (e.applicationId as any)._id : e.applicationId;
@@ -146,8 +169,35 @@ export default function InterviewManagementPage() {
                 });
 
                 // Determine Interview Details from Round or defaults
-                const roundType = round?.type || round?.name || 'Interview';
+                let roundType = 'Interview'; // Default fallback
+
+                if (round?.type && round.type !== 'interview') {
+                    // If type is specific (technical, hr, mcq, coding), use it
+                    roundType = formatRoundType(round.type);
+                } else if (round?.name) {
+                    // Extract type from name (e.g., "Technical Interview" -> "Technical")
+                    const nameLower = round.name.toLowerCase();
+                    if (nameLower.includes('technical')) {
+                        roundType = 'Technical';
+                    } else if (nameLower.includes('hr')) {
+                        roundType = 'HR';
+                    } else if (nameLower.includes('mcq')) {
+                        roundType = 'MCQ';
+                    } else if (nameLower.includes('coding')) {
+                        roundType = 'Coding';
+                    } else if (nameLower.includes('case study')) {
+                        roundType = 'Case Study';
+                    } else if (nameLower.includes('group discussion')) {
+                        roundType = 'Group Discussion';
+                    } else {
+                        // Use the full name if no specific type found
+                        roundType = round.name;
+                    }
+                }
+
+                console.log(`Final roundType for ${app.candidateId.name}:`, roundType, '(from round.name:', round?.name, ', round.type:', round?.type, ')');
                 const mode = round?.interviewMode === 'offline' ? 'Offline' : 'Online'; // Default to Online
+
 
                 // Date and Time parsing
                 // Prefer evaluation scheduling, then round scheduling
