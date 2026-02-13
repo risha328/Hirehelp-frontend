@@ -196,8 +196,19 @@ export default function InterviewManagementPage() {
                 }
 
                 console.log(`Final roundType for ${app.candidateId.name}:`, roundType, '(from round.name:', round?.name, ', round.type:', round?.type, ')');
-                const mode = round?.interviewMode === 'offline' ? 'Offline' : 'Online'; // Default to Online
 
+                // Determine interview mode - prioritize evaluation over round
+                let mode: 'Online' | 'Offline' = 'Online'; // Default to Online
+
+                if (evaluation?.interviewMode) {
+                    // Check evaluation first (set when scheduling from Kanban)
+                    mode = (evaluation.interviewMode === 'in-person' || evaluation.interviewMode === 'offline') ? 'Offline' : 'Online';
+                } else if (round?.interviewMode) {
+                    // Fall back to round's default mode
+                    mode = (round.interviewMode === 'in-person' || round.interviewMode === 'offline') ? 'Offline' : 'Online';
+                }
+
+                console.log(`Interview mode for ${app.candidateId.name}: ${mode} (eval: ${evaluation?.interviewMode}, round: ${round?.interviewMode})`);
 
                 // Date and Time parsing
                 // Prefer evaluation scheduling, then round scheduling
@@ -700,13 +711,6 @@ export default function InterviewManagementPage() {
                         <p className="text-sm text-gray-500">Mission control for interviews</p>
                     </div>
                     <div className="flex gap-3">
-                        <button
-                            onClick={() => alert('Schedule new interview feature coming soon')}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium cursor-pointer shadow-sm"
-                        >
-                            <CalendarIcon className="w-4 h-4" />
-                            Schedule Now
-                        </button>
                         <button
                             onClick={() => router.push('/companyadmin/calendar')}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium cursor-pointer shadow-sm"
