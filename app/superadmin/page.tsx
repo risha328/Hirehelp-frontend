@@ -186,59 +186,21 @@ export default function SuperadminDashboardPage() {
   useEffect(() => {
     const fetchTopCompaniesData = async () => {
       try {
+        setLoadingTopCompanies(true);
         const topCompaniesData = await analyticsAPI.getTopCompanies();
         setTopCompanies(topCompaniesData);
       } catch (err) {
         console.error('Error fetching top companies data:', err);
-        // Keep default data on error
+      } finally {
+        setLoadingTopCompanies(false);
       }
     };
 
     fetchTopCompaniesData();
   }, []);
 
-  const [topCompanies, setTopCompanies] = useState([
-    {
-      name: 'ABC Tech',
-      jobs: 42,
-      applications: 3200,
-      hires: 18,
-      score: 3364,
-      engagement: 92
-    },
-    {
-      name: 'FinEdge',
-      jobs: 28,
-      applications: 2100,
-      hires: 12,
-      score: 2266,
-      engagement: 88
-    },
-    {
-      name: 'CloudTech',
-      jobs: 32,
-      applications: 2850,
-      hires: 15,
-      score: 2995,
-      engagement: 95
-    },
-    {
-      name: 'DataSystems',
-      jobs: 24,
-      applications: 1800,
-      hires: 9,
-      score: 1893,
-      engagement: 85
-    },
-    {
-      name: 'DevWorks',
-      jobs: 19,
-      applications: 1050,
-      hires: 6,
-      score: 1133,
-      engagement: 78
-    },
-  ]);
+  const [loadingTopCompanies, setLoadingTopCompanies] = useState(true);
+  const [topCompanies, setTopCompanies] = useState<any[]>([]);
 
   // Platform Insights
   const platformInsights = [
@@ -508,64 +470,81 @@ export default function SuperadminDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {topCompanies.map((company, index) => (
-                  <tr key={company.name} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${index === 0 ? 'bg-amber-50' :
-                            index === 1 ? 'bg-blue-50' :
-                              index === 2 ? 'bg-purple-50' : 'bg-gray-50'
-                          }`}>
-                          <Building className={`h-5 w-5 ${index === 0 ? 'text-amber-600' :
-                              index === 1 ? 'text-blue-600' :
-                                index === 2 ? 'text-purple-600' : 'text-gray-600'
-                            }`} />
-                        </div>
-                        <div className="ml-3">
-                          <div className="font-medium text-gray-900">{company.name}</div>
-                          <div className="text-xs text-gray-500">Active</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{company.jobs}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {company.applications.toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="text-sm font-medium text-gray-900 mr-2">{company.hires}</div>
-                        <div className="text-xs px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full">
-                          {((company.hires / company.applications) * 100).toFixed(1)}%
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-1.5">
-                          <div
-                            className={`h-1.5 rounded-full ${company.engagement > 90 ? 'bg-emerald-500' :
-                                company.engagement > 80 ? 'bg-blue-500' :
-                                  'bg-amber-500'
-                              }`}
-                            style={{ width: `${company.engagement}%` }}
-                          ></div>
-                        </div>
-                        <span className="ml-2 text-sm font-medium text-gray-900">
-                          {company.engagement}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900">
-                        {company.score.toLocaleString()}
+                {loadingTopCompanies ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                        <p className="text-gray-500 text-sm">Loading ranking data...</p>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : topCompanies.length > 0 ? (
+                  topCompanies.map((company, index) => (
+                    <tr key={company.name} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${index === 0 ? 'bg-amber-50' :
+                            index === 1 ? 'bg-blue-50' :
+                              index === 2 ? 'bg-purple-50' : 'bg-gray-50'
+                            }`}>
+                            <Building className={`h-5 w-5 ${index === 0 ? 'text-amber-600' :
+                              index === 1 ? 'text-blue-600' :
+                                index === 2 ? 'text-purple-600' : 'text-gray-600'
+                              }`} />
+                          </div>
+                          <div className="ml-3">
+                            <div className="font-medium text-gray-900">{company.name}</div>
+                            <div className="text-xs text-gray-500">Active</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{company.jobs}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {company.applications.toLocaleString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="text-sm font-medium text-gray-900 mr-2">{company.hires}</div>
+                          <div className="text-xs px-1.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full">
+                            {company.applications > 0 ? ((company.hires / company.applications) * 100).toFixed(1) : 0}%
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-200 rounded-full h-1.5 min-w-[100px]">
+                            <div
+                              className={`h-1.5 rounded-full ${company.engagement > 90 ? 'bg-emerald-500' :
+                                company.engagement > 80 ? 'bg-blue-500' :
+                                  'bg-amber-500'
+                                }`}
+                              style={{ width: `${Math.min(company.engagement, 100)}%` }}
+                            ></div>
+                          </div>
+                          <span className="ml-2 text-sm font-medium text-gray-900">
+                            {company.engagement}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-gray-900">
+                          {company.score.toLocaleString()}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-10 text-center text-gray-500">
+                      No performing companies found for this period.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
