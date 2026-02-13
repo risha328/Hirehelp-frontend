@@ -67,6 +67,20 @@ export default function InterviewManagementPage() {
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+    const [rescheduleStep, setRescheduleStep] = useState<1 | 2>(1);
+    const [rescheduleForm, setRescheduleForm] = useState({
+        date: '',
+        time: '',
+        duration: 60,
+        mode: 'Online' as 'Online' | 'Offline',
+        platform: 'Google Meet',
+        meetingLink: '',
+        venueName: '',
+        address: '',
+        city: '',
+        landmark: '',
+        notes: ''
+    });
 
     const [rescheduleLoading, setRescheduleLoading] = useState(false);
     const [showCompleteConfirmation, setShowCompleteConfirmation] = useState(false);
@@ -600,14 +614,56 @@ export default function InterviewManagementPage() {
     const handleReschedule = async () => {
         if (!selectedInterview || !selectedInterview.evaluationId) return;
 
+        if (rescheduleStep === 1) {
+            // Pre-fill form with existing data when moving to step 2
+            setRescheduleForm({
+                date: selectedInterview.date.split('T')[0],
+                time: selectedInterview.time,
+                duration: selectedInterview.duration,
+                mode: selectedInterview.mode,
+                platform: selectedInterview.meetingLink ? 'Google Meet' : 'Google Meet', // Default
+                meetingLink: selectedInterview.meetingLink || '',
+                venueName: '',
+                address: '',
+                city: '',
+                landmark: '',
+                notes: ''
+            });
+            setRescheduleStep(2);
+            return;
+        }
+
         setRescheduleLoading(true);
         try {
-            await roundsAPI.rescheduleRound(selectedInterview.evaluationId);
+            const scheduledAt = new Date(`${rescheduleForm.date}T${rescheduleForm.time}`).toISOString();
+
+            await roundsAPI.rescheduleRound(selectedInterview.evaluationId, {
+                scheduledAt,
+                notes: rescheduleForm.notes,
+                interviewMode: rescheduleForm.mode.toLowerCase() === 'online' ? 'virtual' : 'offline',
+                platform: rescheduleForm.mode === 'Online' ? rescheduleForm.platform : undefined,
+                meetingLink: rescheduleForm.mode === 'Online' ? rescheduleForm.meetingLink : undefined,
+                duration: rescheduleForm.duration.toString(),
+                locationDetails: rescheduleForm.mode === 'Offline' ? {
+                    venueName: rescheduleForm.venueName,
+                    address: rescheduleForm.address,
+                    city: rescheduleForm.city,
+                    landmark: rescheduleForm.landmark
+                } : undefined
+            });
 
             // Update local state
             setInterviews(prev => prev.map(interview =>
                 interview.id === selectedInterview.id
-                    ? { ...interview, status: 'Rescheduled' } // Or 'Rescheduling'
+                    ? {
+                        ...interview,
+                        status: 'Scheduled',
+                        date: scheduledAt,
+                        time: rescheduleForm.time,
+                        mode: rescheduleForm.mode,
+                        meetingLink: rescheduleForm.mode === 'Online' ? rescheduleForm.meetingLink : '',
+                        location: rescheduleForm.mode === 'Offline' ? rescheduleForm.address : ''
+                    }
                     : interview
             ));
 
@@ -615,6 +671,7 @@ export default function InterviewManagementPage() {
             fetchInterviews();
 
             setShowRescheduleModal(false);
+            setRescheduleStep(1);
         } catch (error) {
             console.error("Failed to reschedule", error);
             alert("Failed to reschedule. Please try again.");
@@ -1162,7 +1219,7 @@ export default function InterviewManagementPage() {
                                                             <CheckCircleIcon className="w-5 h-5" />
                                                         </button>
                                                     )}
-                                                    {interview.status === 'Missed' && (
+                                                    {(interview.status === 'Missed' || interview.status === 'Scheduled') && (
                                                         <button
                                                             onClick={() => {
                                                                 setSelectedInterview(interview);
@@ -1185,35 +1242,224 @@ export default function InterviewManagementPage() {
                 </div>
             </div>
 
-            {/* Reschedule Confirmation Modal */}
+            {/* Reschedule Modal (Multi-step) */}
             {showRescheduleModal && selectedInterview && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-                        <div className="flex items-center gap-3 mb-4 text-orange-600">
-                            <ExclamationCircleIcon className="w-8 h-8" />
-                            <h3 className="text-lg font-bold">Reschedule Interview?</h3>
-                        </div>
-                        <p className="text-gray-600 mb-6">
-                            Are you sure you want to reschedule the interview for <strong>{selectedInterview.candidateName}</strong>?
-                            This will change the status to 'Rescheduling' and notify the candidate.
-                        </p>
-                        <div className="flex justify-end gap-3">
+                    <div className={`bg-white rounded-2xl shadow-xl w-full transition-all duration-300 ${rescheduleStep === 1 ? 'max-w-md' : 'max-w-2xl'}`}>
+                        {/* Header */}
+                        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className={`p-2 rounded-lg ${rescheduleStep === 1 ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'}`}>
+                                    {rescheduleStep === 1 ? <ExclamationCircleIcon className="w-6 h-6" /> : <CalendarDaysIcon className="w-6 h-6" />}
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900">
+                                    {rescheduleStep === 1 ? 'Reschedule Interview?' : 'Set New Schedule'}
+                                </h3>
+                            </div>
                             <button
-                                onClick={() => setShowRescheduleModal(false)}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium cursor-pointer"
-                                disabled={rescheduleLoading}
+                                onClick={() => {
+                                    setShowRescheduleModal(false);
+                                    setRescheduleStep(1);
+                                }}
+                                className="text-gray-400 hover:text-gray-500 p-2 rounded-lg hover:bg-gray-50 transition-colors"
                             >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleReschedule}
-                                className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium cursor-pointer flex items-center gap-2"
-                                disabled={rescheduleLoading}
-                            >
-                                {rescheduleLoading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
-                                Confirm Reschedule
+                                <XCircleIcon className="w-6 h-6" />
                             </button>
                         </div>
+
+                        {/* Step 1: Confirmation */}
+                        {rescheduleStep === 1 && (
+                            <div className="p-6">
+                                <p className="text-gray-600 mb-6">
+                                    Are you sure you want to reschedule the interview for <strong>{selectedInterview.candidateName}</strong>?
+                                    This will allow you to pick a new date and time, and notify both parties.
+                                </p>
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        onClick={() => setShowRescheduleModal(false)}
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors cursor-pointer"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleReschedule}
+                                        className="px-6 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 font-medium transition-colors shadow-sm hover:shadow-md cursor-pointer"
+                                    >
+                                        Yes, Reschedule
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Step 2: Form */}
+                        {rescheduleStep === 2 && (
+                            <div className="p-6">
+                                <form onSubmit={(e) => { e.preventDefault(); handleReschedule(); }} className="space-y-6">
+                                    {/* Date and Time Row */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">New Date</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="date"
+                                                    required
+                                                    className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
+                                                    value={rescheduleForm.date}
+                                                    onChange={(e) => setRescheduleForm({ ...rescheduleForm, date: e.target.value })}
+                                                />
+                                                <CalendarIcon className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">New Time</label>
+                                            <div className="relative">
+                                                <input
+                                                    type="time"
+                                                    required
+                                                    className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
+                                                    value={rescheduleForm.time}
+                                                    onChange={(e) => setRescheduleForm({ ...rescheduleForm, time: e.target.value })}
+                                                />
+                                                <ClockIcon className="absolute left-3 top-2.5 w-5 h-5 text-gray-400" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Duration (min)</label>
+                                            <select
+                                                className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
+                                                value={rescheduleForm.duration}
+                                                onChange={(e) => setRescheduleForm({ ...rescheduleForm, duration: parseInt(e.target.value) })}
+                                            >
+                                                <option value={15}>15 mins</option>
+                                                <option value={30}>30 mins</option>
+                                                <option value={45}>45 mins</option>
+                                                <option value={60}>60 mins</option>
+                                                <option value={90}>90 mins</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Mode Selection */}
+                                    <div className="grid grid-cols-2 gap-4 p-1 bg-gray-50 rounded-xl border border-gray-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => setRescheduleForm({ ...rescheduleForm, mode: 'Online' })}
+                                            className={`flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium transition-all ${rescheduleForm.mode === 'Online' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                        >
+                                            <VideoCameraIcon className="w-5 h-5" />
+                                            Online
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setRescheduleForm({ ...rescheduleForm, mode: 'Offline' })}
+                                            className={`flex items-center justify-center gap-2 py-2.5 rounded-lg font-medium transition-all ${rescheduleForm.mode === 'Offline' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                        >
+                                            <MapPinIcon className="w-5 h-5" />
+                                            Offline
+                                        </button>
+                                    </div>
+
+                                    {/* Dynamic Fields based on Mode */}
+                                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                                        {rescheduleForm.mode === 'Online' ? (
+                                            <div className="space-y-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Platform</label>
+                                                        <select
+                                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
+                                                            value={rescheduleForm.platform}
+                                                            onChange={(e) => setRescheduleForm({ ...rescheduleForm, platform: e.target.value })}
+                                                        >
+                                                            <option>Google Meet</option>
+                                                            <option>Zoom</option>
+                                                            <option>Microsoft Teams</option>
+                                                        </select>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Meeting Link</label>
+                                                        <input
+                                                            type="url"
+                                                            placeholder="https://meet.google.com/..."
+                                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
+                                                            value={rescheduleForm.meetingLink}
+                                                            onChange={(e) => setRescheduleForm({ ...rescheduleForm, meetingLink: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Venue Name</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Main Office, Meeting Room A"
+                                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
+                                                            value={rescheduleForm.venueName}
+                                                            onChange={(e) => setRescheduleForm({ ...rescheduleForm, venueName: e.target.value })}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Indore"
+                                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900"
+                                                            value={rescheduleForm.city}
+                                                            onChange={(e) => setRescheduleForm({ ...rescheduleForm, city: e.target.value })}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">Full Address</label>
+                                                    <textarea
+                                                        rows={2}
+                                                        placeholder="Enter complete office address..."
+                                                        className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 resize-none"
+                                                        value={rescheduleForm.address}
+                                                        onChange={(e) => setRescheduleForm({ ...rescheduleForm, address: e.target.value })}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Reschedule Notes */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Notes to Candidate & Interviewer</label>
+                                        <textarea
+                                            rows={2}
+                                            placeholder="Reason for rescheduling or additional instructions..."
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-gray-900 resize-none"
+                                            value={rescheduleForm.notes}
+                                            onChange={(e) => setRescheduleForm({ ...rescheduleForm, notes: e.target.value })}
+                                        />
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                                        <button
+                                            type="button"
+                                            onClick={() => setRescheduleStep(1)}
+                                            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors cursor-pointer"
+                                            disabled={rescheduleLoading}
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md flex items-center gap-2 cursor-pointer"
+                                            disabled={rescheduleLoading}
+                                        >
+                                            {rescheduleLoading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
+                                            Confirm New Schedule
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
