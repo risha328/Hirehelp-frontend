@@ -61,7 +61,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex">
       {/* ================= LEFT SIDE (IMAGE) ================= */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-gray-50 overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-sky-50 overflow-hidden">
         {/* Illustration */}
         <Image
           src="/images/login-left.png"
@@ -72,45 +72,55 @@ export default function LoginPage() {
         />
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/80 to-indigo-800/80" />
+        <div className="absolute inset-0 bg-gradient-to-br from-sky-400/90 via-sky-500/80 to-white/40" />
 
         {/* Branding content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
+        <div className="relative z-10 flex flex-col justify-between p-12 text-sky-900">
           <div>
-            <Link href="/" className="flex items-center space-x-2 mb-12">
-              <Briefcase className="h-8 w-8" />
-              <span className="text-2xl font-bold">HireFlow</span>
+            <Link href="/" className="flex items-center mb-12">
+              <Image
+                src="/images/logo-transparent.png"
+                alt="HireHelp Logo"
+                width={350}
+                height={90}
+                className="h-24 w-auto object-contain"
+                priority
+              />
             </Link>
 
-            <h2 className="text-4xl font-bold mb-6">
-              Welcome Back to Your Career Hub
+            <h2 className="text-5xl font-extrabold tracking-tighter leading-tight mb-6">
+              Empowering the Next Generation of Talent
             </h2>
 
-            <p className="text-lg text-blue-100 mb-10">
-              Connect with opportunities that match your skills and ambitions.
+            <p className="text-xl text-sky-900/60 font-medium leading-relaxed mb-10 max-w-md">
+              The professional ecosystem connecting global opportunities with exceptional expertise.
             </p>
 
             <div className="space-y-6">
               <div className="flex items-center space-x-4">
-                <div className="bg-white/20 p-2 rounded-lg">
-                  <Building className="h-6 w-6" />
+                <div className="bg-sky-600/10 p-2 rounded-lg">
+                  <Building className="h-6 w-6 text-sky-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">For Companies</h3>
-                  <p className="text-blue-100 text-sm">
-                    Hire verified talent faster
+                  <h3 className="text-xs font-bold text-sky-950 uppercase tracking-widest mb-1">
+                    For Enterprises
+                  </h3>
+                  <p className="text-sky-900/70 text-base font-medium leading-snug">
+                    Streamline your recruitment with data-driven talent acquisition.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-4">
-                <div className="bg-white/20 p-2 rounded-lg">
-                  <Briefcase className="h-6 w-6" />
+                <div className="bg-sky-600/10 p-2 rounded-lg">
+                  <Briefcase className="h-6 w-6 text-sky-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">For Candidates</h3>
-                  <p className="text-blue-100 text-sm">
-                    Find roles that fit your goals
+                  <h3 className="text-xs font-bold text-sky-950 uppercase tracking-widest mb-1">
+                    For Professionals
+                  </h3>
+                  <p className="text-sky-900/70 text-base font-medium leading-snug">
+                    Discover career-defining roles at industry-leading companies.
                   </p>
                 </div>
               </div>
@@ -118,18 +128,18 @@ export default function LoginPage() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-6 border-t border-white/20 pt-8">
+          <div className="grid grid-cols-3 gap-6 border-t border-sky-200/50 pt-8">
             <div className="text-center">
-              <p className="text-2xl font-bold">50K+</p>
-              <p className="text-sm text-blue-100">Users</p>
+              <p className="text-2xl font-bold text-sky-900">50K+</p>
+              <p className="text-sm text-sky-800/70">Users</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold">10K+</p>
-              <p className="text-sm text-blue-100">Jobs</p>
+              <p className="text-2xl font-bold text-sky-900">10K+</p>
+              <p className="text-sm text-sky-800/70">Jobs</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold">95%</p>
-              <p className="text-sm text-blue-100">Success</p>
+              <p className="text-2xl font-bold text-sky-900">95%</p>
+              <p className="text-sm text-sky-800/70">Success</p>
             </div>
           </div>
         </div>
@@ -140,11 +150,15 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-10">
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300">
-                <Briefcase className="h-6 w-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">HireFlow</span>
+            <Link href="/" className="flex items-center group">
+              <Image
+                src="/images/logo-transparent.png"
+                alt="HireHelp Logo"
+                width={250}
+                height={68}
+                className="h-16 w-auto object-contain"
+                priority
+              />
             </Link>
           </div>
 
@@ -172,7 +186,7 @@ export default function LoginPage() {
               </label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                  <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-sky-500 transition-colors" />
                 </div>
                 <input
                   id="email"
@@ -180,7 +194,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="block w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all duration-200 outline-none"
+                  className="block w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 focus:bg-white transition-all duration-200 outline-none"
                   placeholder="name@company.com"
                 />
               </div>
@@ -195,7 +209,7 @@ export default function LoginPage() {
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+                  <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-sky-500 transition-colors" />
                 </div>
                 <input
                   id="password"
@@ -203,7 +217,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="block w-full pl-11 pr-12 py-3.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all duration-200 outline-none"
+                  className="block w-full pl-11 pr-12 py-3.5 bg-gray-50 border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 focus:bg-white transition-all duration-200 outline-none"
                   placeholder="••••••••"
                 />
                 <button
@@ -229,7 +243,7 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-all duration-200 cursor-pointer"
+                  className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded transition-all duration-200 cursor-pointer"
                 />
                 <label htmlFor="remember-me" className="ml-2.5 block text-sm font-medium text-gray-600 cursor-pointer select-none">
                   Remember me
@@ -237,7 +251,7 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <Link href="/auth/forgot-password" underline="none" className="font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                <Link href="/auth/forgot-password" className="font-semibold text-sky-600 hover:text-sky-700 transition-colors">
                   Forgot password?
                 </Link>
               </div>
@@ -246,7 +260,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 shadow-lg shadow-blue-500/25 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
+              className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 shadow-lg shadow-sky-500/25 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
@@ -264,7 +278,7 @@ export default function LoginPage() {
 
           <p className="text-center mt-10 text-gray-500 text-sm font-medium">
             Don’t have an account?{' '}
-            <Link href="/auth/register" className="text-blue-600 font-bold hover:text-blue-700 transition-colors border-b border-transparent hover:border-blue-700 pb-0.5">
+            <Link href="/auth/register" className="text-sky-600 font-bold hover:text-sky-700 transition-colors border-b border-transparent hover:border-sky-700 pb-0.5">
               Create account
             </Link>
           </p>

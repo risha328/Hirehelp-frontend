@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { LogOut, User, Menu, X, Bell, Search, Settings } from 'lucide-react';
 import { authAPI } from '../../api/auth';
 
@@ -63,11 +64,19 @@ export default function SuperAdminHeader() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Brand */}
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
-              <User className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">Super Admin</span>
+          <div className="flex items-center space-x-4">
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/images/logo-transparent.png"
+                alt="HireHelp Logo"
+                width={300}
+                height={80}
+                className="h-20 w-auto object-contain"
+                priority
+              />
+            </Link>
+            <div className="h-6 w-px bg-gray-200" />
+            <span className="text-lg font-semibold text-gray-900">Super Admin</span>
           </div>
 
           {/* Desktop Search Bar */}
