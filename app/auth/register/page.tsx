@@ -225,7 +225,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setRole('CANDIDATE')}
-                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all ${role === 'CANDIDATE'
+                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer ${role === 'CANDIDATE'
                   ? 'border-sky-500 bg-sky-50 shadow-lg shadow-sky-500/10'
                   : 'border-gray-300 hover:border-gray-400'
                   }`}
@@ -240,7 +240,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setRole('COMPANY_ADMIN')}
-                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all ${role === 'COMPANY_ADMIN'
+                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer ${role === 'COMPANY_ADMIN'
                   ? 'border-sky-500 bg-sky-50 shadow-lg shadow-sky-500/10'
                   : 'border-gray-300 hover:border-gray-400'
                   }`}
@@ -255,7 +255,7 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setRole('SUPER_ADMIN')}
-                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all ${role === 'SUPER_ADMIN'
+                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all cursor-pointer ${role === 'SUPER_ADMIN'
                   ? 'border-sky-500 bg-sky-50 shadow-lg shadow-sky-500/10'
                   : 'border-gray-300 hover:border-gray-400'
                   }`}
@@ -334,7 +334,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setGender('MALE')}
-                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all ${gender === 'MALE'
+                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all cursor-pointer ${gender === 'MALE'
                     ? 'border-sky-500 bg-sky-50'
                     : 'border-gray-300 hover:border-sky-300'
                     }`}
@@ -351,7 +351,7 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setGender('FEMALE')}
-                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all ${gender === 'FEMALE'
+                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all cursor-pointer ${gender === 'FEMALE'
                     ? 'border-pink-500 bg-pink-50'
                     : 'border-gray-300 hover:border-pink-300'
                     }`}
@@ -510,7 +510,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center bg-sky-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-sky-500/20"
+              className="w-full flex items-center justify-center bg-sky-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-lg shadow-sky-500/20"
             >
               {isLoading ? (
                 <div className="flex items-center">

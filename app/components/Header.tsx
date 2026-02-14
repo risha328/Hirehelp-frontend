@@ -78,7 +78,7 @@ export default function TransparentHeader() {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMenuOpen
-      ? 'bg-white/80 backdrop-blur-xl shadow-sm border-b border-white/20'
+      ? 'bg-white shadow-md border-b border-gray-100'
       : 'bg-transparent'
       }`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -108,11 +108,13 @@ export default function TransparentHeader() {
                         onMouseLeave={() => item.name === 'Jobs' ? setIsJobsDropdownOpen(false) : setIsCompaniesDropdownOpen(false)}
                       >
                         <button
-                          className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${item.current
-                            ? 'bg-white/20 text-white backdrop-blur-sm'
+                          className={`flex items-center px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${item.current
+                            ? isScrolled || isMenuOpen
+                              ? 'text-blue-600'
+                              : 'text-white'
                             : isScrolled || isMenuOpen
-                              ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                              : 'text-white hover:text-gray-100 hover:bg-white/10'
+                              ? 'text-gray-700 hover:text-blue-600'
+                              : 'text-white hover:text-white/80'
                             }`}
                         >
                           {item.name}
@@ -162,11 +164,13 @@ export default function TransparentHeader() {
                     ) : (
                       <Link
                         href={item.href}
-                        className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${item.current
-                          ? 'bg-white/20 text-white backdrop-blur-sm'
+                        className={`px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${item.current
+                          ? isScrolled || isMenuOpen
+                            ? 'text-blue-600'
+                            : 'text-white'
                           : isScrolled || isMenuOpen
-                            ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                            : 'text-white hover:text-gray-100 hover:bg-white/10'
+                            ? 'text-gray-700 hover:text-blue-600'
+                            : 'text-white hover:text-white/80'
                           }`}
                       >
                         {item.name}
@@ -185,7 +189,7 @@ export default function TransparentHeader() {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white transition-all duration-300 ${isScrolled || isMenuOpen
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white transition-all duration-300 cursor-pointer ${isScrolled || isMenuOpen
                     ? 'bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
                     : 'bg-gradient-to-br from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
                     }`}
@@ -223,7 +227,7 @@ export default function TransparentHeader() {
                         setIsProfileDropdownOpen(false);
                         router.push('/');
                       }}
-                      className="w-full flex items-center px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50/50 transition-colors text-left"
+                      className="w-full flex items-center px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50/50 transition-colors text-left cursor-pointer"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
                       <span className="text-sm font-medium">Logout</span>
@@ -237,7 +241,7 @@ export default function TransparentHeader() {
                   href="/auth/login"
                   className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${isScrolled || isMenuOpen
                     ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                    : 'text-gray-900 hover:text-gray-700 hover:bg-white/10 backdrop-blur-sm'
+                    : 'text-white hover:text-white/80 hover:bg-white/10'
                     }`}
                 >
                   Sign In
@@ -269,7 +273,7 @@ export default function TransparentHeader() {
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className={`lg:hidden p-2 rounded-lg transition-colors duration-300 ${isScrolled || isMenuOpen
               ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-              : 'text-gray-900 hover:text-gray-700 hover:bg-white/10'
+              : 'text-white hover:text-white/80 hover:bg-white/10'
               }`}
           >
             {isMenuOpen ? (
@@ -294,7 +298,7 @@ export default function TransparentHeader() {
                           if (item.name === 'Jobs') setIsJobsDropdownOpen(!isJobsDropdownOpen);
                           if (item.name === 'Company Lists') setIsCompaniesDropdownOpen(!isCompaniesDropdownOpen);
                         }}
-                        className={`flex items-center justify-between w-full px-4 py-3 text-base font-medium rounded-lg transition-colors ${item.current
+                        className={`flex items-center justify-between w-full px-4 py-3 text-base font-medium rounded-lg transition-colors cursor-pointer ${item.current
                           ? 'bg-blue-50 text-blue-700'
                           : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
                           }`}
@@ -376,7 +380,7 @@ export default function TransparentHeader() {
                       setIsMenuOpen(false);
                       router.push('/');
                     }}
-                    className="block w-full px-4 py-3 text-center font-medium text-red-600 hover:text-red-700 hover:bg-red-50/50 rounded-lg border border-red-300/50 transition-colors"
+                    className="block w-full px-4 py-3 text-center font-medium text-red-600 hover:text-red-700 hover:bg-red-50/50 rounded-lg border border-red-300/50 transition-colors cursor-pointer"
                   >
                     Logout
                   </button>

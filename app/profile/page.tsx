@@ -146,12 +146,12 @@ export default function ProfilePage() {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1200));
-      
+
       const updatedUser: UserProfile = { ...user!, ...formData };
       setUser(updatedUser);
       setIsEditing(false);
       setSuccessMessage('Profile updated successfully!');
-      
+
       setTimeout(() => setSuccessMessage(''), 4000);
     } catch (error) {
       setErrors({ submit: 'Failed to update profile. Please try again.' });
@@ -211,7 +211,7 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="relative inline-block">
             <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
@@ -225,7 +225,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
@@ -244,7 +244,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -283,7 +283,7 @@ export default function ProfilePage() {
               <div className="relative">
                 {/* Background Pattern */}
                 <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
-                
+
                 {/* Profile Image */}
                 <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
                   <div className="relative">
@@ -315,7 +315,7 @@ export default function ProfilePage() {
                     <span>{user.company}</span>
                   </div>
                 )}
-                
+
                 {/* Role Badge */}
                 <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-4 ${getRoleColor(user.role)}`}>
                   <Shield className="h-3 w-3 mr-1.5" />
@@ -360,9 +360,9 @@ export default function ProfilePage() {
                 {user.website && (
                   <div className="flex items-center text-gray-600">
                     <Globe className="h-4 w-4 mr-3 text-gray-400" />
-                    <a 
-                      href={`https://${user.website}`} 
-                      target="_blank" 
+                    <a
+                      href={`https://${user.website}`}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="text-sm text-indigo-600 hover:text-indigo-800 hover:underline"
                     >
@@ -430,9 +430,8 @@ export default function ProfilePage() {
                             type="text"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                              errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
+                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                             placeholder="Enter your full name"
                           />
                         </div>
@@ -465,9 +464,8 @@ export default function ProfilePage() {
                             type="email"
                             value={formData.email}
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                              errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
+                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                             placeholder="Enter your email"
                           />
                         </div>
@@ -500,9 +498,8 @@ export default function ProfilePage() {
                             type="tel"
                             value={formData.phone}
                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                              errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
+                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                             placeholder="+1 (555) 123-4567"
                           />
                         </div>
@@ -535,19 +532,18 @@ export default function ProfilePage() {
                             type="date"
                             value={formData.dateOfBirth}
                             onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                              errors.dateOfBirth ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
+                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${errors.dateOfBirth ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                           />
                         </div>
                       ) : (
                         <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                           <Calendar className="h-5 w-5 text-gray-400 mr-3" />
                           <span className="text-gray-900 font-medium">
-                            {user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('en-US', { 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
+                            {user.dateOfBirth ? new Date(user.dateOfBirth).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
                             }) : 'Not set'}
                           </span>
                         </div>
@@ -664,9 +660,8 @@ export default function ProfilePage() {
                             type="text"
                             value={formData.website}
                             onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                              errors.website ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                            }`}
+                            className={`block w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${errors.website ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                              }`}
                             placeholder="yourwebsite.com"
                           />
                         </div>
@@ -674,9 +669,9 @@ export default function ProfilePage() {
                         <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
                           <Link className="h-5 w-5 text-gray-400 mr-3" />
                           {user.website ? (
-                            <a 
-                              href={`https://${user.website}`} 
-                              target="_blank" 
+                            <a
+                              href={`https://${user.website}`}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-indigo-600 hover:text-indigo-800 hover:underline font-medium"
                             >
@@ -698,7 +693,7 @@ export default function ProfilePage() {
                     {/* Bio */}
                     <div>
                       <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
-                       Bio
+                        Bio
                       </label>
                       {isEditing ? (
                         <textarea
@@ -819,9 +814,8 @@ export default function ProfilePage() {
                               />
                               <label
                                 htmlFor="resume-upload"
-                                className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors ${
-                                  isUploadingResume ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
+                                className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 cursor-pointer transition-colors ${isUploadingResume ? 'opacity-50 cursor-not-allowed' : ''
+                                  }`}
                               >
                                 {isUploadingResume ? (
                                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

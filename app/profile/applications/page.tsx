@@ -103,7 +103,7 @@ export default function ApplicationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16 lg:pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-16 lg:pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="relative inline-block">
             <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
@@ -117,7 +117,7 @@ export default function ApplicationsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16 lg:pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-16 lg:pt-20 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
@@ -136,7 +136,7 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pt-16 lg:pt-20">
+    <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-16 lg:pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -193,9 +193,8 @@ export default function ApplicationsPage() {
                       <div
                         key={application._id}
                         onClick={() => setSelectedApplication(application)}
-                        className={`p-6 cursor-pointer hover:bg-gray-50 transition-colors ${
-                          selectedApplication?._id === application._id ? 'bg-indigo-50 border-r-4 border-indigo-500' : ''
-                        }`}
+                        className={`p-6 cursor-pointer hover:bg-gray-50 transition-colors ${selectedApplication?._id === application._id ? 'bg-indigo-50 border-r-4 border-indigo-500' : ''
+                          }`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -320,22 +319,20 @@ export default function ApplicationsPage() {
                             const StepIcon = step.icon;
                             return (
                               <div key={index} className="flex flex-col items-center">
-                                <div className={`relative w-12 h-12 rounded-full border-4 flex items-center justify-center transition-all duration-300 ${
-                                  step.isCurrent
-                                    ? 'bg-indigo-500 border-indigo-500 text-white shadow-lg scale-110'
-                                    : step.isCompleted && !step.isRejected
+                                <div className={`relative w-12 h-12 rounded-full border-4 flex items-center justify-center transition-all duration-300 ${step.isCurrent
+                                  ? 'bg-indigo-500 border-indigo-500 text-white shadow-lg scale-110'
+                                  : step.isCompleted && !step.isRejected
                                     ? 'bg-emerald-500 border-emerald-500 text-white'
                                     : step.isRejected
-                                    ? 'bg-red-500 border-red-500 text-white'
-                                    : 'bg-white border-gray-300 text-gray-400'
-                                }`}>
+                                      ? 'bg-red-500 border-red-500 text-white'
+                                      : 'bg-white border-gray-300 text-gray-400'
+                                  }`}>
                                   <StepIcon className="h-5 w-5" />
                                 </div>
 
                                 <div className="mt-3 text-center max-w-20">
-                                  <div className={`text-sm font-medium ${
-                                    step.isCurrent ? 'text-indigo-600' : step.isCompleted ? 'text-gray-900' : 'text-gray-500'
-                                  }`}>
+                                  <div className={`text-sm font-medium ${step.isCurrent ? 'text-indigo-600' : step.isCompleted ? 'text-gray-900' : 'text-gray-500'
+                                    }`}>
                                     {step.label}
                                   </div>
                                   <div className="text-xs text-gray-500 mt-1 leading-tight">
@@ -350,58 +347,53 @@ export default function ApplicationsPage() {
                     </div>
 
                     {/* Status Message */}
-                    <div className={`p-4 rounded-lg border ${
-                      selectedApplication.status === 'HIRED'
-                        ? 'bg-emerald-50 border-emerald-200'
-                        : selectedApplication.status === 'REJECTED'
+                    <div className={`p-4 rounded-lg border ${selectedApplication.status === 'HIRED'
+                      ? 'bg-emerald-50 border-emerald-200'
+                      : selectedApplication.status === 'REJECTED'
                         ? 'bg-red-50 border-red-200'
                         : selectedApplication.status === 'SHORTLISTED'
-                        ? 'bg-purple-50 border-purple-200'
-                        : 'bg-blue-50 border-blue-200'
-                    }`}>
+                          ? 'bg-purple-50 border-purple-200'
+                          : 'bg-blue-50 border-blue-200'
+                      }`}>
                       <div className="flex items-start">
-                        <div className={`p-1 rounded-full mr-3 ${
-                          selectedApplication.status === 'HIRED'
-                            ? 'bg-emerald-100'
-                            : selectedApplication.status === 'REJECTED'
+                        <div className={`p-1 rounded-full mr-3 ${selectedApplication.status === 'HIRED'
+                          ? 'bg-emerald-100'
+                          : selectedApplication.status === 'REJECTED'
                             ? 'bg-red-100'
                             : selectedApplication.status === 'SHORTLISTED'
-                            ? 'bg-purple-100'
-                            : 'bg-blue-100'
-                        }`}>
+                              ? 'bg-purple-100'
+                              : 'bg-blue-100'
+                          }`}>
                           {React.createElement(statusConfig[selectedApplication.status as keyof typeof statusConfig].icon, {
-                            className: `h-4 w-4 ${
-                              selectedApplication.status === 'HIRED'
-                                ? 'text-emerald-600'
-                                : selectedApplication.status === 'REJECTED'
+                            className: `h-4 w-4 ${selectedApplication.status === 'HIRED'
+                              ? 'text-emerald-600'
+                              : selectedApplication.status === 'REJECTED'
                                 ? 'text-red-600'
                                 : selectedApplication.status === 'SHORTLISTED'
-                                ? 'text-purple-600'
-                                : 'text-blue-600'
-                            }`
+                                  ? 'text-purple-600'
+                                  : 'text-blue-600'
+                              }`
                           })}
                         </div>
                         <div>
-                          <h4 className={`font-semibold ${
-                            selectedApplication.status === 'HIRED'
-                              ? 'text-emerald-800'
-                              : selectedApplication.status === 'REJECTED'
+                          <h4 className={`font-semibold ${selectedApplication.status === 'HIRED'
+                            ? 'text-emerald-800'
+                            : selectedApplication.status === 'REJECTED'
                               ? 'text-red-800'
                               : selectedApplication.status === 'SHORTLISTED'
-                              ? 'text-purple-800'
-                              : 'text-blue-800'
-                          }`}>
+                                ? 'text-purple-800'
+                                : 'text-blue-800'
+                            }`}>
                             {statusConfig[selectedApplication.status as keyof typeof statusConfig].label}
                           </h4>
-                          <p className={`text-sm mt-1 ${
-                            selectedApplication.status === 'HIRED'
-                              ? 'text-emerald-700'
-                              : selectedApplication.status === 'REJECTED'
+                          <p className={`text-sm mt-1 ${selectedApplication.status === 'HIRED'
+                            ? 'text-emerald-700'
+                            : selectedApplication.status === 'REJECTED'
                               ? 'text-red-700'
                               : selectedApplication.status === 'SHORTLISTED'
-                              ? 'text-purple-700'
-                              : 'text-blue-700'
-                          }`}>
+                                ? 'text-purple-700'
+                                : 'text-blue-700'
+                            }`}>
                             {statusConfig[selectedApplication.status as keyof typeof statusConfig].description}
                           </p>
                           {selectedApplication.updatedAt !== selectedApplication.createdAt && (
