@@ -187,7 +187,7 @@ export default function RegisterCompanyModal({ isOpen, onClose, onSuccess }: Reg
                                     value={formData.name}
                                     onChange={handleInputChange}
                                     placeholder="Official registered name"
-                                    className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all ${errors.name ? 'border-red-300' : 'border-gray-200'
+                                    className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-gray-900 bg-white ${errors.name ? 'border-red-300' : 'border-gray-200'
                                         }`}
                                 />
                             </div>
@@ -205,7 +205,7 @@ export default function RegisterCompanyModal({ isOpen, onClose, onSuccess }: Reg
                                 required
                                 value={formData.industry}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all bg-white"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all bg-white text-gray-900"
                             >
                                 <option value="">Select industry</option>
                                 {industries.map(industry => (
@@ -226,7 +226,7 @@ export default function RegisterCompanyModal({ isOpen, onClose, onSuccess }: Reg
                                 required
                                 value={formData.size}
                                 onChange={handleInputChange}
-                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all bg-white"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all bg-white text-gray-900"
                             >
                                 <option value="">Select company size</option>
                                 {companySizes.map(size => (
@@ -251,7 +251,7 @@ export default function RegisterCompanyModal({ isOpen, onClose, onSuccess }: Reg
                                     value={formData.location}
                                     onChange={handleInputChange}
                                     placeholder="City, Country"
-                                    className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all ${errors.location ? 'border-red-300' : 'border-gray-200'
+                                    className={`w-full pl-10 pr-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-gray-900 bg-white ${errors.location ? 'border-red-300' : 'border-gray-200'
                                         }`}
                                 />
                             </div>
@@ -272,7 +272,7 @@ export default function RegisterCompanyModal({ isOpen, onClose, onSuccess }: Reg
                                     value={formData.website}
                                     onChange={handleInputChange}
                                     placeholder="https://www.yourcompany.com"
-                                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all"
+                                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-gray-900 bg-white"
                                 />
                             </div>
                         </div>
@@ -290,7 +290,7 @@ export default function RegisterCompanyModal({ isOpen, onClose, onSuccess }: Reg
                                 value={formData.description}
                                 onChange={handleInputChange}
                                 placeholder="Briefly describe what your company does..."
-                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all ${errors.description ? 'border-red-300' : 'border-gray-200'
+                                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-sky-500/10 focus:border-sky-500 transition-all text-gray-900 bg-white ${errors.description ? 'border-red-300' : 'border-gray-200'
                                     }`}
                             />
                             {errors.description && <p className="mt-2 text-sm text-red-600">{errors.description}</p>}

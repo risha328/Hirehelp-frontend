@@ -18,12 +18,14 @@ import {
 import { companiesAPI } from '../../api/companies';
 import { API_BASE_URL } from '../../api/config';
 import EditCompanyModal from '../../components/EditCompanyModal';
+import RegisterCompanyModal from '../../components/RegisterCompanyModal';
 
 export default function CompanyProfilePage() {
   const router = useRouter();
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [admins, setAdmins] = useState<any[]>([]);
 
   useEffect(() => {
@@ -108,7 +110,7 @@ export default function CompanyProfilePage() {
             You haven't registered a company yet. Register your company to access the profile.
           </p>
           <button
-            onClick={() => router.push('/companies')}
+            onClick={() => setShowRegisterModal(true)}
             className="inline-flex items-center px-8 py-4 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
           >
             Register Your Company
@@ -330,6 +332,16 @@ export default function CompanyProfilePage() {
         onSuccess={() => {
           fetchCompany();
           setShowEditModal(false);
+        }}
+      />
+
+      {/* Register Company Modal */}
+      <RegisterCompanyModal
+        isOpen={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+        onSuccess={() => {
+          fetchCompany();
+          setShowRegisterModal(false);
         }}
       />
     </div>

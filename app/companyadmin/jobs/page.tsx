@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { jobsAPI } from '../../api/companies';
 import { companiesAPI } from '../../api/companies';
+import RegisterCompanyModal from '../../components/RegisterCompanyModal';
 import {
   BriefcaseIcon,
   MapPinIcon,
@@ -53,6 +54,7 @@ export default function CompanyJobsPage() {
   const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [posting, setPosting] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -303,8 +305,8 @@ export default function CompanyJobsPage() {
             You need to register your company before posting job listings.
           </p>
           <button
-            onClick={() => router.push('/companies')}
-            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg"
+            onClick={() => setShowRegisterModal(true)}
+            className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg cursor-pointer"
           >
             Register Company
           </button>
@@ -1155,6 +1157,16 @@ We are looking for a passionate developer to join our team. In this role, you wi
           </div>
         </div>
       )}
+
+      {/* Register Company Modal */}
+      <RegisterCompanyModal
+        isOpen={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+        onSuccess={() => {
+          // Refresh data or reload
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }
