@@ -260,7 +260,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 shadow-lg shadow-sky-500/25 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed overflow-hidden"
+              className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 shadow-lg shadow-sky-500/25 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer overflow-hidden"
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
