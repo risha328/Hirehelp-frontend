@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Mail,
@@ -75,7 +76,7 @@ export default function RegisterPage() {
       // Store tokens in localStorage
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
-      
+
       // Store user data for quick access
       if (response.user) {
         localStorage.setItem('user', JSON.stringify(response.user));
@@ -105,65 +106,86 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left Side - Image/Illustration */}
-      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-green-600 to-emerald-800">
-        <div className="absolute inset-0 bg-black/10"></div>
-        
-        {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-1/3 left-1/3 w-48 h-48 bg-white rounded-full"></div>
-          <div className="absolute bottom-1/3 right-1/3 w-64 h-64 bg-white rounded-full"></div>
-        </div>
+      {/* ================= LEFT SIDE (IMAGE) ================= */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-sky-50 overflow-hidden">
+        {/* Illustration */}
+        <Image
+          src="/images/login-left.png"
+          alt="Registration illustration"
+          fill
+          priority
+          className="object-contain p-12"
+        />
 
-        {/* Content Overlay */}
-        <div className="relative z-10 flex flex-col justify-between p-12 text-white">
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-sky-400/90 via-sky-500/80 to-white/40" />
+
+        {/* Branding content */}
+        <div className="relative z-10 flex flex-col justify-between p-12 text-sky-900">
           <div>
-            <Link href="/" className="flex items-center space-x-2 mb-12">
-              <Briefcase className="h-8 w-8" />
-              <span className="text-2xl font-bold">HireFlow</span>
+            <Link href="/" className="flex items-center mb-12">
+              <Image
+                src="/images/logo-transparent.png"
+                alt="HireHelp Logo"
+                width={350}
+                height={90}
+                className="h-24 w-auto object-contain"
+                priority
+              />
             </Link>
-            
-            <div className="max-w-md">
-              <h2 className="text-4xl font-bold mb-6">
-                Start Your Journey Today
-              </h2>
-              <p className="text-xl text-green-100 mb-8">
-                Join thousands of professionals and companies already using HireFlow.
-              </p>
-              
-              {/* Benefits */}
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5" />
-                  <span>Post unlimited jobs (Free tier)</span>
+
+            <h2 className="text-5xl font-extrabold tracking-tighter leading-tight mb-6 max-w-lg">
+              Begin Your Professional Journey
+            </h2>
+
+            <p className="text-xl text-sky-900/60 font-medium leading-relaxed mb-10 max-w-md">
+              Join the global network of excellence and unlock your full potential with HireHelp.
+            </p>
+
+            <div className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="bg-sky-600/10 p-2 rounded-lg">
+                  <Building className="h-6 w-6 text-sky-600" />
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5" />
-                  <span>Access to premium candidates</span>
+                <div>
+                  <h3 className="text-xs font-bold text-sky-950 uppercase tracking-widest mb-1">
+                    For Enterprises
+                  </h3>
+                  <p className="text-sky-900/70 text-base font-medium leading-snug">
+                    Scale your team with elite talent pools and AI-driven screening.
+                  </p>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5" />
-                  <span>Advanced analytics dashboard</span>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <div className="bg-sky-600/10 p-2 rounded-lg">
+                  <Briefcase className="h-6 w-6 text-sky-600" />
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5" />
-                  <span>14-day free trial for companies</span>
+                <div>
+                  <h3 className="text-xs font-bold text-sky-950 uppercase tracking-widest mb-1">
+                    For Professionals
+                  </h3>
+                  <p className="text-sky-900/70 text-base font-medium leading-snug">
+                    Access exclusive career opportunities at industry-leading companies.
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Testimonials */}
-          <div className="mt-12 pt-8 border-t border-white/20">
-            <blockquote className="text-lg italic text-green-100">
-              "HireFlow helped us reduce hiring time by 60%. The platform is incredibly intuitive."
-            </blockquote>
-            <div className="mt-4 flex items-center">
-              <div className="w-10 h-10 bg-white/20 rounded-full"></div>
-              <div className="ml-3">
-                <div className="font-semibold">Sarah Johnson</div>
-                <div className="text-sm text-green-100">HR Director, TechCorp</div>
-              </div>
+          {/* Stats or Trust Elements */}
+          <div className="grid grid-cols-3 gap-6 border-t border-sky-200/50 pt-8">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-sky-900">50K+</p>
+              <p className="text-sm text-sky-800/70">Users</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-sky-900">10K+</p>
+              <p className="text-sm text-sky-800/70">Jobs</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-sky-900">95%</p>
+              <p className="text-sm text-sky-800/70">Success</p>
             </div>
           </div>
         </div>
@@ -174,9 +196,15 @@ export default function RegisterPage() {
         <div className="w-full max-w-md">
           {/* Logo for mobile */}
           <div className="lg:hidden flex justify-center mb-8">
-            <Link href="/" className="flex items-center space-x-2">
-              <Briefcase className="h-8 w-8 text-green-600" />
-              <span className="text-2xl font-bold text-gray-900">HireFlow</span>
+            <Link href="/" className="flex items-center group">
+              <Image
+                src="/images/logo-transparent.png"
+                alt="HireHelp Logo"
+                width={250}
+                height={68}
+                className="h-16 w-auto object-contain"
+                priority
+              />
             </Link>
           </div>
 
@@ -184,7 +212,7 @@ export default function RegisterPage() {
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
             <p className="text-gray-600 mt-2">
-              Join HireFlow today and unlock opportunities
+              Join HireHelp today and unlock opportunities
             </p>
           </div>
 
@@ -197,54 +225,45 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setRole('CANDIDATE')}
-                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all ${
-                  role === 'CANDIDATE'
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
+                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all ${role === 'CANDIDATE'
+                  ? 'border-sky-500 bg-sky-50 shadow-lg shadow-sky-500/10'
+                  : 'border-gray-300 hover:border-gray-400'
+                  }`}
               >
-                <User className={`h-8 w-8 mb-2 ${
-                  role === 'CANDIDATE' ? 'text-blue-600' : 'text-gray-400'
-                }`} />
-                <span className={`font-medium ${
-                  role === 'CANDIDATE' ? 'text-blue-700' : 'text-gray-700'
-                }`}>Candidate</span>
+                <User className={`h-8 w-8 mb-2 ${role === 'CANDIDATE' ? 'text-sky-600' : 'text-gray-400'
+                  }`} />
+                <span className={`font-medium ${role === 'CANDIDATE' ? 'text-sky-700' : 'text-gray-700'
+                  }`}>Candidate</span>
                 <span className="text-sm text-gray-500 mt-1">Looking for jobs</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setRole('COMPANY_ADMIN')}
-                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all ${
-                  role === 'COMPANY_ADMIN'
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
+                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all ${role === 'COMPANY_ADMIN'
+                  ? 'border-sky-500 bg-sky-50 shadow-lg shadow-sky-500/10'
+                  : 'border-gray-300 hover:border-gray-400'
+                  }`}
               >
-                <Building className={`h-8 w-8 mb-2 ${
-                  role === 'COMPANY_ADMIN' ? 'text-blue-600' : 'text-gray-400'
-                }`} />
-                <span className={`font-medium ${
-                  role === 'COMPANY_ADMIN' ? 'text-blue-700' : 'text-gray-700'
-                }`}>Company Admin</span>
+                <Building className={`h-8 w-8 mb-2 ${role === 'COMPANY_ADMIN' ? 'text-sky-600' : 'text-gray-400'
+                  }`} />
+                <span className={`font-medium ${role === 'COMPANY_ADMIN' ? 'text-sky-700' : 'text-gray-700'
+                  }`}>Company Admin</span>
                 <span className="text-sm text-gray-500 mt-1">Hiring talent</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setRole('SUPER_ADMIN')}
-                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all ${
-                  role === 'SUPER_ADMIN'
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
+                className={`p-4 border-2 rounded-lg flex flex-col items-center justify-center transition-all ${role === 'SUPER_ADMIN'
+                  ? 'border-sky-500 bg-sky-50 shadow-lg shadow-sky-500/10'
+                  : 'border-gray-300 hover:border-gray-400'
+                  }`}
               >
-                <Briefcase className={`h-8 w-8 mb-2 ${
-                  role === 'SUPER_ADMIN' ? 'text-blue-600' : 'text-gray-400'
-                }`} />
-                <span className={`font-medium ${
-                  role === 'SUPER_ADMIN' ? 'text-blue-700' : 'text-gray-700'
-                }`}>Super Admin</span>
+                <Briefcase className={`h-8 w-8 mb-2 ${role === 'SUPER_ADMIN' ? 'text-sky-600' : 'text-gray-400'
+                  }`} />
+                <span className={`font-medium ${role === 'SUPER_ADMIN' ? 'text-sky-700' : 'text-gray-700'
+                  }`}>Super Admin</span>
                 <span className="text-sm text-gray-500 mt-1">System admin</span>
               </button>
             </div>
@@ -266,9 +285,8 @@ export default function RegisterPage() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 ${
-                    errors.name ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors text-gray-900 ${errors.name ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="John Doe"
                 />
               </div>
@@ -294,9 +312,8 @@ export default function RegisterPage() {
                   type="datetime-local"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 ${
-                    errors.dateOfBirth ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors text-gray-900 ${errors.dateOfBirth ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="YYYY-MM-DDTHH:MM:SS.SSSZ"
                 />
               </div>
@@ -317,18 +334,16 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setGender('MALE')}
-                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all ${
-                    gender === 'MALE'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-300 hover:border-blue-300'
-                  }`}
+                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all ${gender === 'MALE'
+                    ? 'border-sky-500 bg-sky-50'
+                    : 'border-gray-300 hover:border-sky-300'
+                    }`}
                 >
-                  <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${
-                    gender === 'MALE' ? 'bg-blue-500' : 'bg-gray-300'
-                  }`}>
+                  <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${gender === 'MALE' ? 'bg-sky-500' : 'bg-gray-300'
+                    }`}>
                     <User className={`h-4 w-4 ${gender === 'MALE' ? 'text-white' : 'text-gray-500'}`} />
                   </div>
-                  <span className={`font-medium ${gender === 'MALE' ? 'text-blue-700' : 'text-gray-700'}`}>
+                  <span className={`font-medium ${gender === 'MALE' ? 'text-sky-700' : 'text-gray-700'}`}>
                     Male
                   </span>
                 </button>
@@ -336,15 +351,13 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setGender('FEMALE')}
-                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all ${
-                    gender === 'FEMALE'
-                      ? 'border-pink-500 bg-pink-50'
-                      : 'border-gray-300 hover:border-pink-300'
-                  }`}
+                  className={`p-3 border-2 rounded-lg flex items-center justify-center transition-all ${gender === 'FEMALE'
+                    ? 'border-pink-500 bg-pink-50'
+                    : 'border-gray-300 hover:border-pink-300'
+                    }`}
                 >
-                  <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${
-                    gender === 'FEMALE' ? 'bg-pink-500' : 'bg-gray-300'
-                  }`}>
+                  <div className={`w-6 h-6 rounded-full mr-3 flex items-center justify-center ${gender === 'FEMALE' ? 'bg-pink-500' : 'bg-gray-300'
+                    }`}>
                     <User className={`h-4 w-4 ${gender === 'FEMALE' ? 'text-white' : 'text-gray-500'}`} />
                   </div>
                   <span className={`font-medium ${gender === 'FEMALE' ? 'text-pink-700' : 'text-gray-700'}`}>
@@ -374,9 +387,8 @@ export default function RegisterPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors text-gray-900 ${errors.email ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="you@example.com"
                 />
               </div>
@@ -402,9 +414,8 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className={`block w-full pl-10 pr-10 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 ${
-                    errors.password ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`block w-full pl-10 pr-10 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors text-gray-900 ${errors.password ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="Create a password"
                 />
                 <button
@@ -462,9 +473,8 @@ export default function RegisterPage() {
                   type={showPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-gray-900 ${
-                    errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
-                  }`}
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-colors text-gray-900 ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'
+                    }`}
                   placeholder="Confirm your password"
                 />
               </div>
@@ -481,16 +491,16 @@ export default function RegisterPage() {
               <input
                 id="terms"
                 type="checkbox"
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-1"
+                className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded mt-1"
                 required
               />
               <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
                 I agree to the{' '}
-                <Link href="/terms" className="text-blue-600 hover:text-blue-500 font-medium">
+                <Link href="/terms" className="text-sky-600 hover:text-sky-500 font-medium">
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link href="/privacy" className="text-blue-600 hover:text-blue-500 font-medium">
+                <Link href="/privacy" className="text-sky-600 hover:text-sky-500 font-medium">
                   Privacy Policy
                 </Link>
               </label>
@@ -500,7 +510,7 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center bg-sky-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-sky-500/20"
             >
               {isLoading ? (
                 <div className="flex items-center">
@@ -524,9 +534,9 @@ export default function RegisterPage() {
           <div className="mt-8 text-center">
             <p className="text-gray-600">
               Already have an account?{' '}
-              <Link 
-                href="/auth/login" 
-                className="text-blue-600 font-semibold hover:text-blue-500"
+              <Link
+                href="/auth/login"
+                className="text-sky-600 font-semibold hover:text-sky-500"
               >
                 Sign in
               </Link>

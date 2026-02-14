@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Briefcase, Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -77,29 +78,22 @@ export default function TransparentHeader() {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMenuOpen
-        ? 'bg-white/80 backdrop-blur-xl shadow-sm border-b border-white/20'
-        : 'bg-transparent'
+      ? 'bg-white/80 backdrop-blur-xl shadow-sm border-b border-white/20'
+      : 'bg-transparent'
       }`}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 lg:h-20 items-center justify-between">
           {/* Logo and Brand */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="relative">
-                <div className={`w-10 h-10 ${isScrolled || isMenuOpen
-                    ? 'bg-gradient-to-br from-blue-600 to-indigo-700'
-                    : 'bg-white/20 backdrop-blur-sm'
-                  } rounded-xl flex items-center justify-center shadow-lg transition-all duration-300`}>
-                  <Briefcase className={`h-6 w-6 ${isScrolled || isMenuOpen ? 'text-white' : 'text-white'
-                    }`} />
-                </div>
-              </div>
-              <div className="flex flex-col">
-                <span className={`text-2xl font-bold tracking-tight transition-colors duration-300 ${isScrolled || isMenuOpen ? 'text-gray-900' : 'text-white'
-                  }`}>
-                  Hire<span className={isScrolled || isMenuOpen ? 'text-blue-600' : 'text-blue-300'}>Help</span>
-                </span>
-              </div>
+            <Link href="/" className="flex items-center group">
+              <Image
+                src="/images/logo-transparent.png"
+                alt="HireHelp Logo"
+                width={600}
+                height={120}
+                className="h-24 lg:h-28 w-auto object-contain transition-all duration-300"
+                priority
+              />
             </Link>
 
             {/* Desktop Navigation */}
@@ -115,17 +109,17 @@ export default function TransparentHeader() {
                       >
                         <button
                           className={`flex items-center px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${item.current
-                              ? 'bg-white/20 text-white backdrop-blur-sm'
-                              : isScrolled || isMenuOpen
-                                ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                                : 'text-white hover:text-gray-100 hover:bg-white/10'
+                            ? 'bg-white/20 text-white backdrop-blur-sm'
+                            : isScrolled || isMenuOpen
+                              ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
+                              : 'text-white hover:text-gray-100 hover:bg-white/10'
                             }`}
                         >
                           {item.name}
                           <ChevronDown className={`ml-1.5 h-4 w-4 transition-transform duration-200 ${(item.name === 'Jobs' && isJobsDropdownOpen) ||
-                              (item.name === 'Company Lists' && isCompaniesDropdownOpen)
-                              ? 'rotate-180'
-                              : ''
+                            (item.name === 'Company Lists' && isCompaniesDropdownOpen)
+                            ? 'rotate-180'
+                            : ''
                             } ${isScrolled || isMenuOpen ? 'text-gray-600' : 'text-white/70'}`} />
                         </button>
 
@@ -169,10 +163,10 @@ export default function TransparentHeader() {
                       <Link
                         href={item.href}
                         className={`px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${item.current
-                            ? 'bg-white/20 text-white backdrop-blur-sm'
-                            : isScrolled || isMenuOpen
-                              ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                              : 'text-white hover:text-gray-100 hover:bg-white/10'
+                          ? 'bg-white/20 text-white backdrop-blur-sm'
+                          : isScrolled || isMenuOpen
+                            ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
+                            : 'text-white hover:text-gray-100 hover:bg-white/10'
                           }`}
                       >
                         {item.name}
@@ -192,8 +186,8 @@ export default function TransparentHeader() {
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white transition-all duration-300 ${isScrolled || isMenuOpen
-                      ? 'bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
-                      : 'bg-gradient-to-br from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
+                    ? 'bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
+                    : 'bg-gradient-to-br from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
                     }`}
                   title={currentUser.name}
                 >
@@ -242,8 +236,8 @@ export default function TransparentHeader() {
                 <Link
                   href="/auth/login"
                   className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${isScrolled || isMenuOpen
-                      ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                      : 'text-gray-900 hover:text-gray-700 hover:bg-white/10 backdrop-blur-sm'
+                    ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
+                    : 'text-gray-900 hover:text-gray-700 hover:bg-white/10 backdrop-blur-sm'
                     }`}
                 >
                   Sign In
@@ -251,8 +245,8 @@ export default function TransparentHeader() {
                 <Link
                   href="/auth/register"
                   className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${isScrolled || isMenuOpen
-                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
-                      : 'bg-white text-gray-900 hover:bg-gray-100'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
+                    : 'bg-white text-gray-900 hover:bg-gray-100'
                     }`}
                 >
                   Get Started
@@ -274,8 +268,8 @@ export default function TransparentHeader() {
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className={`lg:hidden p-2 rounded-lg transition-colors duration-300 ${isScrolled || isMenuOpen
-                ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
-                : 'text-gray-900 hover:text-gray-700 hover:bg-white/10'
+              ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
+              : 'text-gray-900 hover:text-gray-700 hover:bg-white/10'
               }`}
           >
             {isMenuOpen ? (
@@ -301,15 +295,15 @@ export default function TransparentHeader() {
                           if (item.name === 'Company Lists') setIsCompaniesDropdownOpen(!isCompaniesDropdownOpen);
                         }}
                         className={`flex items-center justify-between w-full px-4 py-3 text-base font-medium rounded-lg transition-colors ${item.current
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
                           }`}
                       >
                         {item.name}
                         <ChevronDown className={`h-5 w-5 transition-transform ${(item.name === 'Jobs' && isJobsDropdownOpen) ||
-                            (item.name === 'Company Lists' && isCompaniesDropdownOpen)
-                            ? 'rotate-180'
-                            : ''
+                          (item.name === 'Company Lists' && isCompaniesDropdownOpen)
+                          ? 'rotate-180'
+                          : ''
                           }`} />
                       </button>
 
@@ -343,8 +337,8 @@ export default function TransparentHeader() {
                       href={item.href}
                       onClick={() => setIsMenuOpen(false)}
                       className={`block px-4 py-3 text-base font-medium rounded-lg transition-colors ${item.current
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
                         }`}
                     >
                       {item.name}

@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  UserPlus, 
-  Briefcase, 
-  Users, 
-  CheckCircle, 
-  Search, 
-  Target, 
-  Zap, 
+import {
+  UserPlus,
+  Briefcase,
+  Users,
+  CheckCircle,
+  Search,
+  Target,
+  Zap,
   TrendingUp,
   Shield,
   BarChart3,
@@ -72,12 +72,12 @@ export default function HowItWorks() {
   }, []);
 
   return (
-    <section className="relative py-20 bg-blue-50 overflow-hidden">
+    <section className="relative py-24 bg-gradient-to-b from-white via-sky-50 to-white overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]"></div>
       <div className="absolute top-20 left-10 w-72 h-72 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
       <div className="absolute bottom-20 right-10 w-72 h-72 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-      
+
       <div className="container mx-auto px-4 relative z-10">
         {/* Header Section */}
         {/* <div className="text-center max-w-3xl mx-auto mb-16">
@@ -119,25 +119,23 @@ export default function HowItWorks() {
           {/* Process Timeline */}
           <div className="hidden lg:block relative mb-12">
             <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 -translate-y-1/2"></div>
-            <div 
+            <div
               className="absolute top-1/2 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 -translate-y-1/2 transition-all duration-500"
               style={{ width: `${(activeStep * 100) / (steps.length - 1)}%`, left: 0 }}
             ></div>
-            
+
             <div className="flex justify-between">
               {steps.map((step, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveStep(index)}
-                  className={`relative flex flex-col items-center transition-all duration-300 ${
-                    index <= activeStep ? 'scale-110' : 'opacity-60'
-                  }`}
+                  className={`relative flex flex-col items-center transition-all duration-300 ${index <= activeStep ? 'scale-110' : 'opacity-60'
+                    }`}
                 >
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transform transition-all duration-300 ${
-                    index <= activeStep 
-                      ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200' 
-                      : 'bg-white border-2 border-gray-200 text-gray-400'
-                  }`}>
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transform transition-all duration-300 ${index <= activeStep
+                    ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-200'
+                    : 'bg-white border-2 border-gray-200 text-gray-400'
+                    }`}>
                     <step.icon className="h-7 w-7" />
                   </div>
                   <div className="absolute -bottom-8 text-sm font-semibold">
@@ -190,9 +188,8 @@ export default function HowItWorks() {
                     <button
                       key={index}
                       onClick={() => setActiveStep(index)}
-                      className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                        index === activeStep ? 'bg-blue-600' : 'bg-gray-300'
-                      }`}
+                      className={`w-2.5 h-2.5 rounded-full transition-colors ${index === activeStep ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
                     />
                   ))}
                 </div>
@@ -212,22 +209,19 @@ export default function HowItWorks() {
                 {steps.map((step, index) => (
                   <div
                     key={index}
-                    className={`bg-white rounded-2xl p-6 border-2 transition-all duration-300 cursor-pointer hover:shadow-lg ${
-                      index === activeStep
-                        ? 'border-blue-200 shadow-md'
-                        : 'border-gray-100 shadow-sm'
-                    }`}
+                    className={`bg-white rounded-2xl p-6 border-2 transition-all duration-300 cursor-pointer hover:shadow-lg ${index === activeStep
+                      ? 'border-blue-200 shadow-md'
+                      : 'border-gray-100 shadow-sm'
+                      }`}
                     onClick={() => setActiveStep(index)}
                   >
                     <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-xl ${
-                        index === activeStep
-                          ? 'bg-gradient-to-br from-blue-50 to-indigo-50'
-                          : 'bg-gray-50'
-                      }`}>
-                        <step.icon className={`h-6 w-6 ${
-                          index === activeStep ? 'text-blue-600' : 'text-gray-400'
-                        }`} />
+                      <div className={`p-3 rounded-xl ${index === activeStep
+                        ? 'bg-gradient-to-br from-blue-50 to-indigo-50'
+                        : 'bg-gray-50'
+                        }`}>
+                        <step.icon className={`h-6 w-6 ${index === activeStep ? 'text-blue-600' : 'text-gray-400'
+                          }`} />
                       </div>
                       <div>
                         <div className="text-sm font-medium text-gray-500 mb-1">
