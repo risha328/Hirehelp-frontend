@@ -52,10 +52,16 @@ const statusConfig = {
     color: 'bg-red-100 text-red-800 border-red-200',
     icon: XCircle,
     description: 'Unfortunately, you were not selected for this position'
+  },
+  HOLD: {
+    label: 'On Hold',
+    color: 'bg-orange-100 text-orange-800 border-orange-200',
+    icon: Clock,
+    description: 'Your application has been put on hold'
   }
 };
 
-const statusOrder = ['APPLIED', 'UNDER_REVIEW', 'SHORTLISTED', 'HIRED', 'REJECTED'];
+const statusOrder = ['APPLIED', 'UNDER_REVIEW', 'SHORTLISTED', 'HOLD', 'HIRED', 'REJECTED'];
 
 export default function ApplicationsPage() {
   const router = useRouter();

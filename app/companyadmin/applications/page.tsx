@@ -142,6 +142,7 @@ export default function ApplicationsPage() {
       case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
       case 'HIRED': return 'bg-green-100 text-green-800';
       case 'REJECTED': return 'bg-red-100 text-red-800';
+      case 'HOLD': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -153,6 +154,7 @@ export default function ApplicationsPage() {
       case 'SHORTLISTED': return <CheckCircle className="h-4 w-4" />;
       case 'HIRED': return <CheckCircle className="h-4 w-4" />;
       case 'REJECTED': return <XCircle className="h-4 w-4" />;
+      case 'HOLD': return <Clock className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
   };
@@ -162,9 +164,11 @@ export default function ApplicationsPage() {
       case 'APPLIED':
         return ['UNDER_REVIEW'];
       case 'UNDER_REVIEW':
-        return ['SHORTLISTED', 'REJECTED'];
+        return ['SHORTLISTED', 'REJECTED', 'HOLD'];
       case 'SHORTLISTED':
-        return ['HIRED', 'REJECTED'];
+        return ['HIRED', 'REJECTED', 'HOLD'];
+      case 'HOLD':
+        return ['SHORTLISTED', 'UNDER_REVIEW', 'HIRED', 'REJECTED'];
       case 'HIRED':
       case 'REJECTED':
         return []; // Final states
@@ -180,6 +184,7 @@ export default function ApplicationsPage() {
       case 'SHORTLISTED': return 'Shortlisted';
       case 'HIRED': return 'Hired';
       case 'REJECTED': return 'Rejected';
+      case 'HOLD': return 'Hold';
       default: return status;
     }
   };

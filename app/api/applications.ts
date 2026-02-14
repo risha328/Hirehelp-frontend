@@ -26,7 +26,7 @@ export interface Application {
   };
   coverLetter?: string;
   resumeUrl?: string;
-  status: 'APPLIED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'HIRED' | 'REJECTED';
+  status: 'APPLIED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'HIRED' | 'REJECTED' | 'HOLD';
   notes?: string;
   currentRound?: {
     _id: string;

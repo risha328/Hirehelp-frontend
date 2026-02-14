@@ -52,6 +52,8 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
         return { color: 'bg-green-100 border-green-300', icon: <CheckCircle className="h-5 w-5 text-green-600" />, title: 'Hired' };
       case 'REJECTED':
         return { color: 'bg-red-100 border-red-300', icon: <XCircle className="h-5 w-5 text-red-600" />, title: 'Rejected' };
+      case 'HOLD':
+        return { color: 'bg-orange-100 border-orange-300', icon: <Clock className="h-5 w-5 text-orange-600" />, title: 'Hold' };
       default:
         return { color: 'bg-gray-100 border-gray-300', icon: <Clock className="h-5 w-5 text-gray-600" />, title: status };
     }
@@ -119,7 +121,17 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
       applications: applications.filter(app => app.status === 'SHORTLISTED')
     });
 
-    // 4. Hired
+    // 4. Hold
+    cols.push({
+      id: 'hold',
+      title: 'Hold',
+      status: 'HOLD',
+      color: 'bg-orange-100 border-orange-300',
+      icon: <Clock className="h-5 w-5 text-orange-600" />,
+      applications: applications.filter(app => app.status === 'HOLD')
+    });
+
+    // 5. Hired
     cols.push({
       id: 'hired',
       title: 'Hired',
@@ -129,7 +141,7 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
       applications: applications.filter(app => app.status === 'HIRED')
     });
 
-    // 5. Rejected
+    // 6. Rejected
     cols.push({
       id: 'rejected',
       title: 'Rejected',
@@ -174,7 +186,12 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
         { from: 'APPLIED', to: 'UNDER_REVIEW' },
         { from: 'UNDER_REVIEW', to: 'SHORTLISTED' },
         { from: 'SHORTLISTED', to: 'HIRED' },
-        { from: 'SHORTLISTED', to: 'REJECTED' }
+        { from: 'SHORTLISTED', to: 'REJECTED' },
+        { from: 'SHORTLISTED', to: 'HOLD' },
+        { from: 'HOLD', to: 'SHORTLISTED' },
+        { from: 'HOLD', to: 'REJECTED' },
+        { from: 'UNDER_REVIEW', to: 'HOLD' },
+        { from: 'HOLD', to: 'UNDER_REVIEW' }
       ];
       requiresConfirmation = confirmTransitions.some(
         transition => transition.from === application.status && transition.to === newStatus
