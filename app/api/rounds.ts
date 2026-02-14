@@ -315,12 +315,19 @@ export const roundsAPI = {
     return response.json();
   },
 
-  updateEvaluationStatus: async (evaluationId: string, status: EvaluationStatus, notes?: string): Promise<RoundEvaluation> => {
+  updateEvaluationStatus: async (
+    evaluationId: string,
+    status: EvaluationStatus,
+    notes?: string,
+    feedback?: string,
+    score?: number,
+    recommendation?: 'hire' | 'hold' | 'reject'
+  ): Promise<RoundEvaluation> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/evaluation/${evaluationId}/status`, {
       method: 'PATCH',
       headers,
-      body: JSON.stringify({ status, notes }),
+      body: JSON.stringify({ status, notes, feedback, score, recommendation }),
     });
 
     if (!response.ok) {

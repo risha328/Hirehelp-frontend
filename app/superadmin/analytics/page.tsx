@@ -86,6 +86,7 @@ export default function AnalyticsPage() {
           'APPLIED': '#3b82f6',
           'UNDER_REVIEW': '#f59e0b',
           'SHORTLISTED': '#8b5cf6',
+          'HOLD': '#f97316',
           'HIRED': '#10b981',
           'REJECTED': '#ef4444',
         };
@@ -278,11 +279,12 @@ export default function AnalyticsPage() {
                       <Cell
                         key={`cell-${index}`}
                         fill={{
-                          'APPLIED': '#8b5cf6', // Purple as in design
-                          'UNDER_REVIEW': '#3b82f6', // Blue
-                          'SHORTLISTED': '#10b981', // Green as in design
-                          'HIRED': '#059669', // Darker Green
-                          'REJECTED': '#ef4444', // Red
+                          'APPLIED': '#3b82f6',
+                          'UNDER_REVIEW': '#f59e0b',
+                          'SHORTLISTED': '#8b5cf6',
+                          'HOLD': '#f97316',
+                          'HIRED': '#10b981',
+                          'REJECTED': '#ef4444',
                         }[status] || '#6b7280'}
                       />
                     ))}

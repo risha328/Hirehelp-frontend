@@ -58,6 +58,9 @@ interface Interview {
     location?: string;
     notes?: string;
     evaluationId?: string;
+    feedback?: string;
+    rating?: number;
+    recommendation?: string;
 }
 
 export default function InterviewManagementPage() {
@@ -66,6 +69,7 @@ export default function InterviewManagementPage() {
     const [loading, setLoading] = useState(true);
     const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [showViewFeedbackModal, setShowViewFeedbackModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [showRescheduleModal, setShowRescheduleModal] = useState(false);
     const [rescheduleStep, setRescheduleStep] = useState<1 | 2>(1);
@@ -85,6 +89,14 @@ export default function InterviewManagementPage() {
 
     const [rescheduleLoading, setRescheduleLoading] = useState(false);
     const [showCompleteConfirmation, setShowCompleteConfirmation] = useState(false);
+
+    // Feedback
+    const [feedbackForm, setFeedbackForm] = useState({
+        rating: 0,
+        comments: '',
+        recommendation: '' as 'hire' | 'hold' | 'reject' | ''
+    });
+    const [feedbackLoading, setFeedbackLoading] = useState(false);
 
     // Assignment
     const [availableInterviewers, setAvailableInterviewers] = useState<any[]>([]);
@@ -148,8 +160,10 @@ export default function InterviewManagementPage() {
             }
 
 
-            // 3. Filter applications in 'UNDER_REVIEW' status (Interview Status)
-            const interviewApps = applications.filter(app => app.status === 'UNDER_REVIEW');
+            // 3. Filter applications that are in interview process or have finished it
+            const interviewApps = applications.filter(app =>
+                ['UNDER_REVIEW', 'SHORTLISTED', 'HOLD', 'HIRED', 'REJECTED'].includes(app.status)
+            );
 
             // 4. Fetch evaluations for these applications to get accurate status
             const applicationIds = interviewApps.map(app => app._id);
@@ -348,12 +362,14 @@ export default function InterviewManagementPage() {
                 let feedbackStatus: Interview['feedbackStatus'] = 'Not Generated';
 
                 if (evaluation) {
-                    if (evaluation.status === 'completed' || evaluation.status === 'passed' || evaluation.status === 'failed') {
+                    if (evaluation.feedback || (evaluation.score !== undefined && evaluation.score !== null)) {
                         feedbackStatus = 'Submitted';
                     } else if (evaluation.status === 'reviewed') {
                         feedbackStatus = 'Reviewed';
-                    } else if (status === 'Completed' || status === 'In Progress') {
-                        // If interview is done/active but evaluation is not final, feedback is pending
+                    } else if (evaluation.status === 'completed' || evaluation.status === 'passed' || evaluation.status === 'failed' || status === 'Completed') {
+                        // If interview is done but no feedback is gathered yet
+                        feedbackStatus = 'Pending';
+                    } else if (status === 'In Progress') {
                         feedbackStatus = 'Pending';
                     } else {
                         // Scheduled or Missed -> Not Generated (feedback not yet applicable)
@@ -384,7 +400,10 @@ export default function InterviewManagementPage() {
                     meetingLink: round?.meetingLink,
                     location: round?.locationDetails ? `${round.locationDetails.venueName}, ${round.locationDetails.city}` : undefined,
                     notes: app.notes,
-                    evaluationId: evaluation?._id
+                    evaluationId: evaluation?._id,
+                    feedback: evaluation?.feedback,
+                    rating: evaluation?.score ? evaluation.score / 20 : 0,
+                    recommendation: evaluation?.recommendation
                 };
             });
 
@@ -600,14 +619,55 @@ export default function InterviewManagementPage() {
     };
 
     // Handle submit feedback
-    const handleSubmitFeedback = () => {
-        if (selectedInterview) {
+    const handleSubmitFeedback = async () => {
+        if (!selectedInterview || !selectedInterview.evaluationId) return;
+
+        if (feedbackForm.rating === 0 || !feedbackForm.comments || !feedbackForm.recommendation) {
+            alert('Please fill in all feedback fields.');
+            return;
+        }
+
+        setFeedbackLoading(true);
+        try {
+            // Determine evaluation status based on recommendation
+            let status: any = 'completed';
+            if (feedbackForm.recommendation === 'hire') status = 'passed';
+            if (feedbackForm.recommendation === 'reject') status = 'failed';
+
+            await roundsAPI.updateEvaluationStatus(
+                selectedInterview.evaluationId,
+                status,
+                undefined, // notes
+                feedbackForm.comments,
+                feedbackForm.rating * 20, // Convert 1-5 to 0-100 score
+                feedbackForm.recommendation as 'hire' | 'hold' | 'reject'
+            );
+
+            // Update local state
             setInterviews(prev => prev.map(interview =>
                 interview.id === selectedInterview.id
-                    ? { ...interview, feedbackStatus: 'Submitted', feedbackSubmittedAt: new Date().toISOString() }
+                    ? {
+                        ...interview,
+                        status: 'Completed',
+                        feedbackStatus: 'Submitted',
+                        feedbackSubmittedAt: new Date().toISOString(),
+                        feedback: feedbackForm.comments,
+                        rating: feedbackForm.rating,
+                        recommendation: feedbackForm.recommendation
+                    }
                     : interview
             ));
+
             setShowFeedbackModal(false);
+            setFeedbackForm({ rating: 0, comments: '', recommendation: '' });
+
+            // Refresh to sync
+            fetchInterviews();
+        } catch (error) {
+            console.error('Failed to submit feedback:', error);
+            alert('Failed to submit feedback. Please try again.');
+        } finally {
+            setFeedbackLoading(false);
         }
     };
 
@@ -1197,10 +1257,14 @@ export default function InterviewManagementPage() {
                                                     <button
                                                         onClick={() => {
                                                             setSelectedInterview(interview);
-                                                            setShowFeedbackModal(true);
+                                                            if (interview.feedbackStatus === 'Submitted' || interview.feedbackStatus === 'Reviewed') {
+                                                                setShowViewFeedbackModal(true);
+                                                            } else {
+                                                                setShowFeedbackModal(true);
+                                                            }
                                                         }}
-                                                        className="text-gray-400 hover:text-blue-600 transition-colors p-1"
-                                                        title="Add/View Feedback"
+                                                        className={`${interview.feedbackStatus === 'Submitted' || interview.feedbackStatus === 'Reviewed' ? 'text-green-600 hover:text-green-800' : 'text-gray-400 hover:text-blue-600'} transition-colors p-1`}
+                                                        title={interview.feedbackStatus === 'Submitted' || interview.feedbackStatus === 'Reviewed' ? "View Feedback" : "Add Feedback"}
                                                     >
                                                         <ChatBubbleLeftRightIcon className="w-5 h-5" />
                                                     </button>
@@ -1597,9 +1661,11 @@ export default function InterviewManagementPage() {
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <button
                                             key={star}
-                                            className="w-10 h-10 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 flex items-center justify-center text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+                                            onClick={() => setFeedbackForm({ ...feedbackForm, rating: star })}
+                                            className={`w-10 h-10 rounded-lg border flex items-center justify-center text-lg focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all ${feedbackForm.rating >= star ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'}`}
+                                            type="button"
                                         >
-                                            ⭐
+                                            {feedbackForm.rating >= star ? '⭐' : '☆'}
                                         </button>
                                     ))}
                                 </div>
@@ -1610,8 +1676,10 @@ export default function InterviewManagementPage() {
                                     Feedback Comments
                                 </label>
                                 <textarea
-                                    className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                                    className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-gray-900"
                                     placeholder="Enter detailed feedback about the candidate's performance..."
+                                    value={feedbackForm.comments}
+                                    onChange={(e) => setFeedbackForm({ ...feedbackForm, comments: e.target.value })}
                                 ></textarea>
                             </div>
 
@@ -1621,21 +1689,39 @@ export default function InterviewManagementPage() {
                                 </label>
                                 <div className="flex gap-3">
                                     <label className="flex-1 cursor-pointer">
-                                        <input type="radio" name="recommendation" className="peer sr-only" />
+                                        <input
+                                            type="radio"
+                                            name="recommendation"
+                                            className="peer sr-only"
+                                            checked={feedbackForm.recommendation === 'hire'}
+                                            onChange={() => setFeedbackForm({ ...feedbackForm, recommendation: 'hire' })}
+                                        />
                                         <div className="border border-gray-200 peer-checked:border-green-500 peer-checked:bg-green-50 rounded-lg p-3 text-center transition-all">
-                                            <span className="block text-sm font-medium text-gray-900">Hire</span>
+                                            <span className={`block text-sm font-medium ${feedbackForm.recommendation === 'hire' ? 'text-green-700' : 'text-gray-900'}`}>Hire</span>
                                         </div>
                                     </label>
                                     <label className="flex-1 cursor-pointer">
-                                        <input type="radio" name="recommendation" className="peer sr-only" />
+                                        <input
+                                            type="radio"
+                                            name="recommendation"
+                                            className="peer sr-only"
+                                            checked={feedbackForm.recommendation === 'hold'}
+                                            onChange={() => setFeedbackForm({ ...feedbackForm, recommendation: 'hold' })}
+                                        />
                                         <div className="border border-gray-200 peer-checked:border-yellow-500 peer-checked:bg-yellow-50 rounded-lg p-3 text-center transition-all">
-                                            <span className="block text-sm font-medium text-gray-900">Hold</span>
+                                            <span className={`block text-sm font-medium ${feedbackForm.recommendation === 'hold' ? 'text-yellow-700' : 'text-gray-900'}`}>Hold</span>
                                         </div>
                                     </label>
                                     <label className="flex-1 cursor-pointer">
-                                        <input type="radio" name="recommendation" className="peer sr-only" />
+                                        <input
+                                            type="radio"
+                                            name="recommendation"
+                                            className="peer sr-only"
+                                            checked={feedbackForm.recommendation === 'reject'}
+                                            onChange={() => setFeedbackForm({ ...feedbackForm, recommendation: 'reject' })}
+                                        />
                                         <div className="border border-gray-200 peer-checked:border-red-500 peer-checked:bg-red-50 rounded-lg p-3 text-center transition-all">
-                                            <span className="block text-sm font-medium text-gray-900">Reject</span>
+                                            <span className={`block text-sm font-medium ${feedbackForm.recommendation === 'reject' ? 'text-red-700' : 'text-gray-900'}`}>Reject</span>
                                         </div>
                                     </label>
                                 </div>
@@ -1645,15 +1731,91 @@ export default function InterviewManagementPage() {
                         <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
                             <button
                                 onClick={() => setShowFeedbackModal(false)}
-                                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors cursor-pointer"
+                                disabled={feedbackLoading}
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSubmitFeedback}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md flex items-center gap-2 cursor-pointer"
+                                disabled={feedbackLoading}
                             >
+                                {feedbackLoading && <ArrowPathIcon className="w-4 h-4 animate-spin" />}
                                 Submit Feedback
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* View Feedback Modal */}
+            {showViewFeedbackModal && selectedInterview && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full">
+                        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-900">Interview Feedback</h2>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    For {selectedInterview.candidateName} - {selectedInterview.interviewRound} Round
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowViewFeedbackModal(false)}
+                                className="text-gray-400 hover:text-gray-500 p-2 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                <XCircleIcon className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                        Overall Rating
+                                    </label>
+                                    <div className="flex gap-1">
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <span key={star} className="text-xl">
+                                                {(selectedInterview.rating || 0) >= star ? '⭐' : '☆'}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                        Recommendation
+                                    </label>
+                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold capitalize ${selectedInterview.recommendation === 'hire' ? 'bg-green-100 text-green-700' :
+                                        selectedInterview.recommendation === 'hold' ? 'bg-yellow-100 text-yellow-700' :
+                                            'bg-red-100 text-red-700'
+                                        }`}>
+                                        {selectedInterview.recommendation || 'N/A'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                                    Feedback Comments
+                                </label>
+                                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 min-h-[120px] text-gray-800 italic whitespace-pre-wrap">
+                                    "{selectedInterview.feedback || 'No comments provided.'}"
+                                </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 text-sm text-gray-500 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                <UserIcon className="w-4 h-4 text-blue-600" />
+                                <span>Feedback submitted by <strong>{selectedInterview.interviewerName}</strong></span>
+                            </div>
+                        </div>
+
+                        <div className="p-6 border-t border-gray-100 flex justify-end">
+                            <button
+                                onClick={() => setShowViewFeedbackModal(false)}
+                                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors cursor-pointer"
+                            >
+                                Close
                             </button>
                         </div>
                     </div>
