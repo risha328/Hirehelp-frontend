@@ -221,6 +221,7 @@ export default function CompanyAdminPage() {
   const [jobPerformanceData, setJobPerformanceData] = useState<any[]>([]);
   const [applicationSourceData, setApplicationSourceData] = useState<any[]>([]);
   const [hiredCandidates, setHiredCandidates] = useState<any[]>([]);
+  const [showAllHired, setShowAllHired] = useState(false);
 
   useEffect(() => {
     fetchCompany();
@@ -752,19 +753,29 @@ export default function CompanyAdminPage() {
 
               {/* Hired Candidates */}
               <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                <div className="flex items-center mb-6">
-                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
-                    <Award className="h-5 w-5 text-white" />
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                      <Award className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-lg font-semibold text-gray-900">Hired Candidates</h3>
+                      <p className="text-sm text-gray-500">Recently hired team members</p>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <h3 className="text-lg font-semibold text-gray-900">Hired Candidates</h3>
-                    <p className="text-sm text-gray-500">Recently hired team members</p>
-                  </div>
+                  {hiredCandidates.length > 2 && (
+                    <button
+                      onClick={() => setShowAllHired(!showAllHired)}
+                      className="text-sm text-emerald-600 hover:text-emerald-800 font-medium cursor-pointer"
+                    >
+                      {showAllHired ? 'View Less' : 'View More'}
+                    </button>
+                  )}
                 </div>
 
                 <div className="space-y-4">
                   {hiredCandidates.length > 0 ? (
-                    hiredCandidates.map((candidate) => (
+                    (showAllHired ? hiredCandidates : hiredCandidates.slice(0, 2)).map((candidate) => (
                       <div key={candidate.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
                         <div className="flex-shrink-0">
                           <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
