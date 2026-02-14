@@ -201,12 +201,14 @@ import { companiesAPI, jobsAPI } from '../api/companies';
 import { applicationsAPI } from '../api/applications';
 import { API_BASE_URL } from '../api/config';
 import EditCompanyModal from '../components/EditCompanyModal';
+import RegisterCompanyModal from '../components/RegisterCompanyModal';
 
 export default function CompanyAdminPage() {
   const router = useRouter();
   const [company, setCompany] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [stats, setStats] = useState({
     activeJobs: 12,
     totalApplications: 156,
@@ -631,8 +633,8 @@ export default function CompanyAdminPage() {
                   and connecting with talented candidates.
                 </p>
                 <button
-                  onClick={() => router.push('/companies')}
-                  className="inline-flex items-center px-8 py-4 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                  onClick={() => setShowRegisterModal(true)}
+                  className="inline-flex items-center px-8 py-4 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl cursor-pointer"
                 >
                   <Plus className="h-5 w-5 mr-3" />
                   Register Your Company
@@ -848,6 +850,16 @@ export default function CompanyAdminPage() {
         onSuccess={() => {
           fetchCompany();
           setShowEditModal(false);
+        }}
+      />
+
+      {/* Register Company Modal */}
+      <RegisterCompanyModal
+        isOpen={showRegisterModal}
+        onClose={() => setShowRegisterModal(false)}
+        onSuccess={() => {
+          fetchCompany();
+          setShowRegisterModal(false);
         }}
       />
     </div>
