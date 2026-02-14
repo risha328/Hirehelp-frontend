@@ -20,6 +20,7 @@ import {
   FunnelIcon,
   ChevronDownIcon
 } from '@heroicons/react/24/outline';
+import Loader from '../../components/Loader';
 
 interface Round {
   _id: string;
@@ -261,23 +262,16 @@ export default function CompanyRoundsPage() {
 
   const filteredRounds = filterJobId
     ? rounds.filter(round => {
-        const roundJobId = typeof round.jobId === 'string' ? round.jobId : round.jobId._id;
-        return roundJobId === filterJobId;
-      })
+      const roundJobId = typeof round.jobId === 'string' ? round.jobId : round.jobId._id;
+      return roundJobId === filterJobId;
+    })
     : rounds;
 
   const activeRounds = filteredRounds.filter(round => !round.isArchived);
   const archivedRounds = filteredRounds.filter(round => round.isArchived);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-4 text-lg text-gray-600">Loading rounds...</p>
-        </div>
-      </div>
-    );
+    return <Loader variant="container" text="Interview Rounds" subText="Loading your interview process..." />;
   }
 
   if (!company) {
@@ -568,9 +562,8 @@ export default function CompanyRoundsPage() {
                           value={formData.name}
                           onChange={handleInputChange}
                           placeholder="Enter round name"
-                          className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${
-                            errors.name ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.name ? 'border-red-300' : 'border-gray-300'
+                            }`}
                         />
                       </div>
                       {errors.name && (
@@ -594,9 +587,8 @@ export default function CompanyRoundsPage() {
                           required
                           value={formData.jobId}
                           onChange={handleInputChange}
-                          className={`block w-full pl-12 pr-12 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none ${
-                            errors.jobId ? 'border-red-300' : 'border-gray-300'
-                          }`}
+                          className={`block w-full pl-12 pr-12 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all bg-white appearance-none ${errors.jobId ? 'border-red-300' : 'border-gray-300'
+                            }`}
                         >
                           <option value="">Select a job</option>
                           {jobs.map(job => (

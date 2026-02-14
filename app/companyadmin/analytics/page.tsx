@@ -14,6 +14,7 @@ import {
 import { applicationsAPI, Application } from '../../api/applications';
 import { companiesAPI } from '../../api/companies';
 import { usersAPI } from '../../api/users';
+import Loader from '../../components/Loader';
 
 interface AnalyticsData {
   totalApplications: number;
@@ -119,14 +120,7 @@ export default function CompanyAnalyticsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
-        <div className="flex justify-center items-center h-64">
-          <div className="text-gray-500">Loading analytics...</div>
-        </div>
-      </div>
-    );
+    return <Loader variant="container" text="Analytics" subText="Processing company metrics..." />;
   }
 
   if (error) {

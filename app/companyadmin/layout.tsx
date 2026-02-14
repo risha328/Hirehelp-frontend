@@ -50,9 +50,9 @@ export default function CompanyAdminLayout({
       <CompanyAdminSidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       {/* Main content */}
-      <div className="lg:pl-64 pt-16 max-w-full overflow-x-hidden">
+      <div className="lg:pl-64 pt-16 max-w-full overflow-x-hidden min-h-screen">
         {/* Page content */}
-        <main className="p-6 w-full">
+        <main className="p-6 w-full relative min-h-screen">
           {children}
         </main>
       </div>
