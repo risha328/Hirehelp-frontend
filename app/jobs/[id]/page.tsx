@@ -270,7 +270,7 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
         {/* Modal */}
         <div className="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-8 py-6">
+          <div className="bg-gradient-to-r from-sky-600 to-sky-400 px-8 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
@@ -278,7 +278,7 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-white">Apply for Position</h2>
-                  <p className="text-blue-100">{jobTitle}</p>
+                  <p className="text-sky-100">{jobTitle}</p>
                 </div>
               </div>
               <button
@@ -302,9 +302,9 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                           : 'bg-transparent border-white/30'
                         }`}>
                         {stepNumber < step ? (
-                          <CheckCircle className="h-5 w-5 text-blue-600" />
+                          <CheckCircle className="h-5 w-5 text-sky-600" />
                         ) : (
-                          <span className={`font-semibold ${stepNumber <= step ? 'text-blue-600' : 'text-white/50'
+                          <span className={`font-semibold ${stepNumber <= step ? 'text-sky-600' : 'text-white/50'
                             }`}>
                             {stepNumber}
                           </span>
@@ -892,8 +892,8 @@ export default function JobDetailsPage() {
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
         <div className="text-center">
           <div className="relative inline-block">
-            <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
-            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 rounded-full animate-spin border-t-transparent"></div>
+            <div className="w-16 h-16 border-4 border-sky-200 rounded-full"></div>
+            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-sky-600 rounded-full animate-spin border-t-transparent"></div>
           </div>
           <p className="mt-4 text-gray-600 font-medium">Loading job details...</p>
         </div>
@@ -912,7 +912,7 @@ export default function JobDetailsPage() {
           <p className="text-gray-600 mb-6">{error || 'The job you are looking for does not exist or has been removed.'}</p>
           <Link
             href="/jobs"
-            className="inline-flex items-center px-8 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md"
+            className="inline-flex items-center px-8 py-3 bg-sky-600 text-white font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm hover:shadow-md"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Browse Other Jobs
@@ -925,80 +925,83 @@ export default function JobDetailsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Hero Header */}
-      <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 pt-20 lg:pt-24">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+      <div className="relative bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-24 lg:pt-28 border-b border-sky-100">
+        <div className="relative container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8">
             <div className="flex-1">
-              <div className="flex items-center mb-4">
+              <div className="flex items-center mb-6">
                 <Link
                   href="/jobs"
-                  className="inline-flex items-center text-white/90 hover:text-white text-sm font-medium"
+                  className="inline-flex items-center text-sky-700 hover:text-sky-900 text-sm font-medium bg-white/50 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-sky-100 transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Jobs
                 </Link>
               </div>
 
-              <div className="flex items-start space-x-4 mb-6">
+              <div className="flex items-start space-x-6 mb-8">
                 {/* Company Logo */}
-                <div className="w-20 h-20 rounded-xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center overflow-hidden">
+                <div className="w-24 h-24 rounded-2xl bg-white shadow-sm border border-sky-100 flex items-center justify-center overflow-hidden p-2">
                   <img
-                    src={job.companyId.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}&backgroundColor=6366f1`}
+                    src={job.companyId.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}&backgroundColor=0ea5e9`}
                     alt={job.companyId.name}
-                    className="w-16 h-16"
+                    className="w-full h-full object-contain"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}`;
                     }}
                   />
                 </div>
 
-                <div className="flex-1">
-                  <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{job.title}</h1>
-                  <div className="flex items-center space-x-4 mb-3">
-                    <div className="flex items-center text-white/90">
-                      <Building className="h-5 w-5 mr-2" />
-                      <span className="text-lg font-medium">{job.companyId.name}</span>
+                <div className="flex-1 pt-1">
+                  <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">{job.title}</h1>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center text-gray-700">
+                      <Building className="h-5 w-5 mr-2 text-sky-600" />
+                      <span className="text-xl font-semibold">{job.companyId.name}</span>
                     </div>
-                  </div>
-
-                  {/* Quick Info */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="inline-flex items-center px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm">
-                      <MapPin className="h-4 w-4 mr-1.5" />
-                      {job.location}
-                    </span>
-                    <span className="inline-flex items-center px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm">
-                      <DollarSign className="h-4 w-4 mr-1.5" />
-                      {job.salary}
-                    </span>
-                    <span className="inline-flex items-center px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm">
-                      <Briefcase className="h-4 w-4 mr-1.5" />
-                      {job.experienceLevel}
-                    </span>
                   </div>
                 </div>
               </div>
+
+              {/* Quick Info */}
+              <div className="flex flex-wrap items-center gap-4">
+                <span className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-xl text-gray-800 text-sm font-medium border border-sky-100 shadow-sm">
+                  <MapPin className="h-4 w-4 mr-2 text-sky-600" />
+                  {job.location}
+                </span>
+                <span className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-xl text-gray-800 text-sm font-medium border border-sky-100 shadow-sm">
+                  <DollarSign className="h-4 w-4 mr-2 text-sky-600" />
+                  {job.salary}
+                </span>
+                <span className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-xl text-gray-800 text-sm font-medium border border-sky-100 shadow-sm">
+                  <Briefcase className="h-4 w-4 mr-2 text-sky-600" />
+                  {job.experienceLevel}
+                </span>
+                <span className="inline-flex items-center px-4 py-2 bg-white/60 backdrop-blur-sm rounded-xl text-gray-800 text-sm font-medium border border-sky-100 shadow-sm">
+                  <Calendar className="h-4 w-4 mr-2 text-sky-600" />
+                  {new Date(job.createdAt).toLocaleDateString()}
+                </span>
+              </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col space-y-3">
+            {/* Action Buttons - restored to previous style (white/sidebar) */}
+            <div className="flex flex-col space-y-4 min-w-[300px] lg:mt-12">
               <button
                 onClick={() => setShowApplyModal(true)}
                 disabled={hasApplied || (job.applicationDeadline ? new Date(job.applicationDeadline) < new Date() : false)}
-                className={`px-8 py-4 font-semibold rounded-xl transition-all duration-300 transform hover:scale-[1.02] ${hasApplied || (job.applicationDeadline && new Date(job.applicationDeadline) < new Date())
-                  ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                  : 'bg-white text-indigo-600 hover:bg-gray-50 shadow-lg hover:shadow-xl'
+                className={`w-full px-8 py-4 font-bold rounded-2xl transition-all duration-300 transform hover:scale-[1.02] shadow-xl ${hasApplied || (job.applicationDeadline && new Date(job.applicationDeadline) < new Date())
+                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300'
+                  : 'bg-white text-sky-600 hover:bg-sky-50 shadow-sky-200/50 border-2 border-sky-100'
                   }`}
               >
                 {hasApplied ? (
                   <span className="flex items-center justify-center">
-                    <CheckCircle className="h-5 w-5 mr-2" />
+                    <CheckCircle className="h-5 w-5 mr-3" />
                     Applied Successfully
                   </span>
                 ) : (job.applicationDeadline && new Date(job.applicationDeadline) < new Date()) ? (
                   <span className="flex items-center justify-center">
-                    <AlertCircle className="h-5 w-5 mr-2" />
+                    <AlertCircle className="h-5 w-5 mr-3" />
                     Deadline Crossed
                   </span>
                 ) : (
@@ -1006,18 +1009,18 @@ export default function JobDetailsPage() {
                 )}
               </button>
 
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 <button
                   onClick={toggleSave}
-                  className={`flex-1 px-4 py-3 rounded-xl transition-colors flex items-center justify-center ${isBookmarked
-                    ? 'bg-white/20 backdrop-blur-sm text-white border border-white/30'
-                    : 'bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 border border-white/20'
+                  className={`flex-1 px-6 py-4 rounded-2xl font-bold transition-all flex items-center justify-center border-2 ${isBookmarked
+                    ? 'bg-sky-50 text-sky-600 border-sky-200 shadow-inner'
+                    : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white border-sky-100 shadow-sm'
                     }`}
                 >
-                  <Bookmark className={`h-5 w-5 ${isBookmarked ? 'fill-current' : ''}`} />
-                  <span className="ml-2">Save</span>
+                  <Bookmark className={`h-5 w-5 mr-3 ${isBookmarked ? 'fill-current' : ''}`} />
+                  <span>{isBookmarked ? 'Saved' : 'Save'}</span>
                 </button>
-                <button className="px-4 py-3 bg-white/10 backdrop-blur-sm text-white rounded-xl hover:bg-white/20 transition-colors border border-white/20">
+                <button className="p-4 bg-white/80 backdrop-blur-sm text-gray-700 rounded-2xl hover:bg-white border-2 border-sky-100 shadow-sm transition-all">
                   <Share2 className="h-5 w-5" />
                 </button>
               </div>
@@ -1026,7 +1029,7 @@ export default function JobDetailsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
@@ -1080,7 +1083,7 @@ export default function JobDetailsPage() {
                     {job.skills.map((skill, index) => (
                       <span
                         key={index}
-                        className="px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 rounded-lg font-medium border border-indigo-100"
+                        className="px-4 py-2 bg-sky-50 text-sky-700 rounded-lg font-medium border border-sky-100"
                       >
                         {skill}
                       </span>
@@ -1094,7 +1097,7 @@ export default function JobDetailsPage() {
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="p-8">
                 <div className="flex items-center mb-6">
-                  <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg">
+                  <div className="p-2 bg-sky-600 rounded-lg">
                     <FileText className="h-5 w-5 text-white" />
                   </div>
                   <h2 className="text-xl font-bold text-gray-900 ml-3">Job Description</h2>
@@ -1121,7 +1124,7 @@ export default function JobDetailsPage() {
                       </div>
                       <h2 className="text-xl font-bold text-gray-900 ml-3">Similar Jobs</h2>
                     </div>
-                    <Link href="/jobs" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium flex items-center">
+                    <Link href="/jobs" className="text-sm text-sky-600 hover:text-sky-800 font-medium flex items-center">
                       View all jobs
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Link>
@@ -1134,7 +1137,7 @@ export default function JobDetailsPage() {
                         href={`/jobs/${similarJob.id}`}
                         className="block group"
                       >
-                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 hover:border-indigo-300 hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]">
+                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 hover:border-sky-300 hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]">
                           <div className="flex items-start justify-between mb-3">
                             <h4 className="font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors line-clamp-2">
                               {similarJob.title}
@@ -1163,7 +1166,7 @@ export default function JobDetailsPage() {
 
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-500">{similarJob.posted}</span>
-                            <span className="inline-flex items-center px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full">
+                            <span className="inline-flex items-center px-3 py-1 bg-sky-100 text-sky-700 text-xs font-medium rounded-full">
                               {similarJob.type}
                             </span>
                           </div>
@@ -1229,8 +1232,8 @@ export default function JobDetailsPage() {
             {/* Company Profile */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="p-6">
-                <div className="flex items-center mb-4">
-                  <div className="p-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg">
+                <div className="flex items-center mb-6">
+                  <div className="p-2 bg-sky-600 rounded-lg">
                     <Building className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 ml-3">About Company</h3>
@@ -1260,7 +1263,7 @@ export default function JobDetailsPage() {
                       href={job.companyId.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center text-indigo-600 hover:text-indigo-800"
+                      className="flex items-center text-sky-600 hover:text-sky-800 font-medium"
                     >
                       <ExternalLink className="h-4 w-4 mr-3" />
                       Company Website
@@ -1337,50 +1340,50 @@ export default function JobDetailsPage() {
             </div>
 
             {/* Apply Now Card */}
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 text-center">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="bg-gradient-to-br from-sky-400 via-sky-500 to-white rounded-2xl p-8 text-center border border-sky-100 shadow-xl">
+              <div className="w-16 h-16 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-white/40">
                 <Briefcase className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Ready to Apply?</h3>
-              <p className="text-indigo-100 mb-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Ready to Apply?</h3>
+              <p className="text-sky-900/80 mb-8 font-medium">
                 {hasApplied
                   ? 'Your application has been submitted successfully!'
-                  : 'Take the next step in your career journey'
+                  : 'Take the next step in your career journey with HireHelp'
                 }
               </p>
 
               {hasApplied ? (
-                <div className="space-y-3">
-                  <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-                    <div className="flex items-center justify-center text-white mb-2">
+                <div className="space-y-4">
+                  <div className="bg-white/40 backdrop-blur-md rounded-xl p-4 border border-white/60 shadow-sm">
+                    <div className="flex items-center justify-center text-sky-900 mb-2">
                       <CheckCircle className="h-5 w-5 mr-2" />
-                      <span className="font-semibold">Application Submitted</span>
+                      <span className="font-bold">Application Submitted</span>
                     </div>
-                    <p className="text-indigo-100 text-sm">
+                    <p className="text-sky-800 text-sm">
                       We'll review your application and get back to you soon.
                     </p>
                   </div>
                   <Link
                     href="/profile/applications"
-                    className="w-full px-6 py-3 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-center block"
+                    className="w-full px-6 py-4 bg-white text-sky-600 font-bold rounded-xl hover:bg-sky-50 transition-all shadow-md block border-2 border-sky-100"
                   >
-                    View Application Status
+                    View Status
                   </Link>
                 </div>
               ) : (job.applicationDeadline && new Date(job.applicationDeadline) < new Date()) ? (
-                <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4">
-                  <div className="flex items-center justify-center text-white mb-2">
+                <div className="bg-white/40 backdrop-blur-md rounded-xl p-4 border border-white/60">
+                  <div className="flex items-center justify-center text-red-700 mb-2">
                     <AlertCircle className="h-5 w-5 mr-2" />
-                    <span className="font-semibold">Application Deadline Passed</span>
+                    <span className="font-bold">Deadline Passed</span>
                   </div>
-                  <p className="text-indigo-100 text-sm">
-                    This job is no longer accepting applications.
+                  <p className="text-red-700 text-sm">
+                    This position is no longer accepting new applications.
                   </p>
                 </div>
               ) : (
                 <button
                   onClick={() => setShowApplyModal(true)}
-                  className="w-full px-6 py-4 bg-white text-indigo-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+                  className="w-full px-6 py-4 bg-white text-sky-600 font-bold rounded-xl hover:bg-sky-50 transition-all transform hover:scale-[1.02] shadow-xl shadow-sky-300/20 border-2 border-sky-100"
                 >
                   Apply Now
                 </button>
@@ -1390,7 +1393,6 @@ export default function JobDetailsPage() {
         </div>
       </div>
 
-      {/* Apply Modal */}
       <ApplyModal
         isOpen={showApplyModal}
         onClose={() => setShowApplyModal(false)}
@@ -1402,6 +1404,6 @@ export default function JobDetailsPage() {
           setHasApplied(true);
         }}
       />
-    </div>
+    </div >
   );
 }

@@ -220,7 +220,7 @@ export default function JobsPage() {
       {/* Hero Section */}
       <div className="relative bg-gradient-to-b from-blue-200 via-white to-white">
         <div className="absolute inset-0 bg-grid-white/10 bg-grid-8"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div className="relative max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
           <div className="text-center">
             <div className="inline-flex items-center px-4 py-2 bg-blue-100/80 backdrop-blur-sm rounded-full mb-6">
               <Sparkles className="h-4 w-4 text-blue-600 mr-2" />
@@ -238,7 +238,7 @@ export default function JobsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Job Type Navigation */}
         <div className="mb-8">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
