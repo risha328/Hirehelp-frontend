@@ -1,6 +1,7 @@
 import { API_BASE_URL } from './config';
 
 export interface RegisterData {
+  prefix?: string;
   name: string;
   email: string;
   password: string;

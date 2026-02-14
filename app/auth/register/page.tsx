@@ -20,6 +20,7 @@ import { authAPI, RegisterData } from '../../api/auth';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [prefix, setPrefix] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,6 +63,7 @@ export default function RegisterPage() {
 
     try {
       const registerData: RegisterData = {
+        prefix: role === 'COMPANY_ADMIN' ? prefix : undefined,
         name,
         email,
         password,
@@ -271,6 +273,30 @@ export default function RegisterPage() {
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Prefix Selection (Only for Company Admin) */}
+            {role === 'COMPANY_ADMIN' && (
+              <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Title / Prefix
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {['MR.', 'MRS.', 'DR.'].map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPrefix(p)}
+                      className={`py-2 px-4 border-2 rounded-lg font-semibold transition-all cursor-pointer ${prefix === p
+                        ? 'border-sky-500 bg-sky-50 text-sky-700'
+                        : 'border-gray-200 text-gray-600 hover:border-sky-200'
+                        }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Name Input */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
