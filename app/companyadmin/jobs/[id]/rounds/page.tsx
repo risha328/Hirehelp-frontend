@@ -70,6 +70,10 @@ export default function JobRoundsPage() {
   const [posting, setPosting] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
 
+  const isExpired = job?.applicationDeadline
+    ? new Date(job.applicationDeadline) < new Date(new Date().setHours(0, 0, 0, 0))
+    : false;
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -397,8 +401,8 @@ export default function JobRoundsPage() {
                 resetForm();
                 setShowModal(true);
               }}
-              disabled={!!(job.applicationDeadline && new Date(job.applicationDeadline) < new Date())}
-              className={`inline-flex items-center px-4 py-2.5 font-medium rounded-lg transition-all duration-200 shadow-sm ${job.applicationDeadline && new Date(job.applicationDeadline) < new Date()
+              disabled={isExpired}
+              className={`inline-flex items-center px-4 py-2.5 font-medium rounded-lg transition-all duration-200 shadow-sm ${isExpired
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 hover:shadow-md cursor-pointer'
                 }`}
@@ -442,11 +446,15 @@ export default function JobRoundsPage() {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <div className="text-sm text-gray-600">Job Status</div>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${job.status === 'active' ? 'bg-green-100 text-green-800' :
-                  job.status === 'draft' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
+                <div className={`px-3 py-1 rounded-full text-xs font-medium ${isExpired
+                  ? 'bg-red-100 text-red-800 border border-red-200'
+                  : job.status === 'active'
+                    ? 'bg-green-100 text-green-800'
+                    : job.status === 'draft'
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-gray-100 text-gray-800'
                   }`}>
-                  {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
+                  {isExpired ? 'Expired' : job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                 </div>
               </div>
             </div>
@@ -454,7 +462,7 @@ export default function JobRoundsPage() {
         </div>
 
         {/* Expiration Warning */}
-        {job.applicationDeadline && new Date(job.applicationDeadline) < new Date() && (
+        {isExpired && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-8">
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -463,7 +471,7 @@ export default function JobRoundsPage() {
               <div className="ml-3">
                 <h3 className="text-sm font-semibold text-red-800">Job Posting Expired</h3>
                 <p className="text-sm text-red-700 mt-1">
-                  This job's application deadline has passed on {new Date(job.applicationDeadline).toLocaleDateString('en-US', {
+                  This job's application deadline has passed on {new Date(job.applicationDeadline!).toLocaleDateString('en-US', {
                     month: 'long',
                     day: 'numeric',
                     year: 'numeric'
@@ -577,8 +585,8 @@ export default function JobRoundsPage() {
                       resetForm();
                       setShowModal(true);
                     }}
-                    disabled={!!(job.applicationDeadline && new Date(job.applicationDeadline) < new Date())}
-                    className={`inline-flex items-center px-5 py-2.5 font-medium rounded-lg transition-all duration-200 ${job.applicationDeadline && new Date(job.applicationDeadline) < new Date()
+                    disabled={isExpired}
+                    className={`inline-flex items-center px-5 py-2.5 font-medium rounded-lg transition-all duration-200 ${isExpired
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'
                       }`}
@@ -637,20 +645,24 @@ export default function JobRoundsPage() {
                               View
                             </button>
                           )}
-                          <button
-                            onClick={() => handleEdit(round)}
-                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors duration-200 cursor-pointer"
-                          >
-                            <PencilSquareIcon className="w-4 h-4 mr-2" />
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleArchive(round._id)}
-                            className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-lg transition-colors duration-200 cursor-pointer"
-                          >
-                            <ArchiveBoxIcon className="w-4 h-4 mr-2" />
-                            Archive
-                          </button>
+                          {!isExpired && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(round)}
+                                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-lg transition-colors duration-200 cursor-pointer"
+                              >
+                                <PencilSquareIcon className="w-4 h-4 mr-2" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleArchive(round._id)}
+                                className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-lg transition-colors duration-200 cursor-pointer"
+                              >
+                                <ArchiveBoxIcon className="w-4 h-4 mr-2" />
+                                Archive
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
