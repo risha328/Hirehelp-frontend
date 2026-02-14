@@ -46,7 +46,7 @@ export default function CompanyAdminHeader() {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center font-semibold text-white transition-all duration-300"
+                  className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center font-semibold text-white transition-all duration-300 cursor-pointer"
                   title={user.name}
                 >
                   {user.name?.charAt(0).toUpperCase() || 'U'}
@@ -69,7 +69,7 @@ export default function CompanyAdminHeader() {
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="w-full flex items-center px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors text-left"
+                      className="w-full flex items-center px-4 py-3 text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors text-left cursor-pointer"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
                       <span className="text-sm font-medium">Logout</span>
@@ -90,7 +90,7 @@ export default function CompanyAdminHeader() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer"
           >
             {isMobileMenuOpen ? (
               <X className="h-6 w-6" />
@@ -118,7 +118,7 @@ export default function CompanyAdminHeader() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="block w-full px-4 py-3 text-left text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
+                  className="block w-full px-4 py-3 text-left text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors cursor-pointer"
                 >
                   Logout
                 </button>
