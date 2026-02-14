@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { companiesAPI } from '../../api/companies';
 import { Plus, X, User, Mail, Shield, Users, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 interface TeamMember {
     _id: string;
@@ -126,16 +127,7 @@ export default function TeamManagementPage() {
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="inline-block p-4 bg-white rounded-2xl shadow-lg mb-4">
-                        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                    <p className="text-gray-600 font-medium">Loading team members...</p>
-                </div>
-            </div>
-        );
+        return <Loader variant="container" text="Team Management" subText="Loading your organization chart..." />;
     }
 
     return (

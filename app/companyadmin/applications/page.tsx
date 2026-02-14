@@ -7,6 +7,7 @@ import { applicationsAPI, Application } from '../../api/applications';
 import { roundsAPI, MCQResponse, RoundEvaluation, EvaluationStatus, Round } from '../../api/rounds';
 import { API_BASE_URL } from '../../api/config';
 import KanbanBoard from '../../components/KanbanBoard';
+import Loader from '../../components/Loader';
 
 export default function ApplicationsPage() {
   const router = useRouter();
@@ -211,11 +212,7 @@ export default function ApplicationsPage() {
   }, [applications, selectedJobId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <Loader variant="container" text="Job Applications" subText="Organizing candidate profiles..." />;
   }
 
   if (error) {

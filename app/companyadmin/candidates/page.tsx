@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Eye, Download, User, Mail, FileText, Briefcase } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
 import { API_BASE_URL } from '../../api/config';
+import Loader from '../../components/Loader';
 
 interface CandidateWithApplications {
   candidateId: {
@@ -77,11 +78,7 @@ export default function CandidatesPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-      </div>
-    );
+    return <Loader variant="container" text="Candidates" subText="Fetching applicant profiles..." />;
   }
 
   if (error) {
