@@ -163,11 +163,7 @@ export default function CompanyProfilePage() {
                         <Building className="h-10 w-10 text-white" />
                       )}
                     </div>
-                    <div className="absolute -top-2 -right-2">
-                      <div className={`p-1.5 rounded-full ${statusInfo.color} border-2 border-white`}>
-                        <statusInfo.icon className="h-3 w-3" />
-                      </div>
-                    </div>
+
                   </div>
 
                   {/* Company Info */}
@@ -289,8 +285,8 @@ export default function CompanyProfilePage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {admins && admins.length > 0 ? (
-                admins.map((admin) => (
+              {admins && admins.filter(a => a.role === 'COMPANY_ADMIN').length > 0 ? (
+                admins.filter(a => a.role === 'COMPANY_ADMIN').map((admin) => (
                   <div key={admin._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-center space-x-3 mb-2">
                       <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-semibold">
@@ -298,7 +294,7 @@ export default function CompanyProfilePage() {
                       </div>
                       <div>
                         <div className="font-medium text-gray-900">{admin.name}</div>
-                        <div className="text-xs text-gray-500">{admin.role.replace('_', ' ')}</div>
+                        <div className="text-xs text-gray-500">Company Admin</div>
                       </div>
                     </div>
                     <div className="text-sm text-gray-600 space-y-1 mt-2">
@@ -317,7 +313,51 @@ export default function CompanyProfilePage() {
                 ))
               ) : (
                 <div className="col-span-full text-center py-8 text-gray-500">
-                  No other admins found.
+                  No company admins found.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Interviewers */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 lg:col-span-2">
+            <div className="flex items-center mb-6">
+              <div className="p-2 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg">
+                <Users className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 ml-3">Interviewers</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {admins && admins.filter(a => a.role === 'INTERVIEWER').length > 0 ? (
+                admins.filter(a => a.role === 'INTERVIEWER').map((interviewer) => (
+                  <div key={interviewer._id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-700 font-semibold">
+                        {interviewer.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{interviewer.name}</div>
+                        <div className="text-xs text-gray-500">Interviewer</div>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600 space-y-1 mt-2">
+                      <div className="flex items-center">
+                        <Mail className="h-3 w-3 mr-2 text-gray-400" />
+                        <span className="truncate">{interviewer.email}</span>
+                      </div>
+                      {interviewer.phone && (
+                        <div className="flex items-center">
+                          <Phone className="h-3 w-3 mr-2 text-gray-400" />
+                          <span>{interviewer.phone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  No interviewers found.
                 </div>
               )}
             </div>
