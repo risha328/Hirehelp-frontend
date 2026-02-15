@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { companiesAPI } from '../../api/companies';
-import { Plus, X, User, Mail, Shield, Users, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Plus, X, User, Mail, Shield, Users, ChevronRight, AlertCircle, CheckCircle2, Eye, UserX } from 'lucide-react';
 import Loader from '../../components/Loader';
 
 interface TeamMember {
@@ -30,6 +30,10 @@ export default function TeamManagementPage() {
     });
     const [inviteLoading, setInviteLoading] = useState(false);
     const [formErrors, setFormErrors] = useState<{ name?: string; email?: string }>({});
+
+    // Member Details State
+    const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -106,6 +110,32 @@ export default function TeamManagementPage() {
         }
     };
 
+    const handleRemoveMember = async (member: TeamMember) => {
+        if (!confirm(`Are you sure you want to remove ${member.name} from the team? This action cannot be undone.`)) {
+            return;
+        }
+
+        try {
+            await companiesAPI.removeMember(companyId, member._id);
+            setMembers(members.filter(m => m._id !== member._id));
+            setNotification({
+                type: 'success',
+                message: `${member.name} has been removed from the team.`
+            });
+            // If viewing details of removed member, close modal
+            if (selectedMember?._id === member._id) {
+                setShowDetailsModal(false);
+                setSelectedMember(null);
+            }
+        } catch (error: any) {
+            console.error('Failed to remove member:', error);
+            setNotification({
+                type: 'error',
+                message: error.message || 'Failed to remove team member.'
+            });
+        }
+    };
+
     const getInitials = (name: string) => {
         return name
             .split(' ')
@@ -170,121 +200,104 @@ export default function TeamManagementPage() {
 
                     <button
                         onClick={() => setShowInviteModal(true)}
-                        className="group relative inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 hover:scale-[1.02] active:scale-[0.98]"
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors cursor-pointer font-medium"
                     >
-                        <Plus className="w-5 h-5 mr-2 group-hover:rotate-90 transition-transform duration-200" />
-                        <span className="font-semibold">Invite Team Member</span>
+                        <Plus className="w-4 h-4" />
+                        <span>Invite Team Member</span>
                     </button>
                 </div>
 
-                {/* Members Grid/Table */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden backdrop-blur-sm backdrop-filter">
+                {/* Members Grid/Table - Redesigned */}
+                <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                                    <th className="px-6 py-5 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        <div className="flex items-center space-x-2">
-                                            <User className="w-4 h-4 text-gray-500" />
-                                            <span>Team Member</span>
-                                        </div>
+                                <tr className="border-b border-gray-100">
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Member
                                     </th>
-                                    <th className="px-6 py-5 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        <div className="flex items-center space-x-2">
-                                            <Mail className="w-4 h-4 text-gray-500" />
-                                            <span>Email</span>
-                                        </div>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Role
                                     </th>
-                                    <th className="px-6 py-5 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        <div className="flex items-center space-x-2">
-                                            <Shield className="w-4 h-4 text-gray-500" />
-                                            <span>Role</span>
-                                        </div>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Status
                                     </th>
-                                    <th className="px-6 py-5 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        <div className="flex items-center space-x-2">
-                                            <div className="w-4 h-4 rounded-full bg-green-500/20 flex items-center justify-center">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                                            </div>
-                                            <span>Status</span>
-                                        </div>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Actions
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {members.length > 0 ? (
-                                    members.map((member, index) => (
+                                    members.map((member) => (
                                         <tr
                                             key={member._id}
-                                            className="group hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-200"
-                                            style={{ animationDelay: `${index * 50}ms` }}
+                                            className="hover:bg-gray-50 transition-colors"
                                         >
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center">
-                                                    <div className="relative">
-                                                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-semibold text-sm shadow-md shadow-blue-200">
-                                                            {member.avatar ? (
-                                                                <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-xl object-cover" />
-                                                            ) : (
-                                                                getInitials(member.name)
-                                                            )}
-                                                        </div>
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-sm shrink-0">
+                                                        {member.avatar ? (
+                                                            <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover" />
+                                                        ) : (
+                                                            getInitials(member.name)
+                                                        )}
                                                     </div>
-                                                    <div className="ml-4">
-                                                        <div className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">
                                                             {member.name}
                                                         </div>
-                                                        <div className="text-xs text-gray-500 mt-0.5">
-                                                            Joined {new Date(member.createdAt).toLocaleDateString('en-US', {
-                                                                month: 'short',
-                                                                day: 'numeric',
-                                                                year: 'numeric'
-                                                            })}
+                                                        <div className="text-sm text-gray-500">
+                                                            {member.email}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className="text-gray-600 group-hover:text-gray-900 transition-colors">
-                                                    {member.email}
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${member.role === 'COMPANY_ADMIN'
+                                                    ? 'bg-purple-50 text-purple-700 border-purple-100'
+                                                    : 'bg-blue-50 text-blue-700 border-blue-100'
+                                                    }`}>
+                                                    {member.role === 'COMPANY_ADMIN' ? 'Admin' : 'Interviewer'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium ${getRoleBadgeColor(member.role)}`}>
-                                                    {member.role === 'COMPANY_ADMIN' ? 'Company Admin' : 'Interviewer'}
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                                                    Active
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center space-x-2">
-                                                    <div className="relative">
-                                                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                                                        <div className="absolute inset-0 w-2 h-2 bg-emerald-500 rounded-full animate-ping opacity-20"></div>
-                                                    </div>
-                                                    <span className="text-sm font-medium text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
-                                                        Active
-                                                    </span>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedMember(member);
+                                                            setShowDetailsModal(true);
+                                                        }}
+                                                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                                                        title="View Details"
+                                                    >
+                                                        <Eye className="w-4 h-4" />
+                                                    </button>
+                                                    {member.role !== 'COMPANY_ADMIN' && (
+                                                        <button
+                                                            onClick={() => handleRemoveMember(member)}
+                                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                                                            title="Disable Member"
+                                                        >
+                                                            <UserX className="w-4 h-4" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={4} className="px-6 py-16">
-                                            <div className="text-center">
-                                                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                                                    <Users className="w-8 h-8 text-gray-400" />
-                                                </div>
-                                                <h3 className="text-lg font-semibold text-gray-900 mb-2">No team members yet</h3>
-                                                <p className="text-gray-500 mb-6 max-w-md mx-auto">
-                                                    Start building your team by inviting administrators and interviewers to join your organization.
-                                                </p>
-                                                <button
-                                                    onClick={() => setShowInviteModal(true)}
-                                                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg shadow-blue-200"
-                                                >
-                                                    <Plus className="w-5 h-5 mr-2" />
-                                                    Invite Your First Member
-                                                </button>
+                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                                            <div className="flex flex-col items-center justify-center">
+                                                <Users className="w-12 h-12 text-gray-300 mb-3" />
+                                                <p className="text-base font-medium text-gray-900">No team members found</p>
+                                                <p className="text-sm mt-1">Invite people to your team to get started.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -446,6 +459,76 @@ export default function TeamManagementPage() {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* Member Details Modal */}
+                {showDetailsModal && selectedMember && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all animate-scale-in">
+                            <div className="px-6 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">Team Member Details</h3>
+                                    <p className="text-sm text-gray-500 mt-1">Information and permissions</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowDetailsModal(false)}
+                                    className="p-2 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                                >
+                                    <X className="w-5 h-5 text-gray-400" />
+                                </button>
+                            </div>
+
+                            <div className="p-6 space-y-6">
+                                <div className="flex items-center space-x-4">
+                                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-200">
+                                        {selectedMember.avatar ? (
+                                            <img src={selectedMember.avatar} alt={selectedMember.name} className="w-16 h-16 rounded-2xl object-cover" />
+                                        ) : (
+                                            getInitials(selectedMember.name)
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h4 className="text-lg font-bold text-gray-900">{selectedMember.name}</h4>
+                                        <p className="text-gray-500">{selectedMember.email}</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Role</p>
+                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium ${getRoleBadgeColor(selectedMember.role)}`}>
+                                            {selectedMember.role === 'COMPANY_ADMIN' ? 'Company Admin' : 'Interviewer'}
+                                        </span>
+                                    </div>
+                                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Joined</p>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {new Date(selectedMember.createdAt).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric'
+                                            })}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {selectedMember.role !== 'COMPANY_ADMIN' && (
+                                    <div className="pt-4 border-t border-gray-100">
+                                        <button
+                                            onClick={() => handleRemoveMember(selectedMember)}
+                                            className="w-full flex items-center justify-center px-4 py-3 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors border border-red-200 font-medium cursor-pointer"
+                                        >
+                                            <UserX className="w-4 h-4 mr-2" />
+                                            Disable & Remove User
+                                        </button>
+                                        <p className="text-center text-xs text-gray-500 mt-2">
+                                            This action will permanently delete the user account.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 )}

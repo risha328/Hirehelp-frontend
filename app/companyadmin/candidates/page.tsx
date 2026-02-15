@@ -196,7 +196,7 @@ export default function CandidatesPage() {
                                 setSelectedCandidate(candidate);
                                 setShowModal(true);
                               }}
-                              className="text-xs text-gray-500 hover:text-indigo-600 underline"
+                              className="text-xs text-gray-500 hover:text-indigo-600 underline cursor-pointer"
                             >
                               View all
                             </button>
@@ -212,7 +212,7 @@ export default function CandidatesPage() {
                           setSelectedCandidate(candidate);
                           setShowModal(true);
                         }}
-                        className="text-indigo-600 hover:text-indigo-900"
+                        className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
