@@ -54,9 +54,9 @@ export default function CompanyAdminSidebar({ sidebarOpen, setSidebarOpen }: Com
   return (
     <>
       {/* Sidebar */}
-      <div className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
-        <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
+      <div className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-blue-50/80 backdrop-blur-sm shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } transition-transform duration-300 ease-in-out lg:translate-x-0 border-r border-blue-100`}>
+        <div className="flex items-center justify-between h-16 px-6 border-b border-blue-100">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
               <Building className="h-5 w-5 text-white" />
@@ -82,12 +82,12 @@ export default function CompanyAdminSidebar({ sidebarOpen, setSidebarOpen }: Com
                   key={item.name}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${isActive
-                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${isActive
+                    ? 'bg-blue-100 text-blue-800 border-r-2 border-blue-800 shadow-sm'
+                    : 'text-gray-600 hover:text-blue-700 hover:bg-blue-50'
                     }`}
                 >
-                  <item.icon className={`mr-3 h-5 w-5 ${isActive ? 'text-blue-700' : 'text-gray-400'
+                  <item.icon className={`mr-3 h-5 w-5 ${isActive ? 'text-blue-800' : 'text-gray-400 group-hover:text-blue-600'
                     }`} />
                   {item.name}
                 </Link>
@@ -101,12 +101,12 @@ export default function CompanyAdminSidebar({ sidebarOpen, setSidebarOpen }: Com
           <Link
             href="/companyadmin/profile"
             onClick={() => setSidebarOpen(false)}
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${pathname.startsWith('/companyadmin/profile')
-              ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${pathname.startsWith('/companyadmin/profile')
+              ? 'bg-blue-100 text-blue-800 border-r-2 border-blue-800 shadow-sm'
+              : 'text-gray-600 hover:text-blue-700 hover:bg-blue-50'
               }`}
           >
-            <User className={`mr-3 h-5 w-5 ${pathname.startsWith('/companyadmin/profile') ? 'text-blue-700' : 'text-gray-400'
+            <User className={`mr-3 h-5 w-5 ${pathname.startsWith('/companyadmin/profile') ? 'text-blue-800' : 'text-gray-400 group-hover:text-blue-600'
               }`} />
             Profile
           </Link>

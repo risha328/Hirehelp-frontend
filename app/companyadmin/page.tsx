@@ -199,6 +199,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { companiesAPI, jobsAPI } from '../api/companies';
 import { applicationsAPI } from '../api/applications';
+import { analyticsAPI } from '../api/analytics';
 import { API_BASE_URL } from '../api/config';
 import EditCompanyModal from '../components/EditCompanyModal';
 import RegisterCompanyModal from '../components/RegisterCompanyModal';
@@ -258,26 +259,43 @@ export default function CompanyAdminPage() {
   };
 
   const fetchChartData = async () => {
-    // Mock chart data - replace with API calls
-    setTimeout(() => {
-      // Job Performance Data (Bar Chart)
-      setJobPerformanceData([
-        { name: 'Frontend Dev', applications: 45 },
-        { name: 'Backend Dev', applications: 32 },
-        { name: 'Full Stack', applications: 28 },
-        { name: 'UI/UX Designer', applications: 22 },
-        { name: 'DevOps Engineer', applications: 18 },
-        { name: 'Data Scientist', applications: 11 }
-      ]);
+    console.log('fetchChartData: starting...');
+    try {
+      // Fetch Job Performance Data
+      const performanceData = await analyticsAPI.getCompanyJobPerformance();
+      console.log('fetchChartData: performanceData received:', performanceData);
+      setJobPerformanceData(performanceData);
 
-      // Application Source Data (Pie Chart)
-      setApplicationSourceData([
-        { name: 'Platform Search', value: 45, color: '#3b82f6' },
-        { name: 'Direct Job Link', value: 30, color: '#10b981' },
-        { name: 'Company Page', value: 20, color: '#f59e0b' },
-        { name: 'Referral', value: 5, color: '#ef4444' }
-      ]);
-    }, 500);
+      // Fetch Application Stats for Pie Chart
+      const stats = await analyticsAPI.getCompanyApplicationStats();
+      console.log('fetchChartData: stats received:', stats);
+      const colors = {
+        'APPLIED': '#3b82f6',
+        'UNDER_REVIEW': '#f59e0b',
+        'SHORTLISTED': '#8b5cf6',
+        'HIRED': '#10b981',
+        'REJECTED': '#ef4444',
+        'HOLD': '#6b7280'
+      };
+
+      const pieData = stats.map((s: any) => ({
+        name: s.status.replace('_', ' '),
+        value: s.count,
+        color: colors[s.status as keyof typeof colors] || '#94a3b8'
+      }));
+      setApplicationSourceData(pieData);
+    } catch (error) {
+      console.error('Failed to fetch chart data:', error);
+      // Fallback to mock data if API fails or for new companies
+      if (jobPerformanceData.length === 0) {
+        setJobPerformanceData([
+          { name: 'No Data yet', applications: 0 }
+        ]);
+        setApplicationSourceData([
+          { name: 'No Applications', value: 1, color: '#e2e8f0' }
+        ]);
+      }
+    }
   };
 
   const fetchRecentActivities = async (companyData?: any) => {
@@ -523,11 +541,6 @@ export default function CompanyAdminPage() {
                           <Building className="h-10 w-10 text-white" />
                         )}
                       </div>
-                      <div className="absolute -top-2 -right-2">
-                        <div className={`p-1.5 rounded-full ${statusInfo.color} border-2 border-white`}>
-                          <statusInfo.icon className="h-3 w-3" />
-                        </div>
-                      </div>
                     </div>
 
                     {/* Company Info */}
@@ -580,7 +593,7 @@ export default function CompanyAdminPage() {
 
                 {/* Company Details */}
                 <div className="mt-8 pt-8 border-t border-white/20">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="flex flex-wrap items-center gap-y-4 gap-x-8">
                     <div className="flex items-center text-white/90">
                       <MapPin className="h-5 w-5 mr-3 text-white/70" />
                       <span>{company.location}</span>
@@ -671,8 +684,8 @@ export default function CompanyAdminPage() {
                     <FileText className="h-5 w-5 text-white" />
                   </div>
                   <div className="ml-3">
-                    <h3 className="text-lg font-semibold text-gray-900">Application Source Distribution</h3>
-                    <p className="text-sm text-gray-500">Where candidates come from</p>
+                    <h3 className="text-lg font-semibold text-gray-900">Application Status Distribution</h3>
+                    <p className="text-sm text-gray-500">Breakdown of candidates across stages</p>
                   </div>
                 </div>
                 <div className="h-80">

@@ -160,4 +160,84 @@ export const analyticsAPI = {
 
     return response.json();
   },
+
+  getCompanyJobPerformance: async () => {
+    let token = localStorage.getItem('access_token');
+
+    if (!token || token === null) {
+      throw new Error('No access token found');
+    }
+
+    if (isTokenExpired(token!)) {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) throw new Error('No refresh token found');
+
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!refreshResponse.ok) throw new Error('Token refresh failed');
+
+        const refreshData = await refreshResponse.json();
+        token = refreshData.accessToken;
+        localStorage.setItem('access_token', token!);
+      } catch (error) {
+        throw new Error('Session expired');
+      }
+    }
+
+    const response = await fetch(`${API_BASE_URL}/analytics/company-job-performance`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch job performance data');
+    return response.json();
+  },
+
+  getCompanyApplicationStats: async () => {
+    let token = localStorage.getItem('access_token');
+
+    if (!token || token === null) {
+      throw new Error('No access token found');
+    }
+
+    if (isTokenExpired(token!)) {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) throw new Error('No refresh token found');
+
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!refreshResponse.ok) throw new Error('Token refresh failed');
+
+        const refreshData = await refreshResponse.json();
+        token = refreshData.accessToken;
+        localStorage.setItem('access_token', token!);
+      } catch (error) {
+        throw new Error('Session expired');
+      }
+    }
+
+    const response = await fetch(`${API_BASE_URL}/analytics/company-application-stats`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch application stats');
+    return response.json();
+  },
 };
