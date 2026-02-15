@@ -63,6 +63,12 @@ interface Interview {
     recommendation?: string;
 }
 
+interface Toast {
+    message: string;
+    type: 'success' | 'error';
+    visible: boolean;
+}
+
 export default function InterviewManagementPage() {
     const router = useRouter();
     const [interviews, setInterviews] = useState<Interview[]>([]);
@@ -113,6 +119,8 @@ export default function InterviewManagementPage() {
     const [feedbackFilter, setFeedbackFilter] = useState<string>('all');
     const [interviewerFilter, setInterviewerFilter] = useState<string>('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+    const [toast, setToast] = useState<Toast>({ message: '', type: 'success', visible: false });
 
     // Helper function to format round type for display
     const formatRoundType = (type: string): string => {
@@ -132,6 +140,10 @@ export default function InterviewManagementPage() {
     useEffect(() => {
         fetchInterviews();
     }, []);
+
+    useEffect(() => {
+        setStatusFilter('all');
+    }, [activeTab]);
 
     const fetchInterviews = async () => {
         setLoading(true);
@@ -416,8 +428,21 @@ export default function InterviewManagementPage() {
         }
     };
 
+    // Helper to show toast
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setToast({ message, type, visible: true });
+        setTimeout(() => setToast(prev => ({ ...prev, visible: false })), 3000);
+    };
+
     // Filter interviews
     const filteredInterviews = interviews.filter(interview => {
+        // Tab filter
+        if (activeTab === 'active') {
+            if (interview.status === 'Completed') return false;
+        } else {
+            if (interview.status !== 'Completed') return false;
+        }
+
         const today = new Date();
         const interviewDate = new Date(interview.date);
 
@@ -612,9 +637,10 @@ export default function InterviewManagementPage() {
 
             // Optional: Refresh data to ensure sync
             fetchInterviews();
+            showToast('Interview marked as completed successfully!');
         } catch (error) {
             console.error('Failed to mark interview as completed:', error);
-            alert('Failed to mark interview as completed. Please try again.');
+            showToast('Failed to mark interview as completed. Please try again.', 'error');
         }
     };
 
@@ -663,9 +689,10 @@ export default function InterviewManagementPage() {
 
             // Refresh to sync
             fetchInterviews();
+            showToast('Feedback submitted successfully!');
         } catch (error) {
             console.error('Failed to submit feedback:', error);
-            alert('Failed to submit feedback. Please try again.');
+            showToast('Failed to submit feedback. Please try again.', 'error');
         } finally {
             setFeedbackLoading(false);
         }
@@ -730,12 +757,13 @@ export default function InterviewManagementPage() {
 
             // Refresh to ensure we are in sync
             fetchInterviews();
+            showToast('Interview rescheduled successfully!');
 
             setShowRescheduleModal(false);
             setRescheduleStep(1);
         } catch (error) {
             console.error("Failed to reschedule", error);
-            alert("Failed to reschedule. Please try again.");
+            showToast("Failed to reschedule. Please try again.", 'error');
         } finally {
             setRescheduleLoading(false);
         }
@@ -792,9 +820,10 @@ export default function InterviewManagementPage() {
             setShowAssignModal(false);
             setSelectedInterviewerId('');
             // Optional: Show success toast
+            showToast('Interviewer assigned successfully!');
         } catch (error) {
             console.error("Failed to assign interviewer", error);
-            alert("Failed to assign interviewer. Please try again.");
+            showToast("Failed to assign interviewer. Please try again.", 'error');
         } finally {
             setAssignLoading(false);
         }
@@ -999,9 +1028,39 @@ export default function InterviewManagementPage() {
                                         className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 font-medium placeholder-gray-500"
                                     />
                                 </div>
-
-
                             </div>
+                        </div>
+
+                        {/* Tabs */}
+                        <div className="mt-6 border-b border-gray-200">
+                            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                                <button
+                                    onClick={() => setActiveTab('active')}
+                                    className={`${activeTab === 'active'
+                                        ? 'border-blue-500 text-blue-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                >
+                                    <CalendarIcon className={`w-5 h-5 ${activeTab === 'active' ? 'text-blue-500' : 'text-gray-400'}`} />
+                                    Active / Upcoming
+                                    <span className={`ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium ${activeTab === 'active' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'}`}>
+                                        {interviews.filter(i => i.status !== 'Completed').length}
+                                    </span>
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('completed')}
+                                    className={`${activeTab === 'completed'
+                                        ? 'border-green-500 text-green-600'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                        } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                                >
+                                    <CheckCircleIcon className={`w-5 h-5 ${activeTab === 'completed' ? 'text-green-500' : 'text-gray-400'}`} />
+                                    Completed History
+                                    <span className={`ml-2 py-0.5 px-2.5 rounded-full text-xs font-medium ${activeTab === 'completed' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'}`}>
+                                        {interviews.filter(i => i.status === 'Completed').length}
+                                    </span>
+                                </button>
+                            </nav>
                         </div>
 
                         {/* Filter Chips */}
@@ -1048,11 +1107,16 @@ export default function InterviewManagementPage() {
                                     className="pl-3 pr-8 py-1.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                                 >
                                     <option value="all">All Status</option>
-                                    <option value="Scheduled">Scheduled</option>
-                                    <option value="In Progress">In Progress</option>
-                                    <option value="Completed">Completed</option>
-                                    <option value="Missed">Missed</option>
-                                    <option value="Rescheduled">Rescheduled</option>
+                                    {activeTab === 'active' ? (
+                                        <>
+                                            <option value="Scheduled">Scheduled</option>
+                                            <option value="In Progress">In Progress</option>
+                                            <option value="Missed">Missed</option>
+                                            <option value="Rescheduled">Rescheduled</option>
+                                        </>
+                                    ) : (
+                                        <option value="Completed">Completed</option>
+                                    )}
                                 </select>
                                 <ChevronDownIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-600 pointer-events-none" />
                             </div>
@@ -1117,7 +1181,9 @@ export default function InterviewManagementPage() {
                             <p className="text-gray-600 max-w-md mx-auto mb-8">
                                 {searchTerm || dateFilter !== 'all' || statusFilter !== 'all'
                                     ? 'Try adjusting your search or filters'
-                                    : 'No interview applications found.'}
+                                    : activeTab === 'completed'
+                                        ? 'No completed interviews history found.'
+                                        : 'No active or upcoming interviews found.'}
                             </p>
                         </div>
                     ) : (
@@ -1959,6 +2025,18 @@ export default function InterviewManagementPage() {
                             </button>
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* Toast Notification */}
+            {toast.visible && (
+                <div className={`fixed bottom-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 transform transition-all duration-300 animate-in slide-in-from-bottom-5 ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                    {toast.type === 'success' ? (
+                        <CheckCircleIcon className="w-5 h-5" />
+                    ) : (
+                        <ExclamationCircleIcon className="w-5 h-5" />
+                    )}
+                    <span className="font-medium">{toast.message}</span>
                 </div>
             )}
         </div>
