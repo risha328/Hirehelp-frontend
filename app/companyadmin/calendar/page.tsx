@@ -74,7 +74,7 @@ export default function CalendarPage() {
         total: 0,
         today: 0,
         thisWeek: 0,
-        pendingFeedback: 0
+        completed: 0
     });
 
     useEffect(() => {
@@ -93,7 +93,7 @@ export default function CalendarPage() {
                 total: interviews.length,
                 today: interviews.filter(i => i.date.toDateString() === todayStr).length,
                 thisWeek: interviews.filter(i => i.date >= thisWeekStart && i.date <= thisWeekEnd).length,
-                pendingFeedback: interviews.filter(i => i.feedbackStatus === 'Pending').length
+                completed: interviews.filter(i => i.status === 'Completed').length
             };
             setStats(newStats);
         }
@@ -118,9 +118,7 @@ export default function CalendarPage() {
             // Filter for relevant applications first to avoid fetching unnecessary evaluations
             // In interview management page, logic filters mostly by job, but here we want all scheduled items.
             // We'll fetch evaluations for all active applications.
-            const relevantApps = applications.filter(app =>
-                app.status !== 'REJECTED' && app.status !== 'HIRED'
-            );
+            const relevantApps = applications;
 
             let evaluations: RoundEvaluation[] = [];
             if (relevantApps.length > 0) {
@@ -432,33 +430,44 @@ export default function CalendarPage() {
                     </div>
 
                     <div className="space-y-1 mt-1 max-h-20 overflow-y-auto">
-                        {dayInterviews.slice(0, 3).map((interview) => (
-                            <div
-                                key={interview.id}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedInterview(interview);
-                                }}
-                                className={`text-xs p-1.5 rounded cursor-pointer transition-all border-l-2 shadow-sm hover:shadow-md group/interview ${interview.priority === 'High'
-                                    ? 'bg-red-50 border-red-500 text-red-700 hover:bg-red-100'
-                                    : interview.priority === 'Medium'
-                                        ? 'bg-amber-50 border-amber-500 text-amber-700 hover:bg-amber-100'
-                                        : 'bg-blue-50 border-blue-500 text-blue-700 hover:bg-blue-100'
-                                    }`}
-                            >
-                                <div className="flex justify-between items-start">
-                                    <div className="flex-1 min-w-0">
-                                        <div className="font-semibold truncate flex items-center gap-1">
-                                            <ClockIcon className="w-3 h-3 flex-shrink-0" />
-                                            <span className="truncate">{interview.time}</span>
+                        {dayInterviews.slice(0, 3).map((interview) => {
+                            const isCompleted = interview.status === 'Completed';
+                            const isMissed = interview.status === 'Missed';
+
+                            let itemStyle = 'bg-blue-50 border-blue-500 text-blue-700 hover:bg-blue-100';
+                            if (isCompleted) {
+                                itemStyle = 'bg-green-50 border-green-500 text-green-700 hover:bg-green-100';
+                            } else if (isMissed) {
+                                itemStyle = 'bg-gray-50 border-gray-500 text-gray-700 hover:bg-gray-100';
+                            } else if (interview.priority === 'High') {
+                                itemStyle = 'bg-red-50 border-red-500 text-red-700 hover:bg-red-100';
+                            } else if (interview.priority === 'Medium') {
+                                itemStyle = 'bg-amber-50 border-amber-500 text-amber-700 hover:bg-amber-100';
+                            }
+
+                            return (
+                                <div
+                                    key={interview.id}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedInterview(interview);
+                                    }}
+                                    className={`text-xs p-1.5 rounded cursor-pointer transition-all border-l-2 shadow-sm hover:shadow-md group/interview ${itemStyle}`}
+                                >
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="font-semibold truncate flex items-center gap-1">
+                                                <ClockIcon className="w-3 h-3 flex-shrink-0" />
+                                                <span className="truncate">{interview.time}</span>
+                                            </div>
+                                            <div className="truncate font-medium mt-0.5">{interview.candidateName}</div>
+                                            <div className="truncate text-opacity-75 mt-0.5">{interview.jobRole}</div>
                                         </div>
-                                        <div className="truncate font-medium mt-0.5">{interview.candidateName}</div>
-                                        <div className="truncate text-opacity-75 mt-0.5">{interview.jobRole}</div>
+                                        <ChevronRightIcon className="w-3 h-3 opacity-0 group-hover/interview:opacity-100 transition-opacity flex-shrink-0" />
                                     </div>
-                                    <ChevronRightIcon className="w-3 h-3 opacity-0 group-hover/interview:opacity-100 transition-opacity flex-shrink-0" />
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {dayInterviews.length > 3 && (
                             <div className="text-xs text-gray-500 text-center p-1">
@@ -570,15 +579,15 @@ export default function CalendarPage() {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm font-medium text-gray-600">Pending Feedback</p>
-                                <p className="text-2xl font-bold text-gray-900 mt-2">{stats.pendingFeedback}</p>
+                                <p className="text-sm font-medium text-gray-600">Completed Interviews</p>
+                                <p className="text-2xl font-bold text-gray-900 mt-2">{stats.completed}</p>
                             </div>
-                            <div className="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
-                                <BellAlertIcon className="w-6 h-6 text-amber-600" />
+                            <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
+                                <CheckCircleIcon className="w-6 h-6 text-green-600" />
                             </div>
                         </div>
                         <div className="mt-4 pt-4 border-t border-gray-100">
-                            <span className="text-sm text-gray-500">Requires attention</span>
+                            <span className="text-sm text-gray-500">Successfully concluded</span>
                         </div>
                     </div>
 
@@ -651,13 +660,6 @@ export default function CalendarPage() {
                                             Today
                                         </button>
 
-                                        {/* Filters */}
-                                        <div className="relative">
-                                            <button className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 text-sm font-medium cursor-pointer">
-                                                <FunnelIcon className="w-4 h-4" />
-                                                Filter
-                                            </button>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -672,31 +674,32 @@ export default function CalendarPage() {
                                             placeholder="Search interviews..."
                                             value={searchTerm}
                                             onChange={(e) => setSearchTerm(e.target.value)}
-                                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full md:w-64"
+                                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full md:w-64 text-gray-900"
                                         />
                                     </div>
 
                                     <select
                                         value={filterRound}
                                         onChange={(e) => setFilterRound(e.target.value)}
-                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                                     >
                                         <option value="all">All Rounds</option>
-                                        <option value="HR">HR Round</option>
-                                        <option value="Technical">Technical</option>
-                                        <option value="Manager">Manager</option>
-                                        <option value="Final">Final</option>
+                                        {Array.from(new Set(interviews.map(i => i.interviewRound))).map(round => (
+                                            <option key={round} value={round}>{round}</option>
+                                        ))}
                                     </select>
 
                                     <select
                                         value={filterStatus}
                                         onChange={(e) => setFilterStatus(e.target.value)}
-                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                                     >
                                         <option value="all">All Status</option>
                                         <option value="Scheduled">Scheduled</option>
                                         <option value="In Progress">In Progress</option>
                                         <option value="Completed">Completed</option>
+                                        <option value="Missed">Missed</option>
+                                        <option value="Rescheduled">Rescheduled</option>
                                     </select>
 
                                     {(searchTerm || filterRound !== 'all' || filterStatus !== 'all') && (
