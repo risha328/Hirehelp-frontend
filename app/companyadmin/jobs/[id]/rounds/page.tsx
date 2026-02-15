@@ -32,6 +32,7 @@ import {
   CalendarDaysIcon,
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
+import Loader from '../../../../components/Loader';
 
 
 
@@ -338,17 +339,7 @@ export default function JobRoundsPage() {
   const archivedRounds = rounds.filter(round => round.isArchived);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-center">
-            <p className="text-lg font-medium text-gray-900">Loading Interview Rounds</p>
-            <p className="text-gray-500">Fetching job details and rounds...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loader variant="container" text="Loading Interview Rounds" subText="Fetching job details and rounds..." />;
   }
 
   if (!job) {

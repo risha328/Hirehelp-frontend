@@ -16,6 +16,7 @@ interface JobData {
   applicationDeadline?: string;
   status: string;
   requirements?: string;
+  scheduledPublishAt?: string;
 }
 
 interface EditJobModalProps {
@@ -65,6 +66,16 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
   const handleSave = async () => {
     if (!job) return;
 
+    if (job.applicationDeadline) {
+      const deadlineDate = new Date(job.applicationDeadline);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (deadlineDate <= today) {
+        setError('Application deadline must be a future date (at least tomorrow)');
+        return;
+      }
+    }
+
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -98,12 +109,16 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
 
   if (!isOpen) return null;
 
+  const isPublished = !!(job && job.status === 'active' && new Date(job.scheduledPublishAt || Date.now()) <= new Date());
+
   return (
     <div className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-70 p-4">
       <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 shadow-2xl">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Edit Job</h2>
+            <h2 className="text-2xl font-bold text-gray-900">
+              {isPublished ? 'View Job Details (Read-only)' : 'Edit Job'}
+            </h2>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -111,6 +126,18 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
               <X className="h-5 w-5" />
             </button>
           </div>
+
+          {isPublished && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex gap-3">
+              <span className="text-2xl">⚠️</span>
+              <div>
+                <h5 className="text-sm font-bold text-amber-900 uppercase tracking-wide">Read-Only Mode</h5>
+                <p className="text-sm text-amber-800 mt-1 leading-relaxed">
+                  This job has already been published. To maintain consistency for applicants, published jobs cannot be modified.
+                </p>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -138,8 +165,9 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   <input
                     type="text"
                     value={job.title || ''}
+                    disabled={isPublished}
                     onChange={(e) => handleJobChange('title', e.target.value)}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                   />
                 </div>
 
@@ -150,8 +178,9 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   <input
                     type="text"
                     value={job.location || ''}
+                    disabled={isPublished}
                     onChange={(e) => handleJobChange('location', e.target.value)}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                   />
                 </div>
 
@@ -162,9 +191,10 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   <input
                     type="text"
                     value={job.salary || ''}
+                    disabled={isPublished}
                     onChange={(e) => handleJobChange('salary', e.target.value)}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., $50,000 - $70,000"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
+                    placeholder="Enter salary (e.g. 50k - 70k, Competitive, Negotiable)"
                   />
                 </div>
 
@@ -174,8 +204,9 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   </label>
                   <select
                     value={job.jobType || ''}
+                    disabled={isPublished}
                     onChange={(e) => handleJobChange('jobType', e.target.value)}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                   >
                     <option value="">Select job type</option>
                     <option value="full-time">Full-time</option>
@@ -192,8 +223,9 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   </label>
                   <select
                     value={job.experienceLevel || ''}
+                    disabled={isPublished}
                     onChange={(e) => handleJobChange('experienceLevel', e.target.value)}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                   >
                     <option value="">Select experience level</option>
                     <option value="Entry Level">Entry Level</option>
@@ -209,9 +241,11 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   </label>
                   <input
                     type="date"
+                    min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}
                     value={job.applicationDeadline ? new Date(job.applicationDeadline).toISOString().split('T')[0] : ''}
+                    disabled={isPublished}
                     onChange={(e) => handleJobChange('applicationDeadline', e.target.value)}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                   />
                 </div>
 
@@ -221,8 +255,9 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   </label>
                   <select
                     value={job.status || ''}
+                    disabled={isPublished}
                     onChange={(e) => handleJobChange('status', e.target.value)}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                   >
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -237,8 +272,9 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   <input
                     type="text"
                     value={job.skills?.join(', ') || ''}
+                    disabled={isPublished}
                     onChange={(e) => handleSkillsChange(e.target.value)}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                     placeholder="e.g., JavaScript, React, Node.js"
                   />
                 </div>
@@ -249,9 +285,10 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   </label>
                   <textarea
                     value={job.description || ''}
+                    disabled={isPublished}
                     onChange={(e) => handleJobChange('description', e.target.value)}
                     rows={6}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                   />
                 </div>
 
@@ -261,9 +298,10 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   </label>
                   <textarea
                     value={job.requirements || ''}
+                    disabled={isPublished}
                     onChange={(e) => handleJobChange('requirements', e.target.value)}
                     rows={4}
-                    className="text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                   />
                 </div>
               </div>
@@ -275,16 +313,18 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                   onClick={onClose}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  {isPublished ? 'Close' : 'Cancel'}
                 </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {saving ? 'Saving...' : 'Save Changes'}
-                </button>
+                {!isPublished && (
+                  <button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="px-6 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {saving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                )}
               </div>
             </div>
           ) : (

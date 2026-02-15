@@ -32,6 +32,7 @@ interface Job {
   skills?: string[];
   applicationDeadline?: string;
   status: string;
+  scheduledPublishAt?: string;
   createdAt: string;
   companyId: string | {
     _id: string;
@@ -67,6 +68,8 @@ export default function JobDetailsPage() {
   const isExpired = job?.applicationDeadline
     ? new Date(job.applicationDeadline) < new Date(new Date().setHours(0, 0, 0, 0))
     : false;
+
+  const isPublished = !!(job && job.status === 'active' && new Date(job.scheduledPublishAt || job.createdAt) <= new Date());
 
   useEffect(() => {
     if (jobId) {
@@ -226,8 +229,8 @@ export default function JobDetailsPage() {
             <FileText className="h-4 w-4 mr-2" />
             Manage Rounds
           </button>
-          {!isExpired && (
-            <>
+          <>
+            {!isPublished && (
               <button
                 onClick={() => setShowEditModal(true)}
                 className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-gray-700 font-medium"
@@ -235,6 +238,17 @@ export default function JobDetailsPage() {
               >
                 <Edit className="h-4 w-4" />
               </button>
+            )}
+            {isPublished && (
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-gray-700 font-medium"
+                title="View Details"
+              >
+                <FileText className="h-4 w-4" />
+              </button>
+            )}
+            {!isPublished && (
               <button
                 onClick={handleDelete}
                 className="flex items-center px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors cursor-pointer"
@@ -242,10 +256,22 @@ export default function JobDetailsPage() {
               >
                 <Trash2 className="h-4 w-4" />
               </button>
-            </>
-          )}
+            )}
+          </>
         </div>
       </div>
+
+      {isPublished && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 shadow-sm">
+          <div className="text-xl">ℹ️</div>
+          <div>
+            <h5 className="text-sm font-bold text-amber-900">Job is Published (Read-Only)</h5>
+            <p className="text-sm text-amber-800 mt-0.5">
+              This job posting is live and has been published. To maintain consistency for candidates, it can no longer be edited.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="p-6">
@@ -294,11 +320,13 @@ export default function JobDetailsPage() {
                   <div className="flex items-center">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${isExpired
                       ? 'bg-red-100 text-red-800 border border-red-200'
-                      : job.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                      : !isPublished && job.status === 'active'
+                        ? 'bg-blue-100 text-blue-800 border border-blue-200'
+                        : job.status === 'active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
                       }`}>
-                      {isExpired ? 'Expired' : job.status}
+                      {isExpired ? 'Expired' : !isPublished && job.status === 'active' ? 'Scheduled' : job.status}
                     </span>
                   </div>
                 </div>
@@ -441,6 +469,6 @@ export default function JobDetailsPage() {
         onSuccess={fetchJobDetails}
         jobId={jobId}
       />
-    </div>
+    </div >
   );
 }
