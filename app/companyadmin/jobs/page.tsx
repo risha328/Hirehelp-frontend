@@ -39,6 +39,7 @@ interface Job {
   skills?: string[];
   applicationDeadline?: string;
   status: string;
+  scheduledPublishAt: string;
   createdAt: string;
 }
 
@@ -66,6 +67,9 @@ export default function CompanyJobsPage() {
     experienceLevel: 'entry',
     skills: '',
     applicationDeadline: '',
+    publishOption: 'immediate' as 'immediate' | 'later',
+    scheduledPublishDate: '',
+    scheduledPublishTime: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [activeSection, setActiveSection] = useState<'basic' | 'details' | 'requirements'>('basic');
@@ -123,22 +127,19 @@ export default function CompanyJobsPage() {
     console.log('Starting form validation...');
     const newErrors: Record<string, string> = {};
 
+    // Title validation
+    if (!formData.title.trim()) {
+      newErrors.title = 'Job title is required';
+    } else if (formData.title.trim().length < 5) {
+      newErrors.title = 'Job title must be at least 5 characters';
+    }
+
     // Location validation
-    console.log('Validating location:', formData.location);
     if (!formData.location.trim()) {
-      console.log('Location is empty');
       newErrors.location = 'Please select a location';
     }
 
-    // Salary validation (optional but if provided, validate format)
-    if (formData.salary.trim()) {
-      console.log('Validating salary:', formData.salary);
-      const salaryPattern = /^[\$]?[\d,]+(\.\d{2})?(?:\s*-\s*[\$]?[\d,]+(\.\d{2})?)?(?:\s*(?:per\s+year|per\s+month|per\s+hour|annually|monthly|hourly|k|K))?$/i;
-      if (!salaryPattern.test(formData.salary.trim())) {
-        console.log('Salary format invalid');
-        newErrors.salary = 'Please enter a valid salary format (e.g., $50,000 - $70,000 per year)';
-      }
-    }
+    // Salary validation removed to allow any format as requested by user
 
     // Job Type validation
     console.log('Validating job type:', formData.jobType);
@@ -161,9 +162,26 @@ export default function CompanyJobsPage() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      if (deadlineDate < today) {
-        console.log('Application deadline is in the past');
-        newErrors.applicationDeadline = 'Application deadline must be a future date';
+      if (deadlineDate <= today) {
+        console.log('Application deadline is not a future date');
+        newErrors.applicationDeadline = 'Application deadline must be a future date (at least tomorrow)';
+      }
+    }
+
+    // Scheduling validation
+    if (formData.publishOption === 'later') {
+      if (!formData.scheduledPublishDate) {
+        newErrors.scheduledPublishDate = 'Please select a date for publishing';
+      }
+      if (!formData.scheduledPublishTime) {
+        newErrors.scheduledPublishTime = 'Please select a time for publishing';
+      }
+
+      if (formData.scheduledPublishDate && formData.scheduledPublishTime) {
+        const publishAt = new Date(`${formData.scheduledPublishDate}T${formData.scheduledPublishTime}`);
+        if (publishAt <= new Date()) {
+          newErrors.scheduledPublishDate = 'Publish time must be in the future';
+        }
       }
     }
 
@@ -201,6 +219,21 @@ export default function CompanyJobsPage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const isFormComplete = () => {
+    const basicComplete =
+      formData.title.trim().length >= 5 &&
+      formData.location.trim().length > 0 &&
+      formData.jobType.length > 0 &&
+      formData.experienceLevel.length > 0 &&
+      formData.description.trim().length >= 50;
+
+    if (formData.publishOption === 'later') {
+      return basicComplete && formData.scheduledPublishDate !== '' && formData.scheduledPublishTime !== '';
+    }
+
+    return basicComplete;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -244,11 +277,19 @@ export default function CompanyJobsPage() {
     setPosting(true);
 
     try {
+      let scheduledPublishAt = new Date().toISOString();
+      if (formData.publishOption === 'later') {
+        scheduledPublishAt = new Date(`${formData.scheduledPublishDate}T${formData.scheduledPublishTime}`).toISOString();
+      }
+
+      const { publishOption, scheduledPublishDate, scheduledPublishTime, ...cleanFormData } = formData;
+
       const jobData = {
-        ...formData,
+        ...cleanFormData,
         companyId: company._id.trim(),
         skills: formData.skills ? formData.skills.split(',').map(s => s.trim()) : [],
         status: 'active',
+        scheduledPublishAt,
       };
 
       await jobsAPI.createJob(jobData);
@@ -266,6 +307,9 @@ export default function CompanyJobsPage() {
         experienceLevel: 'entry',
         skills: '',
         applicationDeadline: '',
+        publishOption: 'immediate',
+        scheduledPublishDate: '',
+        scheduledPublishTime: '',
       });
 
       alert('Job posted successfully!');
@@ -594,7 +638,11 @@ export default function CompanyJobsPage() {
             ) : (
               <div className="divide-y divide-gray-100">
                 {filteredJobs.map(job => {
-                  const isExpired = job.applicationDeadline ? new Date(job.applicationDeadline) < new Date(new Date().setHours(0, 0, 0, 0)) : false;
+                  const isExpired = job.applicationDeadline
+                    ? new Date(job.applicationDeadline) < new Date(new Date().setHours(0, 0, 0, 0))
+                    : false;
+
+                  const isPublished = !!(job.status === 'active' && new Date(job.scheduledPublishAt || job.createdAt) <= new Date());
 
                   return (
                     <div key={job._id} className={`p-6 transition-colors duration-200 ${isExpired ? 'bg-gray-50 opacity-70' : 'hover:bg-gray-50'}`}>
@@ -666,20 +714,37 @@ export default function CompanyJobsPage() {
                         </div>
 
                         <div className="flex flex-col gap-3">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${isExpired
-                            ? 'bg-red-100 text-red-800'
-                            : job.status === 'active'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-gray-100 text-gray-800'
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border shadow-sm ${isExpired
+                            ? 'bg-rose-50 text-rose-700 border-rose-200'
+                            : !isPublished && job.status === 'active'
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : job.status === 'active'
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : 'bg-gray-50 text-gray-700 border-gray-200'
                             }`}>
-                            {isExpired ? 'Expired' : job.status}
+                            <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isExpired
+                              ? 'bg-rose-500'
+                              : !isPublished && job.status === 'active'
+                                ? 'bg-blue-500'
+                                : job.status === 'active'
+                                  ? 'bg-emerald-500'
+                                  : 'bg-gray-500'
+                              }`} />
+                            {isExpired ? 'Expired' : !isPublished && job.status === 'active' ? 'Scheduled' : job.status}
                           </span>
                           <button
                             onClick={() => router.push(`/companyadmin/jobs/${job._id}`)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 text-sm font-medium cursor-pointer"
+                            className={`flex items-center gap-2 px-4 py-2 border transition-colors duration-200 text-sm font-medium rounded-lg cursor-pointer ${isPublished
+                              ? 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                              : 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 font-bold'
+                              }`}
                           >
-                            <EyeIcon className="w-4 h-4" />
-                            View Details
+                            {isPublished ? (
+                              <EyeIcon className="w-4 h-4" />
+                            ) : (
+                              <PencilSquareIcon className="w-4 h-4" />
+                            )}
+                            {isPublished ? 'View Details' : 'Manage / Edit'}
                           </button>
                         </div>
                       </div>
@@ -905,7 +970,7 @@ export default function CompanyJobsPage() {
                                 type="text"
                                 value={formData.salary}
                                 onChange={handleInputChange}
-                                placeholder="e.g. $90,000 - $130,000 per year"
+                                placeholder="Enter salary (e.g. 50k - 70k, Competitive, Negotiable)"
                                 className="block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all"
                               />
                             </div>
@@ -971,10 +1036,92 @@ export default function CompanyJobsPage() {
                                 id="applicationDeadline"
                                 name="applicationDeadline"
                                 type="date"
+                                min={new Date(new Date().setDate(new Date().getDate() + 1)).toISOString().split('T')[0]}
                                 value={formData.applicationDeadline}
                                 onChange={handleInputChange}
-                                className="block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                className={`block w-full pl-12 pr-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.applicationDeadline ? 'border-red-300' : 'border-gray-300'
+                                  }`}
                               />
+                            </div>
+                            {errors.applicationDeadline && (
+                              <p className="text-sm text-red-600 font-medium flex items-center gap-1 mt-1">
+                                <ExclamationTriangleIcon className="w-4 h-4" />
+                                {errors.applicationDeadline}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Publishing Options */}
+                          <div className="md:col-span-2 mt-4 space-y-4 pt-4 border-t border-gray-100">
+                            <div>
+                              <h4 className="text-sm font-bold text-gray-900 mb-2">Publishing Options</h4>
+                              <div className="grid grid-cols-2 gap-4">
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData(prev => ({ ...prev, publishOption: 'immediate' }))}
+                                  className={`flex flex-col p-4 rounded-xl border-2 transition-all text-left ${formData.publishOption === 'immediate'
+                                    ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-500/20'
+                                    : 'border-gray-200 hover:border-blue-200'
+                                    }`}
+                                >
+                                  <span className="font-bold text-gray-900">Publish Immediately</span>
+                                  <span className="text-xs text-gray-500 mt-1">Go live as soon as you submit</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData(prev => ({ ...prev, publishOption: 'later' }))}
+                                  className={`flex flex-col p-4 rounded-xl border-2 transition-all text-left ${formData.publishOption === 'later'
+                                    ? 'border-blue-600 bg-blue-50 ring-2 ring-blue-500/20'
+                                    : 'border-gray-200 hover:border-blue-200'
+                                    }`}
+                                >
+                                  <span className="font-bold text-gray-900">Publish Later</span>
+                                  <span className="text-xs text-gray-500 mt-1">Schedule a specific time</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {formData.publishOption === 'later' && (
+                              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                                <div className="space-y-3">
+                                  <label className="block text-sm font-semibold text-gray-900">Publish Date</label>
+                                  <input
+                                    type="date"
+                                    name="scheduledPublishDate"
+                                    min={new Date().toISOString().split('T')[0]}
+                                    value={formData.scheduledPublishDate}
+                                    onChange={handleInputChange}
+                                    className={`block w-full px-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 transition-all ${errors.scheduledPublishDate ? 'border-red-300' : 'border-gray-300'}`}
+                                  />
+                                  {errors.scheduledPublishDate && (
+                                    <p className="text-xs text-red-600 mt-1">{errors.scheduledPublishDate}</p>
+                                  )}
+                                </div>
+                                <div className="space-y-3">
+                                  <label className="block text-sm font-semibold text-gray-900">Publish Time</label>
+                                  <input
+                                    type="time"
+                                    name="scheduledPublishTime"
+                                    value={formData.scheduledPublishTime}
+                                    onChange={handleInputChange}
+                                    className={`block w-full px-4 py-3.5 text-base text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 transition-all ${errors.scheduledPublishTime ? 'border-red-300' : 'border-gray-300'}`}
+                                  />
+                                  {errors.scheduledPublishTime && (
+                                    <p className="text-xs text-red-600 mt-1">{errors.scheduledPublishTime}</p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Immutability Warning */}
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                              <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 shrink-0" />
+                              <div>
+                                <h5 className="text-sm font-bold text-amber-900">Important Policy</h5>
+                                <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                                  Once a job is published, it <strong>cannot be edited</strong>. This ensures fairness and consistency for candidates who have already applied or viewed the details. Please review your post carefully before publishing.
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1126,23 +1273,25 @@ We are looking for a passionate developer to join our team. In this role, you wi
                       >
                         Cancel
                       </button>
-                      <button
-                        type="submit"
-                        disabled={posting}
-                        className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
-                      >
-                        {posting ? (
-                          <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            Publishing Job...
-                          </>
-                        ) : (
-                          <>
-                            <CheckBadgeIcon className="w-5 h-5" />
-                            Publish Job Posting
-                          </>
-                        )}
-                      </button>
+                      {activeSection === 'requirements' && (
+                        <button
+                          type="submit"
+                          disabled={posting || !isFormComplete()}
+                          className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg cursor-pointer"
+                        >
+                          {posting ? (
+                            <>
+                              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              Publishing Job...
+                            </>
+                          ) : (
+                            <>
+                              <CheckBadgeIcon className="w-5 h-5" />
+                              Publish Job Posting
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
