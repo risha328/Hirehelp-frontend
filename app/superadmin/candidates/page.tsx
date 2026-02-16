@@ -22,6 +22,7 @@ import {
   TrendingUp,
   UserCheck
 } from 'lucide-react';
+import CandidateDetailsModal from '../../components/superadmin/CandidateDetailsModal';
 import { usersAPI } from '../../api/users';
 
 interface Candidate {
@@ -56,6 +57,16 @@ export default function CandidatesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [experienceFilter, setExperienceFilter] = useState<string>('all');
+
+  // Modal State
+  const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleViewCandidate = (candidate: Candidate) => {
+    setSelectedCandidate(candidate);
+    setIsModalOpen(true);
+  };
+
 
   useEffect(() => {
     const token = localStorage.getItem('access_token');
@@ -128,7 +139,7 @@ export default function CandidatesPage() {
     // Apply experience filter
     if (experienceFilter !== 'all') {
       const minExp = parseInt(experienceFilter);
-      results = results.filter(candidate => 
+      results = results.filter(candidate =>
         candidate.experience && candidate.experience >= minExp
       );
     }
@@ -166,8 +177,9 @@ export default function CandidatesPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Header */}
+      <div className="">
+        <div className="py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div>
               <div className="flex items-center">
@@ -182,7 +194,7 @@ export default function CandidatesPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="mt-4 sm:mt-0 flex items-center space-x-3">
               {/* <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-50 text-sm font-medium">
                 <Filter className="h-4 w-4 mr-2" />
@@ -197,7 +209,7 @@ export default function CandidatesPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="py-8">
         {/* Search and Filter Bar */}
         <div className="mb-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -403,8 +415,11 @@ export default function CandidatesPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex space-x-2">
-                              <button className="text-indigo-600 hover:text-indigo-900">
-                                <Eye className="h-4 w-4" />
+                              <button 
+                                className="text-indigo-600 hover:text-indigo-900"
+                                onClick={() => handleViewCandidate(candidate)}
+                              >
+                                <Eye className="h-4 w-4 cursor-pointer" />
                               </button>
                               <button className="text-gray-600 hover:text-gray-900">
                                 <Edit className="h-4 w-4" />
@@ -466,6 +481,12 @@ export default function CandidatesPage() {
           </div>
         )} */}
       </div>
+
+      <CandidateDetailsModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        candidate={selectedCandidate} 
+      />
     </div>
   );
 }
