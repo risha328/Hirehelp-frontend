@@ -30,7 +30,7 @@ const sidebarItems: SidebarItem[] = [
   { name: 'Jobs', href: '/superadmin/jobs', icon: Briefcase },
   { name: 'Analytics', href: '/superadmin/analytics', icon: BarChart3 },
   { name: 'Resumes', href: '/superadmin/resumes', icon: FileText },
-  { name: 'Settings', href: '/superadmin/settings', icon: Settings },
+  // { name: 'Settings', href: '/superadmin/settings', icon: Settings },
 ];
 
 interface SuperAdminSidebarProps {
@@ -44,9 +44,8 @@ export default function SuperAdminSidebar({ sidebarOpen, setSidebarOpen }: Super
   return (
     <>
       {/* Sidebar */}
-      <div className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white shadow-lg transform ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-      } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
+      <div className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        } transition-transform duration-300 ease-in-out lg:translate-x-0`}>
         <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
@@ -71,15 +70,13 @@ export default function SuperAdminSidebar({ sidebarOpen, setSidebarOpen }: Super
                   key={item.name}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
-                    isActive
+                  className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${isActive
                       ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
-                  <item.icon className={`mr-3 h-5 w-5 ${
-                    isActive ? 'text-blue-700' : 'text-gray-400'
-                  }`} />
+                  <item.icon className={`mr-3 h-5 w-5 ${isActive ? 'text-blue-700' : 'text-gray-400'
+                    }`} />
                   {item.name}
                 </Link>
               );
@@ -92,15 +89,13 @@ export default function SuperAdminSidebar({ sidebarOpen, setSidebarOpen }: Super
           <Link
             href="/superadmin/profile"
             onClick={() => setSidebarOpen(false)}
-            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
-              pathname === '/superadmin/profile'
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${pathname === '/superadmin/profile'
                 ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
+              }`}
           >
-            <User className={`mr-3 h-5 w-5 ${
-              pathname === '/superadmin/profile' ? 'text-blue-700' : 'text-gray-400'
-            }`} />
+            <User className={`mr-3 h-5 w-5 ${pathname === '/superadmin/profile' ? 'text-blue-700' : 'text-gray-400'
+              }`} />
             Profile
           </Link>
         </div>

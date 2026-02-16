@@ -2,6 +2,21 @@ import { API_BASE_URL } from './config';
 import { isTokenExpired } from './auth';
 
 export const companiesAPI = {
+  getFeaturedCompanies: async () => {
+    const response = await fetch(`${API_BASE_URL}/companies/featured`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch featured companies');
+    }
+
+    return response.json();
+  },
+
   createCompany: async (companyData: any) => {
     let token = localStorage.getItem('access_token');
 
@@ -374,6 +389,59 @@ export const companiesAPI = {
 
     if (!response.ok) {
       throw new Error('Failed to fetch companies');
+    }
+
+    return response.json();
+  },
+
+  getCompanyById: async (companyId: string) => {
+    let token = localStorage.getItem('access_token');
+
+    if (!token || token === null) {
+      throw new Error('No access token found');
+    }
+
+    // Check if token is expired
+    if (isTokenExpired(token!)) {
+      console.log('Access token expired, attempting refresh...');
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        throw new Error('No refresh token found');
+      }
+
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+
+        if (!refreshResponse.ok) {
+          throw new Error('Token refresh failed');
+        }
+
+        const refreshData = await refreshResponse.json();
+        token = refreshData.accessToken;
+        localStorage.setItem('access_token', token!);
+        console.log('Token refreshed successfully');
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        throw new Error('Session expired, please login again');
+      }
+    }
+
+    const response = await fetch(`${API_BASE_URL}/companies/${companyId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch company details');
     }
 
     return response.json();

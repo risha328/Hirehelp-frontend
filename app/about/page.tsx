@@ -1,12 +1,12 @@
 'use client';
 
-import { 
-  Users, 
-  Target, 
-  Award, 
-  TrendingUp, 
-  Heart, 
-  Shield, 
+import {
+  Users,
+  Target,
+  Award,
+  TrendingUp,
+  Heart,
+  Shield,
   Zap,
   Globe,
   Clock,
@@ -18,6 +18,7 @@ import {
   Building
 } from 'lucide-react';
 import Link from 'next/link';
+import Footer from '../components/Footer';
 
 export default function AboutPage() {
   const values = [
@@ -160,17 +161,17 @@ export default function AboutPage() {
             </div>
           </div>
         </div>
-        
+
         {/* Wave Divider */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 1440 320"
             className="w-full h-24 md:h-32 text-white"
           >
-            <path 
-              fill="currentColor" 
-              fillOpacity="1" 
+            <path
+              fill="currentColor"
+              fillOpacity="1"
               d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,192C672,181,768,139,864,138.7C960,139,1056,181,1152,181.3C1248,181,1344,139,1392,117.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
             ></path>
           </svg>
@@ -183,7 +184,7 @@ export default function AboutPage() {
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             return (
-              <div 
+              <div
                 key={index}
                 className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
@@ -209,11 +210,11 @@ export default function AboutPage() {
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Story</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto rounded-full"></div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mt-6">
-              Founded in 2020, HireHelp began with a simple observation: the traditional job search 
+              Founded in 2020, HireHelp began with a simple observation: the traditional job search
               process was broken for both candidates and employers. We set out to build something better.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="relative">
@@ -221,13 +222,13 @@ export default function AboutPage() {
                 <div className="relative bg-white rounded-2xl p-8 border border-gray-200 shadow-lg">
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">From Vision to Reality</h3>
                   <p className="text-gray-600 mb-6 leading-relaxed">
-                    Our founder, Sarah Chen, experienced firsthand the challenges of finding meaningful 
-                    work and hiring exceptional talent. After 15 years in HR technology, she realized 
-                    that what the industry needed wasn't another job board, but a smarter, more human 
+                    Our founder, Sarah Chen, experienced firsthand the challenges of finding meaningful
+                    work and hiring exceptional talent. After 15 years in HR technology, she realized
+                    that what the industry needed wasn't another job board, but a smarter, more human
                     approach to career connections.
                   </p>
                   <p className="text-gray-600 mb-6 leading-relaxed">
-                    Today, HireHelp combines cutting-edge AI with deep human insight to create 
+                    Today, HireHelp combines cutting-edge AI with deep human insight to create
                     meaningful connections that transform careers and businesses.
                   </p>
                   <div className="flex items-center text-indigo-600 font-medium">
@@ -237,10 +238,10 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-6">
               {milestones.map((milestone, index) => (
-                <div 
+                <div
                   key={index}
                   className="flex items-start space-x-4 p-4 rounded-xl hover:bg-gray-50 transition-colors group"
                 >
@@ -267,16 +268,16 @@ export default function AboutPage() {
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Values</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto rounded-full"></div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mt-6">
-              These principles guide everything we do at HireHelp, from product development 
+              These principles guide everything we do at HireHelp, from product development
               to customer support and company culture.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {values.map((value, index) => {
               const Icon = value.icon;
               return (
-                <div 
+                <div
                   key={index}
                   className="group relative overflow-hidden bg-white rounded-2xl border border-gray-200 p-8 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
@@ -303,10 +304,10 @@ export default function AboutPage() {
               Our platform is designed to make your career journey seamless and successful
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {howItWorks.map((step, index) => (
-              <div 
+              <div
                 key={index}
                 className={`relative ${step.color} rounded-2xl border p-8 group hover:shadow-lg transition-shadow duration-300`}
               >
@@ -332,22 +333,22 @@ export default function AboutPage() {
             <h2 className="text-4xl font-bold text-gray-900 mb-4">Meet Our Leadership</h2>
             <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-cyan-500 mx-auto rounded-full"></div>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mt-6">
-              A diverse team of innovators, thinkers, and problem-solvers dedicated to 
+              A diverse team of innovators, thinkers, and problem-solvers dedicated to
               transforming the future of work.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {teamMembers.map((member, index) => (
-              <div 
+              <div
                 key={index}
                 className="group relative bg-white rounded-2xl border border-gray-200 p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2"
               >
                 <div className="flex flex-col items-center text-center">
                   <div className="relative mb-4">
                     <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                      <img 
-                        src={member.image} 
+                      <img
+                        src={member.image}
                         alt={member.name}
                         className="w-full h-full object-cover"
                       />
@@ -381,8 +382,8 @@ export default function AboutPage() {
                   Building Connections Worldwide
                 </h2>
                 <p className="text-white/90 mb-8 leading-relaxed">
-                  With operations in 50+ countries and support for 20+ languages, HireHelp 
-                  is truly global. We're proud to connect talent and opportunity across 
+                  With operations in 50+ countries and support for 20+ languages, HireHelp
+                  is truly global. We're proud to connect talent and opportunity across
                   borders, time zones, and cultures.
                 </p>
                 <div className="flex flex-wrap gap-3">
@@ -418,7 +419,7 @@ export default function AboutPage() {
                 Ready to Transform Your Career or Business?
               </h2>
               <p className="text-gray-600 text-lg mb-8 max-w-2xl mx-auto">
-                Join thousands of professionals and companies who trust HireHelp for their 
+                Join thousands of professionals and companies who trust HireHelp for their
                 career and talent needs.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -440,6 +441,9 @@ export default function AboutPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

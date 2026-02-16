@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Sparkles
 } from 'lucide-react';
+import Footer from '../components/Footer';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -159,7 +160,7 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -168,7 +169,7 @@ export default function ContactPage() {
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
+
       // Reset form
       setFormData({
         name: '',
@@ -177,7 +178,7 @@ export default function ContactPage() {
         message: '',
         department: 'general',
       });
-      
+
       setIsSubmitted(true);
       setTimeout(() => setIsSubmitted(false), 5000);
     } catch (error) {
@@ -226,17 +227,17 @@ export default function ContactPage() {
             </p>
           </div>
         </div>
-        
+
         {/* Wave Divider */}
         <div className="absolute bottom-0 left-0 right-0">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 1440 320"
             className="w-full h-20 md:h-24 text-white"
           >
-            <path 
-              fill="currentColor" 
-              fillOpacity="1" 
+            <path
+              fill="currentColor"
+              fillOpacity="1"
               d="M0,224L48,213.3C96,203,192,181,288,181.3C384,181,480,203,576,192C672,181,768,139,864,138.7C960,139,1056,181,1152,181.3C1248,181,1344,139,1392,117.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
             ></path>
           </svg>
@@ -253,7 +254,7 @@ export default function ContactPage() {
               Choose the most convenient way to reach our team
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {contactMethods.map((method, index) => {
               const Icon = method.icon;
@@ -323,9 +324,8 @@ export default function ContactPage() {
                           name="name"
                           value={formData.name}
                           onChange={handleChange}
-                          className={`block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                            errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                          }`}
+                          className={`block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${errors.name ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
                           placeholder="Enter your full name"
                         />
                         {errors.name && (
@@ -351,9 +351,8 @@ export default function ContactPage() {
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          className={`block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                            errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                          }`}
+                          className={`block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                            }`}
                           placeholder="your.email@example.com"
                         />
                         {errors.email && (
@@ -382,11 +381,10 @@ export default function ContactPage() {
                             key={dept.id}
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, department: dept.id }))}
-                            className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 ${
-                              isSelected
+                            className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 ${isSelected
                                 ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
                                 : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50 text-gray-700'
-                            }`}
+                              }`}
                           >
                             <Icon className="h-5 w-5 mb-1.5" />
                             <span className="text-xs font-medium text-center">{dept.label}</span>
@@ -408,9 +406,8 @@ export default function ContactPage() {
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}
-                        className={`block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
-                          errors.subject ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                        }`}
+                        className={`block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${errors.subject ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
                         placeholder="What is this regarding?"
                       />
                       {errors.subject && (
@@ -436,9 +433,8 @@ export default function ContactPage() {
                         value={formData.message}
                         onChange={handleChange}
                         rows={6}
-                        className={`block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors resize-none ${
-                          errors.message ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                        }`}
+                        className={`block w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors resize-none ${errors.message ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          }`}
                         placeholder="Please provide details about your inquiry..."
                       />
                       {errors.message && (
@@ -503,7 +499,7 @@ export default function ContactPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 ml-3">Global Offices</h3>
               </div>
-              
+
               <div className="space-y-4">
                 {offices.map((office, index) => (
                   <div key={index} className="group cursor-pointer">
@@ -529,7 +525,7 @@ export default function ContactPage() {
                   </div>
                 ))}
               </div>
-              
+
               <button className="w-full mt-6 py-2.5 text-indigo-600 font-medium rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors text-sm">
                 View All Locations
               </button>
@@ -538,7 +534,7 @@ export default function ContactPage() {
             {/* Quick Contacts */}
             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Contact</h3>
-              
+
               <div className="space-y-4">
                 <div className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
                   <div className="p-2 bg-blue-100 rounded-lg">
@@ -551,7 +547,7 @@ export default function ContactPage() {
                     </a>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
                   <div className="p-2 bg-purple-100 rounded-lg">
                     <Phone className="h-4 w-4 text-purple-600" />
@@ -563,7 +559,7 @@ export default function ContactPage() {
                     </a>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center p-3 bg-white rounded-lg border border-gray-200">
                   <div className="p-2 bg-emerald-100 rounded-lg">
                     <Clock className="h-4 w-4 text-emerald-600" />
@@ -582,7 +578,7 @@ export default function ContactPage() {
               <p className="text-sm text-gray-600 mb-6">
                 Follow us on social media for updates, tips, and career opportunities.
               </p>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 {socialLinks.map((social, index) => {
                   const Icon = social.icon;
@@ -605,7 +601,7 @@ export default function ContactPage() {
             {/* FAQ Preview */}
             <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Common Questions</h3>
-              
+
               <div className="space-y-4">
                 {faqs.map((faq, index) => (
                   <details key={index} className="group">
@@ -619,7 +615,7 @@ export default function ContactPage() {
                   </details>
                 ))}
               </div>
-              
+
               <a
                 href="/faq"
                 className="inline-flex items-center justify-center w-full mt-6 py-2.5 text-indigo-600 font-medium rounded-lg border border-indigo-200 hover:bg-indigo-50 transition-colors text-sm"
@@ -711,6 +707,9 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

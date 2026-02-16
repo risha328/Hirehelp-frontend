@@ -21,7 +21,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
-import { jobsAPI } from '../api/companies';
+import { jobsAPI, companiesAPI } from '../api/companies';
 
 interface Job {
   id: string;
@@ -38,6 +38,19 @@ interface Job {
   tags: string[];
   description: string;
   applicationDeadline?: string;
+}
+
+interface Company {
+  _id: string;
+  name: string;
+  logoUrl?: string;
+  description?: string;
+  industry?: string;
+  website?: string;
+  size?: string;
+  location?: string;
+  rating?: number;
+  openJobs?: number;
 }
 
 const jobTypes = [
@@ -71,9 +84,12 @@ export default function JobsPage() {
   const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
   const [selectedSalary, setSelectedSalary] = useState<string[]>([]);
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
+  const [featuredCompanies, setFeaturedCompanies] = useState<Company[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
 
   useEffect(() => {
     fetchJobs();
+    fetchFeaturedCompanies();
   }, []);
 
   useEffect(() => {
@@ -113,6 +129,19 @@ export default function JobsPage() {
       setFilteredJobs([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFeaturedCompanies = async () => {
+    setLoadingCompanies(true);
+    try {
+      const companiesData = await companiesAPI.getFeaturedCompanies();
+      setFeaturedCompanies(companiesData);
+    } catch (error) {
+      console.error('Failed to fetch featured companies:', error);
+      setFeaturedCompanies([]);
+    } finally {
+      setLoadingCompanies(false);
     }
   };
 
@@ -591,7 +620,10 @@ export default function JobsPage() {
         {/* Featured Companies */}
         <div className="mt-16">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Featured Companies</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Featured Companies</h2>
+              <p className="text-gray-600 mt-1">Discover top employers actively hiring</p>
+            </div>
             <Link
               href="/companies"
               className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
@@ -600,36 +632,94 @@ export default function JobsPage() {
               <ExternalLink className="h-4 w-4 ml-1.5" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {['Google', 'Microsoft', 'Amazon', 'Apple'].map((company) => (
-              <div key={company} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <Building className="h-6 w-6 text-gray-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{company}</h3>
-                    <div className="flex items-center mt-1">
-                      {[1, 2, 3, 4].map((star) => (
-                        <Star key={star} className="h-4 w-4 text-amber-400 fill-current" />
-                      ))}
-                      <span className="text-sm text-gray-500 ml-2">4.8</span>
+
+          {loadingCompanies ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
                     </div>
                   </div>
-                </div>
-                <div className="mt-4 text-sm text-gray-600">
-                  <div className="flex justify-between mb-1">
-                    <span>Open positions:</span>
-                    <span className="font-medium text-gray-900">24</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Avg salary:</span>
-                    <span className="font-medium text-gray-900">$145k</span>
+                  <div className="space-y-2">
+                    <div className="h-3 bg-gray-200 rounded"></div>
+                    <div className="h-3 bg-gray-200 rounded"></div>
                   </div>
                 </div>
+              ))}
+            </div>
+          ) : featuredCompanies.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Building className="h-10 w-10 text-gray-400" />
               </div>
-            ))}
-          </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No featured companies</h3>
+              <p className="text-gray-600">
+                Check back later for featured companies.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {featuredCompanies.map((company) => (
+                <Link
+                  key={company._id}
+                  href={`/companies/${company._id}`}
+                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-indigo-300 transition-all duration-300 group"
+                >
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 flex-shrink-0">
+                      {company.logoUrl ? (
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_API_URL}${company.logoUrl}`}
+                          alt={company.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company.name)}&backgroundColor=6366f1`;
+                          }}
+                        />
+                      ) : (
+                        <Building className="h-6 w-6 text-gray-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
+                        {company.name}
+                      </h3>
+                      {company.rating && (
+                        <div className="flex items-center mt-1">
+                          <Star className="h-4 w-4 text-amber-400 fill-current" />
+                          <span className="text-sm text-gray-600 ml-1">{company.rating.toFixed(1)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    {company.industry && (
+                      <div className="flex items-center">
+                        <Briefcase className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
+                        <span className="truncate">{company.industry}</span>
+                      </div>
+                    )}
+                    {company.location && (
+                      <div className="flex items-center">
+                        <MapPin className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
+                        <span className="truncate">{company.location}</span>
+                      </div>
+                    )}
+                    {company.openJobs !== undefined && (
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                        <span className="text-gray-600">Open positions:</span>
+                        <span className="font-medium text-indigo-600">{company.openJobs}</span>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
