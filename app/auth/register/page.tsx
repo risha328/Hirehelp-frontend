@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -31,6 +31,20 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [dots, setDots] = useState('');
+
+  // Animated dots effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => {
+        if (prev === '') return '.';
+        if (prev === '.') return '..';
+        if (prev === '..') return '...';
+        return '';
+      });
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -109,7 +123,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex">
       {/* ================= LEFT SIDE (IMAGE) ================= */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-sky-50 overflow-hidden">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-sky-50 overflow-hidden min-h-screen">
         {/* Illustration */}
         <Image
           src="/images/login-left.png"
@@ -122,89 +136,35 @@ export default function RegisterPage() {
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-sky-400/90 via-sky-500/80 to-white/40" />
 
-        {/* Branding content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 text-sky-900">
-          <div>
-            <Link href="/" className="flex items-center mb-12">
-              <Image
-                src="/images/logo-transparent.png"
-                alt="HireHelp Logo"
-                width={350}
-                height={90}
-                className="h-24 w-auto object-contain"
-                priority
-              />
-            </Link>
-
-            <h2 className="text-5xl font-extrabold tracking-tighter leading-tight mb-6 max-w-lg">
-              Begin Your Professional Journey
+        {/* Branding content - Animated text */}
+        <div className="relative z-10 flex flex-col justify-center items-center p-12 text-sky-900 w-full min-h-screen -mt-20">
+          <div className="text-center max-w-lg px-4">
+            <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight mb-6 text-white drop-shadow-lg break-words">
+              Connecting Talent
+              <span className="inline-block w-8 ml-1">{dots}</span>
             </h2>
-
-            <p className="text-xl text-sky-900/60 font-medium leading-relaxed mb-10 max-w-md">
-              Join the global network of excellence and unlock your full potential with HireHelp.
+            <p className="text-lg md:text-xl lg:text-2xl text-white/90 font-medium leading-relaxed mb-4">
+              Your next opportunity awaits
             </p>
-
-            <div className="space-y-6">
-              <div className="flex items-center space-x-4">
-                <div className="bg-sky-600/10 p-2 rounded-lg">
-                  <Building className="h-6 w-6 text-sky-600" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-sky-950 uppercase tracking-widest mb-1">
-                    For Enterprises
-                  </h3>
-                  <p className="text-sky-900/70 text-base font-medium leading-snug">
-                    Scale your team with elite talent pools and AI-driven screening.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="bg-sky-600/10 p-2 rounded-lg">
-                  <Briefcase className="h-6 w-6 text-sky-600" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-sky-950 uppercase tracking-widest mb-1">
-                    For Professionals
-                  </h3>
-                  <p className="text-sky-900/70 text-base font-medium leading-snug">
-                    Access exclusive career opportunities at industry-leading companies.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats or Trust Elements */}
-          <div className="grid grid-cols-3 gap-6 border-t border-sky-200/50 pt-8">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-sky-900">50K+</p>
-              <p className="text-sm text-sky-800/70">Users</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-sky-900">10K+</p>
-              <p className="text-sm text-sky-800/70">Jobs</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-sky-900">95%</p>
-              <p className="text-sm text-sky-800/70">Success</p>
-            </div>
+            <p className="text-sm md:text-base lg:text-lg text-white/70 font-normal">
+              Join thousands of professionals finding their dream careers
+            </p>
           </div>
         </div>
       </div>
 
       {/* Right Side - Registration Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-white">
-        <div className="w-full max-w-md">
-          {/* Logo for mobile */}
-          <div className="lg:hidden flex justify-center mb-8">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-8 lg:p-12 bg-white min-h-screen overflow-y-auto">
+        <div className="w-full max-w-md py-8">
+          {/* Logo - Above Create Account */}
+          <div className="flex justify-center mb-10">
             <Link href="/" className="flex items-center group">
               <Image
                 src="/images/logo-transparent.png"
                 alt="HireHelp Logo"
-                width={250}
-                height={68}
-                className="h-16 w-auto object-contain"
+                width={400}
+                height={120}
+                className="h-32 w-auto object-contain"
                 priority
               />
             </Link>

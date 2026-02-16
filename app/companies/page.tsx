@@ -176,6 +176,109 @@ export default function CompaniesPage() {
     { value: new Set(companies.map(c => c.location)).size.toString(), label: 'Locations', icon: MapPin }
   ];
 
+  // Full Page Skeleton Loader
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-sky-200 via-white to-white">
+        {/* Hero Section Skeleton */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-sky-400 via-sky-500 to-white">
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-grid-white/[0.1] bg-[size:30px_30px]"></div>
+          </div>
+
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-24">
+            <div className="text-center">
+              {/* Badge Skeleton */}
+              <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-white/20 border border-white/30 backdrop-blur-md mb-8 animate-pulse">
+                <div className="h-4 w-4 bg-white/50 rounded"></div>
+                <div className="h-4 w-40 bg-white/50 rounded"></div>
+              </div>
+
+              {/* Title Skeleton */}
+              <div className="mb-6 space-y-3">
+                <div className="h-12 bg-white/30 rounded-lg mx-auto w-96 animate-pulse"></div>
+                <div className="h-12 bg-white/30 rounded-lg mx-auto w-80 animate-pulse"></div>
+              </div>
+
+              {/* Description Skeleton */}
+              <div className="h-6 bg-white/30 rounded-lg mx-auto w-2/3 mb-10 animate-pulse"></div>
+
+              {/* Search Bar Skeleton */}
+              <div className="max-w-2xl mx-auto">
+                <div className="h-14 bg-white/30 rounded-2xl animate-pulse"></div>
+              </div>
+            </div>
+
+            {/* Stats Skeleton */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-4 text-center animate-pulse"
+                >
+                  <div className="h-6 w-6 bg-white/50 rounded mx-auto mb-2"></div>
+                  <div className="h-8 bg-white/50 rounded w-16 mx-auto mb-2"></div>
+                  <div className="h-4 bg-white/50 rounded w-24 mx-auto"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Filters Bar Skeleton */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-8 animate-pulse">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="h-10 bg-gray-200 rounded-lg w-24"></div>
+                <div className="h-10 bg-gray-200 rounded-lg w-32"></div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="h-10 bg-gray-200 rounded-lg w-40"></div>
+                <div className="h-10 bg-gray-200 rounded-lg w-20"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Results Count Skeleton */}
+          <div className="mb-6 animate-pulse">
+            <div className="h-5 bg-gray-200 rounded w-48"></div>
+          </div>
+
+          {/* Companies Grid Skeleton */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="w-16 h-16 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+                <div className="space-y-2 mb-4">
+                  <div className="h-6 bg-gray-200 rounded-full w-32"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+                </div>
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                <div className="h-10 bg-gray-200 rounded-lg w-full"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer Skeleton */}
+        <div className="mt-20">
+          <Footer />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-200 via-white to-white">
       {/* Hero Section */}
@@ -417,25 +520,7 @@ export default function CompaniesPage() {
         </div>
 
         {/* Companies Grid/List */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="w-16 h-16 bg-gray-200 rounded-lg"></div>
-                  <div className="flex-1">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded"></div>
-                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : filteredCompanies.length === 0 ? (
+        {filteredCompanies.length === 0 ? (
           <div className="text-center py-20">
             <Building className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">No companies found</h3>
