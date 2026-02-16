@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Search,
   MapPin,
@@ -18,10 +19,13 @@ import {
   Sparkles,
   ChevronRight,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2,
+  ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { jobsAPI, companiesAPI } from '../api/companies';
+import Footer from '../components/Footer';
 
 interface Job {
   id: string;
@@ -73,7 +77,8 @@ const filters = {
   postedDate: ['Last 24 hours', 'Last 3 days', 'Last week', 'Last month'],
 };
 
-export default function JobsPage() {
+function JobsPageContent() {
+  const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,6 +91,25 @@ export default function JobsPage() {
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
   const [featuredCompanies, setFeaturedCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
+
+  // Read query parameter on mount and when it changes
+  useEffect(() => {
+    const typeParam = searchParams.get('type');
+    if (typeParam) {
+      // Map URL parameter to job type
+      const jobTypeMap: { [key: string]: string } = {
+        'remote': 'remote',
+        'full-time': 'full-time',
+        'part-time': 'part-time',
+        'contract': 'contract',
+        'internship': 'internship'
+      };
+      
+      if (jobTypeMap[typeParam]) {
+        setActiveJobType(jobTypeMap[typeParam]);
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchJobs();
@@ -243,6 +267,174 @@ export default function JobsPage() {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Full Page Skeleton Loader
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-200 via-white to-white">
+        {/* Hero Section Skeleton */}
+        <div className="relative bg-gradient-to-b from-blue-200 via-white to-white">
+          <div className="absolute inset-0 bg-grid-white/10 bg-grid-8"></div>
+          <div className="relative max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+            <div className="text-center">
+              <div className="inline-flex items-center px-4 py-2 bg-blue-100/80 backdrop-blur-sm rounded-full mb-6 animate-pulse">
+                <div className="h-4 w-4 bg-gray-300 rounded mr-2"></div>
+                <div className="h-4 w-48 bg-gray-300 rounded"></div>
+              </div>
+              <div className="h-12 w-96 bg-gray-300 rounded-lg mx-auto mb-4 animate-pulse"></div>
+              <div className="h-6 w-2/3 bg-gray-200 rounded-lg mx-auto mb-8 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Job Type Navigation Skeleton */}
+          <div className="mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 animate-pulse">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Filters Sidebar Skeleton */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-8">
+                {/* Search Box Skeleton */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 animate-pulse">
+                  <div className="space-y-4">
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                      <div className="h-10 bg-gray-200 rounded-lg"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
+                      <div className="h-10 bg-gray-200 rounded-lg"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Advanced Filters Skeleton */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 animate-pulse">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="h-5 bg-gray-200 rounded w-16"></div>
+                    <div className="h-4 bg-gray-200 rounded w-20"></div>
+                  </div>
+                  <div className="space-y-6">
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-32 mb-3"></div>
+                      <div className="space-y-2">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-28 mb-3"></div>
+                      <div className="space-y-2">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-20 mb-3"></div>
+                      <div className="space-y-2">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="h-4 bg-gray-200 rounded w-3/4"></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Jobs List Skeleton */}
+            <div className="lg:col-span-3">
+              {/* Results Header Skeleton */}
+              <div className="flex items-center justify-between mb-6 animate-pulse">
+                <div className="h-8 bg-gray-200 rounded w-40"></div>
+                <div className="h-10 bg-gray-200 rounded-lg w-48"></div>
+              </div>
+
+              {/* Job Cards Skeleton */}
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
+                    <div className="flex items-start space-x-4">
+                      <div className="w-12 h-12 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                      <div className="flex-1 space-y-3">
+                        <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+                        <div className="flex items-center space-x-4">
+                          <div className="h-4 bg-gray-200 rounded w-32"></div>
+                          <div className="h-4 bg-gray-200 rounded w-24"></div>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+                          <div className="h-6 bg-gray-200 rounded-full w-24"></div>
+                          <div className="h-6 bg-gray-200 rounded-full w-28"></div>
+                        </div>
+                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                        <div className="flex items-center justify-between">
+                          <div className="h-4 bg-gray-200 rounded w-32"></div>
+                          <div className="h-9 bg-gray-200 rounded-lg w-32"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Featured Companies Skeleton */}
+          <div className="mt-20 mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 animate-pulse">
+              <div className="mb-4 sm:mb-0">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                  <div className="h-8 bg-gray-200 rounded w-48"></div>
+                </div>
+                <div className="h-4 bg-gray-200 rounded w-64 ml-12"></div>
+              </div>
+              <div className="h-10 bg-gray-200 rounded-lg w-40"></div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse shadow-sm">
+                  <div className="flex flex-col items-center mb-5">
+                    <div className="w-20 h-20 bg-gray-200 rounded-2xl mb-4"></div>
+                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                  <div className="space-y-3 pt-4 border-t border-gray-100">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="pt-3 mt-3 border-t border-gray-100">
+                      <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                      <div className="h-6 bg-gray-200 rounded w-16"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-200 via-white to-white">
@@ -618,31 +810,37 @@ export default function JobsPage() {
         </div>
 
         {/* Featured Companies */}
-        <div className="mt-16">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Featured Companies</h2>
-              <p className="text-gray-600 mt-1">Discover top employers actively hiring</p>
+        <div className="mt-20 mb-8">
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+            <div className="mb-4 sm:mb-0">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg shadow-lg">
+                  <Sparkles className="h-5 w-5 text-white" />
+                </div>
+                <h2 className="text-3xl font-bold text-gray-900">Featured Companies</h2>
+              </div>
+              <p className="text-gray-600 ml-12 text-sm sm:text-base">
+                Discover top employers actively hiring and verified by our team
+              </p>
             </div>
             <Link
               href="/companies"
-              className="inline-flex items-center text-indigo-600 hover:text-indigo-800 font-medium"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 hover:border-indigo-300 hover:text-indigo-600 transition-all duration-200 shadow-sm"
             >
               View all companies
-              <ExternalLink className="h-4 w-4 ml-1.5" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
           {loadingCompanies ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                    </div>
+                <div key={i} className="bg-white rounded-2xl border border-gray-200 p-6 animate-pulse shadow-sm">
+                  <div className="flex flex-col items-center mb-4">
+                    <div className="w-16 h-16 bg-gray-200 rounded-xl mb-4"></div>
+                    <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
                   </div>
                   <div className="space-y-2">
                     <div className="h-3 bg-gray-200 rounded"></div>
@@ -652,76 +850,136 @@ export default function JobsPage() {
               ))}
             </div>
           ) : featuredCompanies.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-              <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Building className="h-10 w-10 text-gray-400" />
+            <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center shadow-sm">
+              <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Building className="h-12 w-12 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No featured companies</h3>
-              <p className="text-gray-600">
-                Check back later for featured companies.
+              <h3 className="text-2xl font-semibold text-gray-900 mb-2">No featured companies</h3>
+              <p className="text-gray-600 max-w-md mx-auto">
+                Check back later for featured companies. We're constantly adding new verified employers.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {featuredCompanies.map((company) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredCompanies.map((company, index) => (
                 <Link
                   key={company._id}
                   href={`/companies/${company._id}`}
-                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-indigo-300 transition-all duration-300 group"
+                  className="group relative bg-white rounded-2xl border border-gray-200 p-6 hover:shadow-xl hover:border-indigo-300 transition-all duration-300 hover:-translate-y-1 shadow-sm"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200 flex-shrink-0">
-                      {company.logoUrl ? (
-                        <img
-                          src={`${process.env.NEXT_PUBLIC_API_URL}${company.logoUrl}`}
-                          alt={company.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company.name)}&backgroundColor=6366f1`;
-                          }}
-                        />
-                      ) : (
-                        <Building className="h-6 w-6 text-gray-600" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 truncate group-hover:text-indigo-600 transition-colors">
-                        {company.name}
-                      </h3>
-                      {company.rating && (
-                        <div className="flex items-center mt-1">
-                          <Star className="h-4 w-4 text-amber-400 fill-current" />
-                          <span className="text-sm text-gray-600 ml-1">{company.rating.toFixed(1)}</span>
-                        </div>
-                      )}
+                  {/* Verified Badge */}
+                  <div className="absolute top-4 right-4">
+                    <div className="flex items-center gap-1 px-2 py-1 bg-emerald-50 border border-emerald-200 rounded-full">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                      <span className="text-xs font-medium text-emerald-700">Verified</span>
                     </div>
                   </div>
-                  <div className="space-y-2 text-sm text-gray-600">
+
+                  {/* Company Logo */}
+                  <div className="flex flex-col items-center mb-5">
+                    <div className="relative mb-4">
+                      <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200 group-hover:border-indigo-300 transition-colors shadow-sm group-hover:shadow-md">
+                        {company.logoUrl ? (
+                          <img
+                            src={`${process.env.NEXT_PUBLIC_API_URL}${company.logoUrl}`}
+                            alt={company.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company.name)}&backgroundColor=6366f1`;
+                            }}
+                          />
+                        ) : (
+                          <Building className="h-10 w-10 text-gray-400" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Company Name */}
+                    <h3 className="text-lg font-bold text-gray-900 text-center group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2">
+                      {company.name}
+                    </h3>
+
+                    {/* Rating */}
+                    {company.rating && (
+                      <div className="flex items-center gap-1 mb-3">
+                        <div className="flex items-center">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={`h-3.5 w-3.5 ${
+                                star <= Math.round(company.rating || 0)
+                                  ? 'text-amber-400 fill-current'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm font-medium text-gray-600 ml-1">
+                          {(company.rating || 0).toFixed(1)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Company Details */}
+                  <div className="space-y-3 pt-4 border-t border-gray-100">
                     {company.industry && (
-                      <div className="flex items-center">
-                        <Briefcase className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                        <span className="truncate">{company.industry}</span>
+                      <div className="flex items-start gap-2">
+                        <Briefcase className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-gray-600 line-clamp-1">{company.industry}</span>
                       </div>
                     )}
                     {company.location && (
-                      <div className="flex items-center">
-                        <MapPin className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
-                        <span className="truncate">{company.location}</span>
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-gray-600 line-clamp-1">{company.location}</span>
                       </div>
                     )}
-                    {company.openJobs !== undefined && (
-                      <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                        <span className="text-gray-600">Open positions:</span>
-                        <span className="font-medium text-indigo-600">{company.openJobs}</span>
+                    
+                    {/* Open Jobs CTA */}
+                    {company.openJobs !== undefined && company.openJobs > 0 && (
+                      <div className="pt-3 mt-3 border-t border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium text-gray-700">Open positions</span>
+                          <span className="inline-flex items-center px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-sm font-semibold">
+                            {company.openJobs}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex items-center text-xs text-indigo-600 font-medium group-hover:gap-2 transition-all">
+                          <span>View jobs</span>
+                          <ArrowRight className="h-3 w-3 ml-1 group-hover:translate-x-1 transition-transform" />
+                        </div>
                       </div>
                     )}
                   </div>
+
+                  {/* Hover Effect Overlay */}
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/0 to-purple-500/0 group-hover:from-indigo-500/5 group-hover:to-purple-500/5 transition-all duration-300 pointer-events-none"></div>
                 </Link>
               ))}
             </div>
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-blue-200 via-white to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading jobs...</p>
+        </div>
+      </div>
+    }>
+      <JobsPageContent />
+    </Suspense>
   );
 }
