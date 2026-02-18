@@ -93,9 +93,9 @@ export default function Loader({
                     <Image
                         src="/images/logo-transparent.png"
                         alt="HireHelp"
-                        width={160}
-                        height={40}
-                        className="h-10 w-auto object-contain brightness-110 opacity-80"
+                        width={320}
+                        height={80}
+                        className="h-20 w-auto min-w-[200px] object-contain brightness-110 opacity-80 sm:h-24 sm:min-w-[240px]"
                         priority
                     />
                 </motion.div>

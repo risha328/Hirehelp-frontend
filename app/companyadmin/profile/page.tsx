@@ -19,6 +19,7 @@ import { companiesAPI } from '../../api/companies';
 import { API_BASE_URL } from '../../api/config';
 import EditCompanyModal from '../../components/EditCompanyModal';
 import RegisterCompanyModal from '../../components/RegisterCompanyModal';
+import Loader from '../../components/Loader';
 
 export default function CompanyProfilePage() {
   const router = useRouter();
@@ -85,17 +86,7 @@ export default function CompanyProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative inline-block">
-            <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
-            <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 rounded-full animate-spin border-t-transparent"></div>
-          </div>
-          <p className="mt-4 text-gray-600 font-medium">Loading company profile...</p>
-        </div>
-      </div>
-    );
+    return <Loader variant="container" text="Profile" subText="Loading company profile..." />;
   }
 
   if (!company) {
