@@ -21,6 +21,7 @@ import {
   ExternalLink,
   AlertCircle,
   CheckCircle2,
+  ChevronLeft,
   ArrowRight
 } from 'lucide-react';
 import Link from 'next/link';
@@ -92,6 +93,9 @@ function JobsPageContent() {
   const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
   const [featuredCompanies, setFeaturedCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalJobs, setTotalJobs] = useState(0);
 
   // Read query parameter on mount and when it changes
   useEffect(() => {
@@ -113,43 +117,70 @@ function JobsPageContent() {
   }, [searchParams]);
 
   useEffect(() => {
-    fetchJobs();
     fetchFeaturedCompanies();
   }, []);
 
   useEffect(() => {
+    setCurrentPage(1);
+  }, [activeJobType, searchQuery, location]);
+
+  useEffect(() => {
+    fetchJobs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fetchJobs uses currentPage, activeJobType, searchQuery, location from closure
+  }, [currentPage, activeJobType, searchQuery, location]);
+
+  useEffect(() => {
     filterJobs();
-  }, [activeJobType, searchQuery, location, selectedExperience, selectedSalary, jobs]);
+  }, [selectedExperience, selectedSalary, jobs]);
+
+  const transformJob = (job: any): Job => {
+    const company = job.companyId || job.company;
+    const companyName = company?.name ?? 'Company';
+    const logoUrl = company?.logoUrl ?? '';
+    const logoResolved = getFileUrl(logoUrl || undefined);
+    // Fallback initials: use company name only if it's real; else job title/id so we don't show "CO" (from "Company")
+    const initialsSeed = (companyName && companyName.trim() !== '' && companyName !== 'Company')
+      ? companyName
+      : (job.title || job._id || 'Job');
+    return {
+    id: job._id,
+    title: job.title,
+    company: companyName,
+    companyLogo: logoResolved || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(initialsSeed)}&backgroundColor=6366f1`,
+    location: job.location,
+    type: job.jobType || 'full-time',
+    salary: job.salary || 'Salary not specified',
+    experience: job.experienceLevel || 'Not specified',
+    postedDate: new Date(job.createdAt).toLocaleDateString(),
+    isFeatured: false,
+    isUrgent: false,
+    tags: job.skills || [],
+    description: job.description,
+    applicationDeadline: job.applicationDeadline,
+  };
+  };
 
   const fetchJobs = async () => {
     setLoading(true);
     try {
-      const jobsData = await jobsAPI.getAllJobs();
-      // Transform API data to match the Job interface
-      const transformedJobs: Job[] = jobsData.map((job: any) => ({
-        id: job._id,
-        title: job.title,
-        company: job.companyId.name,
-        companyLogo: getFileUrl(job.companyId.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}&backgroundColor=6366f1`,
-        location: job.location,
-        type: job.jobType || 'full-time',
-        salary: job.salary || 'Salary not specified',
-        experience: job.experienceLevel || 'Not specified',
-        postedDate: new Date(job.createdAt).toLocaleDateString(),
-        isFeatured: false, // You can add featured logic later
-        isUrgent: false, // You can add urgent logic later
-        tags: job.skills || [],
-        description: job.description,
-        applicationDeadline: job.applicationDeadline,
-      }));
-
+      const res = await jobsAPI.getJobsPaginated({
+        page: currentPage,
+        limit: 10,
+        jobType: activeJobType !== 'all' ? activeJobType : undefined,
+        search: searchQuery.trim() || undefined,
+        location: location.trim() || undefined,
+      });
+      const transformedJobs: Job[] = (res.data || []).map(transformJob);
       setJobs(transformedJobs);
       setFilteredJobs(transformedJobs);
+      setTotalJobs(res.total ?? 0);
+      setTotalPages(res.totalPages ?? 1);
     } catch (error) {
       console.error('Failed to fetch jobs:', error);
-      // Fallback to empty array
       setJobs([]);
       setFilteredJobs([]);
+      setTotalJobs(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -170,38 +201,9 @@ function JobsPageContent() {
 
   const filterJobs = () => {
     let filtered = [...jobs];
-
-    // Filter by job type
-    if (activeJobType !== 'all') {
-      filtered = filtered.filter(job => job.type === activeJobType);
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(job =>
-        job.title.toLowerCase().includes(query) ||
-        job.company.toLowerCase().includes(query) ||
-        job.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-
-    // Filter by location
-    if (location) {
-      const loc = location.toLowerCase();
-      filtered = filtered.filter(job =>
-        job.location.toLowerCase().includes(loc)
-      );
-    }
-
-    // Filter by experience
     if (selectedExperience.length > 0) {
-      filtered = filtered.filter(job =>
-        selectedExperience.includes(job.experience)
-      );
+      filtered = filtered.filter(job => selectedExperience.includes(job.experience));
     }
-
-    // Filter by salary (simplified)
     if (selectedSalary.length > 0) {
       filtered = filtered.filter(job => {
         const salary = job.salary;
@@ -213,7 +215,6 @@ function JobsPageContent() {
         });
       });
     }
-
     setFilteredJobs(filtered);
   };
 
@@ -445,7 +446,7 @@ function JobsPageContent() {
             <div className="inline-flex items-center px-4 py-2 bg-blue-100/80 backdrop-blur-sm rounded-full mb-6">
               <Sparkles className="h-4 w-4 text-blue-600 mr-2" />
               <span className="text-gray-900 text-sm font-medium">
-                {filteredJobs.length}+ opportunities available
+                {totalJobs > 0 ? `${totalJobs} opportunity${totalJobs !== 1 ? 'ies' : ''} available` : 'Loading opportunities...'}
               </span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
@@ -619,13 +620,13 @@ function JobsPageContent() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  {filteredJobs.length} Jobs Found
+                  {totalJobs} Job{totalJobs !== 1 ? 's' : ''} Found
                 </h2>
-                {activeJobType !== 'all' && (
-                  <p className="text-gray-600 mt-1">
-                    Showing {jobTypes.find(t => t.id === activeJobType)?.label.toLowerCase()}
-                  </p>
-                )}
+                <p className="text-gray-600 mt-1">
+                  {totalJobs > 0
+                    ? `Showing ${((currentPage - 1) * 10) + 1}–${Math.min(currentPage * 10, totalJobs)} of ${totalJobs}`
+                    : 'No jobs match your filters'}
+                </p>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-gray-500 text-sm">Sort by:</span>
@@ -694,9 +695,14 @@ function JobsPageContent() {
                             <img
                               src={job.companyLogo}
                               alt={job.company}
-                              className="w-10 h-10"
+                              className="w-10 h-10 object-cover"
                               onError={(e) => {
-                                (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.company)}`;
+                                const target = e.target as HTMLImageElement;
+                                if (target.src.includes('dicebear')) return;
+                                const fallbackSeed = (job.company && job.company.trim() !== '' && job.company !== 'Company')
+                                  ? job.company
+                                  : (job.title || job.id || 'Job');
+                                target.src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fallbackSeed)}&backgroundColor=6366f1`;
                               }}
                             />
                           </div>
@@ -796,12 +802,50 @@ function JobsPageContent() {
               </div>
             )}
 
-            {/* Load More */}
-            {filteredJobs.length > 0 && (
-              <div className="mt-8 text-center">
-                <button className="inline-flex items-center px-6 py-3 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-300 shadow-sm">
-                  <span>Load More Jobs</span>
-                  <ChevronRight className="h-4 w-4 ml-2" />
+            {/* Pagination */}
+            {totalPages > 1 && !loading && (
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="inline-flex items-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((p) => {
+                      if (totalPages <= 7) return true;
+                      if (p === 1 || p === totalPages) return true;
+                      if (Math.abs(p - currentPage) <= 1) return true;
+                      return false;
+                    })
+                    .map((p, idx, arr) => (
+                      <span key={p}>
+                        {idx > 0 && arr[idx - 1] !== p - 1 && (
+                          <span className="px-2 text-gray-400">…</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(p)}
+                          className={`min-w-[2.25rem] py-2 px-2 rounded-lg font-medium transition-colors ${
+                            currentPage === p
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      </span>
+                    ))}
+                </div>
+                <button
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="inline-flex items-center px-4 py-2 bg-white text-gray-700 font-medium rounded-lg border border-gray-300 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
                 </button>
               </div>
             )}

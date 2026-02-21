@@ -610,6 +610,22 @@ export const companiesAPI = {
   },
 };
 
+export interface JobsPaginatedParams {
+  page?: number;
+  limit?: number;
+  jobType?: string;
+  search?: string;
+  location?: string;
+}
+
+export interface JobsPaginatedResponse {
+  data: any[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const jobsAPI = {
   getAllJobs: async () => {
     const response = await fetch(`${API_BASE_URL}/jobs`, {
@@ -617,6 +633,27 @@ export const jobsAPI = {
       headers: {
         'Content-Type': 'application/json',
       },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch jobs');
+    }
+
+    return response.json();
+  },
+
+  getJobsPaginated: async (params: JobsPaginatedParams = {}): Promise<JobsPaginatedResponse> => {
+    const { page = 1, limit = 10, jobType, search, location } = params;
+    const searchParams = new URLSearchParams();
+    searchParams.set('page', String(page));
+    searchParams.set('limit', String(limit));
+    if (jobType) searchParams.set('jobType', jobType);
+    if (search) searchParams.set('search', search);
+    if (location) searchParams.set('location', location);
+
+    const response = await fetch(`${API_BASE_URL}/jobs?${searchParams.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
     });
 
     if (!response.ok) {

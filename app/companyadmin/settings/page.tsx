@@ -70,7 +70,17 @@ export default function CompanySettingsPage() {
     setSuccess(null);
 
     try {
-      // Update company profile
+      let logoUrl: string | undefined;
+
+      // Upload logo to Cloudinary (logos section) if selected, then save URL to company
+      if (logoFile) {
+        const uploadResult = await companiesAPI.uploadLogo(logoFile);
+        logoUrl = uploadResult?.logoUrl;
+        setLogoFile(null);
+        setLogoPreview(null);
+      }
+
+      // Update company profile (include logoUrl from Cloudinary when we just uploaded)
       await companiesAPI.updateCompany(company._id, {
         name: company.name,
         description: company.description,
@@ -78,18 +88,11 @@ export default function CompanySettingsPage() {
         industry: company.industry,
         size: company.size,
         location: company.location,
+        ...(logoUrl && { logoUrl }),
       });
 
-      // Upload logo if selected
-      if (logoFile) {
-        await companiesAPI.uploadLogo(logoFile);
-        // Refresh company data to get new logo URL
-        const updatedCompany = await companiesAPI.getMyCompany();
-        setCompany(updatedCompany);
-        setLogoFile(null);
-        setLogoPreview(null);
-      }
-
+      const updatedCompany = await companiesAPI.getMyCompany();
+      setCompany(updatedCompany);
       setSuccess('Settings saved successfully!');
     } catch (err) {
       setError('Failed to save settings');
