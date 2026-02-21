@@ -18,6 +18,7 @@ import {
   Heart
 } from 'lucide-react';
 import { jobsAPI, companiesAPI } from '../../api/companies';
+import { getFileUrl } from '../../api/config';
 
 interface Job {
   _id: string;
@@ -280,10 +281,7 @@ export default function JobsPage() {
                   {/* Company Logo */}
                   <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
                     <img
-                      src={getCompanyInfo(selectedJob)?.logoUrl
-                        ? `${process.env.NEXT_PUBLIC_API_URL}${getCompanyInfo(selectedJob)?.logoUrl}`
-                        : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(selectedJob))}&backgroundColor=6366f1`
-                      }
+                      src={getFileUrl(getCompanyInfo(selectedJob)?.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(selectedJob))}&backgroundColor=6366f1`}
                       alt={getCompanyName(selectedJob)}
                       className="w-14 h-14"
                       onError={(e) => {
@@ -380,10 +378,7 @@ export default function JobsPage() {
                     <div className="flex items-center space-x-3 mb-4">
                       <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden">
                         <img
-                          src={getCompanyInfo(selectedJob)?.logoUrl
-                            ? `${process.env.NEXT_PUBLIC_API_URL}${getCompanyInfo(selectedJob)?.logoUrl}`
-                            : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(selectedJob))}`
-                          }
+                          src={getFileUrl(getCompanyInfo(selectedJob)?.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(getCompanyName(selectedJob))}`}
                           alt={getCompanyName(selectedJob)}
                           className="w-10 h-10"
                           onError={(e) => {

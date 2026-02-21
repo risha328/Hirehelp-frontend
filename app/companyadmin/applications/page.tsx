@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List, FileQuestion, Edit, Save, X, Briefcase, ChevronDown } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
 import { roundsAPI, MCQResponse, RoundEvaluation, EvaluationStatus, Round } from '../../api/rounds';
-import { API_BASE_URL } from '../../api/config';
+import { API_BASE_URL, getFileUrl } from '../../api/config';
 import KanbanBoard from '../../components/KanbanBoard';
 import Loader from '../../components/Loader';
 
@@ -462,17 +462,22 @@ export default function ApplicationsPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
                             <button
-                              onClick={() => router.push(`/companyadmin/candidates/${application.candidateId._id}`)}
+                              onClick={() => {
+                                setSelectedApplication(application);
+                                setShowModal(true);
+                              }}
                               className="text-indigo-600 hover:text-indigo-900 cursor-pointer"
+                              title={`View details for ${application.jobId.title}`}
                             >
                               <Eye className="h-4 w-4" />
                             </button>
                             {application.resumeUrl && (
                               <a
-                                href={`${API_BASE_URL}${application.resumeUrl}`}
+                                href={getFileUrl(application.resumeUrl)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-gray-600 hover:text-gray-900"
+                                title={`View resume for ${application.jobId.title}`}
                               >
                                 <Download className="h-4 w-4" />
                               </a>
@@ -702,23 +707,27 @@ export default function ApplicationsPage() {
                 {/* Cover Letter */}
                 {selectedApplication.coverLetter && (
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Cover Letter</h3>
-                    <p className="text-sm text-gray-700 whitespace-pre-line">{selectedApplication.coverLetter}</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Cover Letter (for {selectedApplication.jobId.title})</h3>
+                    {selectedApplication.coverLetter.startsWith('http://') || selectedApplication.coverLetter.startsWith('https://') ? (
+                      <a href={selectedApplication.coverLetter} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline">View cover letter (file)</a>
+                    ) : (
+                      <p className="text-sm text-gray-700 whitespace-pre-line">{selectedApplication.coverLetter}</p>
+                    )}
                   </div>
                 )}
 
-                {/* Resume */}
+                {/* Resume - for this application (this job) */}
                 {selectedApplication.resumeUrl && (
                   <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Resume</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Resume (for {selectedApplication.jobId.title})</h3>
                     <a
-                      href={`${API_BASE_URL}${selectedApplication.resumeUrl}`}
+                      href={getFileUrl(selectedApplication.resumeUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                     >
                       <Download className="h-4 w-4 mr-2" />
-                      Download Resume
+                      View / Download Resume
                     </a>
                   </div>
                 )}

@@ -210,7 +210,7 @@
 //                   )}
 //                   {application.resumeUrl && (
 //                     <a
-//                       href={`${API_BASE_URL}${application.resumeUrl}`}
+//                       href={getFileUrl(application.resumeUrl)}
 //                       target="_blank"
 //                       rel="noopener noreferrer"
 //                       className="inline-flex items-center px-3 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer"
@@ -234,7 +234,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { User, Mail, Phone, Calendar, Briefcase, FileText, Download, ArrowLeft, ChevronRight, MapPin } from 'lucide-react';
 import { applicationsAPI, Application } from '../../../api/applications';
-import { API_BASE_URL } from '../../../api/config';
+import { API_BASE_URL, getFileUrl } from '../../../api/config';
 
 interface CandidateWithApplications {
   candidateId: {
@@ -380,17 +380,23 @@ export default function CandidateDetailsPage() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              {candidate.resumeUrls.length > 0 && (
-                <a
-                  href={`${API_BASE_URL}${candidate.resumeUrls[0]}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  View Resume
-                </a>
-              )}
+              {(() => {
+                const mostRecentWithResume = [...candidate.applications]
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .find(app => app.resumeUrl);
+                const resumeUrl = mostRecentWithResume?.resumeUrl;
+                return resumeUrl ? (
+                  <a
+                    href={getFileUrl(resumeUrl)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    View Resume (most recent)
+                  </a>
+                ) : null;
+              })()}
               <button className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors">
                 <Download className="h-4 w-4 mr-2" />
                 Download Profile
@@ -508,7 +514,11 @@ export default function CandidateDetailsPage() {
                             {application.coverLetter && (
                               <div className="mt-3">
                                 <p className="text-sm font-medium text-gray-700 mb-1">Cover Letter</p>
-                                <p className="text-sm text-gray-600 line-clamp-2">{application.coverLetter}</p>
+                                {application.coverLetter.startsWith('http://') || application.coverLetter.startsWith('https://') ? (
+                                  <a href={application.coverLetter} target="_blank" rel="noopener noreferrer" className="text-sm text-indigo-600 hover:underline">View cover letter (file)</a>
+                                ) : (
+                                  <p className="text-sm text-gray-600 line-clamp-2">{application.coverLetter}</p>
+                                )}
                               </div>
                             )}
                           </div>
@@ -549,7 +559,7 @@ export default function CandidateDetailsPage() {
                       </div>
                       {application.resumeUrl && (
                         <a
-                          href={`${API_BASE_URL}${application.resumeUrl}`}
+                          href={getFileUrl(application.resumeUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="mt-4 lg:mt-0 inline-flex items-center px-4 py-2 bg-gray-50 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
@@ -564,7 +574,11 @@ export default function CandidateDetailsPage() {
                       <div className="mt-6">
                         <h5 className="text-sm font-medium text-gray-700 mb-2">Cover Letter</h5>
                         <div className="bg-gray-50 rounded-lg p-4">
-                          <p className="text-gray-700 whitespace-pre-line">{application.coverLetter}</p>
+                          {application.coverLetter.startsWith('http://') || application.coverLetter.startsWith('https://') ? (
+                            <a href={application.coverLetter} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">View cover letter (file)</a>
+                          ) : (
+                            <p className="text-gray-700 whitespace-pre-line">{application.coverLetter}</p>
+                          )}
                         </div>
                       </div>
                     )}
@@ -572,7 +586,7 @@ export default function CandidateDetailsPage() {
                     <div className="mt-6 flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <a
-                          href={`${API_BASE_URL}${application.resumeUrl}`}
+                          href={getFileUrl(application.resumeUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-700 font-medium rounded-lg hover:bg-indigo-100 transition-colors"

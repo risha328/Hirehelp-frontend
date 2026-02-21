@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Eye, Download, User, Mail, FileText, Briefcase } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
-import { API_BASE_URL } from '../../api/config';
+import { API_BASE_URL, getFileUrl } from '../../api/config';
 import Loader from '../../components/Loader';
 
 interface CandidateWithApplications {
@@ -177,7 +177,7 @@ export default function CandidatesPage() {
                       {candidate.resumeUrls.length > 0 ? (
                         candidate.resumeUrls.length === 1 ? (
                           <a
-                            href={`${API_BASE_URL}${candidate.resumeUrls[0]}`}
+                            href={getFileUrl(candidate.resumeUrls[0])}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-900"
@@ -311,7 +311,7 @@ export default function CandidatesPage() {
                                     <div className="mt-0.5">
                                       {application.resumeUrl ? (
                                         <a
-                                          href={`${API_BASE_URL}${application.resumeUrl}`}
+                                          href={getFileUrl(application.resumeUrl)}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"

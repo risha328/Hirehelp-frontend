@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { jobsAPI, companiesAPI } from '../api/companies';
+import { getFileUrl } from '../api/config';
 import Footer from '../components/Footer';
 
 interface Job {
@@ -129,9 +130,7 @@ function JobsPageContent() {
         id: job._id,
         title: job.title,
         company: job.companyId.name,
-        companyLogo: job.companyId.logoUrl
-          ? `${process.env.NEXT_PUBLIC_API_URL}${job.companyId.logoUrl}`
-          : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}&backgroundColor=6366f1`,
+        companyLogo: getFileUrl(job.companyId.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}&backgroundColor=6366f1`,
         location: job.location,
         type: job.jobType || 'full-time',
         salary: job.salary || 'Salary not specified',
@@ -882,7 +881,7 @@ function JobsPageContent() {
                       <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200 group-hover:border-indigo-300 transition-colors shadow-sm group-hover:shadow-md">
                         {company.logoUrl ? (
                           <img
-                            src={`${process.env.NEXT_PUBLIC_API_URL}${company.logoUrl}`}
+                            src={getFileUrl(company.logoUrl)}
                             alt={company.name}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {

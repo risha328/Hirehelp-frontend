@@ -1,5 +1,6 @@
 'use client';
 
+import { getFileUrl } from '../../api/config';
 import {
     X,
     Mail,
@@ -238,7 +239,7 @@ export default function CandidateDetailsModal({ isOpen, onClose, candidate }: Ca
                                     </div>
                                 </div>
                                 <a
-                                    href={candidate.resumeUrl}
+                                    href={getFileUrl(candidate.resumeUrl)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"

@@ -23,6 +23,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { authAPI } from '../api/auth';
+import { getFileUrl, API_BASE_URL } from '../api/config';
 
 interface UserProfile {
   id: string;
@@ -733,7 +734,7 @@ export default function ProfilePage() {
                           </div>
                           <div className="flex space-x-2">
                             <a
-                              href={`http://localhost:3001${user.resumeUrl}`}
+                              href={getFileUrl(user.resumeUrl)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
@@ -786,7 +787,7 @@ export default function ProfilePage() {
                                     formData.append('resume', file);
 
                                     const token = localStorage.getItem('access_token');
-                                    const response = await fetch('http://localhost:3001/users/upload-resume', {
+                                    const response = await fetch(`${API_BASE_URL}/users/upload-resume`, {
                                       method: 'POST',
                                       headers: {
                                         'Authorization': `Bearer ${token}`,

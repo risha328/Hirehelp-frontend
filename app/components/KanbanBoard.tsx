@@ -5,7 +5,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { Eye, Download, User, FileText, Clock, CheckCircle, XCircle, HelpCircle, AlertCircle } from 'lucide-react';
 import { applicationsAPI, Application } from '../api/applications';
 import { Round, MCQResponse } from '../api/rounds';
-import { API_BASE_URL } from '../api/config';
+import { API_BASE_URL, getFileUrl } from '../api/config';
 import ScheduleInterviewModal from './ScheduleInterviewModal';
 
 interface KanbanBoardProps {
@@ -394,7 +394,7 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
                                     </button>
                                     {application.resumeUrl && (
                                       <a
-                                        href={`${API_BASE_URL}${application.resumeUrl}`}
+                                        href={getFileUrl(application.resumeUrl)}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"

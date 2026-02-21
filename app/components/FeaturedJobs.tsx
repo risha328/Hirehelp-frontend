@@ -25,7 +25,7 @@ import {
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { publicJobsAPI } from '../api/jobs';
-import { API_BASE_URL } from '../api/config';
+import { API_BASE_URL, getFileUrl } from '../api/config';
 
 interface Company {
     _id: string;
@@ -162,11 +162,7 @@ export default function FeaturedJobs() {
         const url = job.companyId?.logoUrl;
         const name = job.companyId?.name || 'Company';
 
-        if (url) {
-            if (url.startsWith('http')) return url;
-            const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-            return `${API_BASE_URL}${cleanUrl}`;
-        }
+        if (url) return getFileUrl(url);
 
         return `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=6366f1&fontFamily=Arial&fontWeight=bold`;
     };

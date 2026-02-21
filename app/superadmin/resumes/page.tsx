@@ -10,7 +10,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
-import { API_BASE_URL } from '../../api/config';
+import { API_BASE_URL, getFileUrl } from '../../api/config';
 
 export default function ResumesPage() {
   const [resumes, setResumes] = useState<Application[]>([]);
@@ -42,11 +42,11 @@ export default function ResumesPage() {
   };
 
   const handleView = (resumeUrl: string) => {
-    window.open(`${API_BASE_URL}${resumeUrl}`, '_blank');
+    window.open(getFileUrl(resumeUrl), '_blank');
   };
 
   const handleDownload = (resumeUrl: string) => {
-    window.open(`${API_BASE_URL}${resumeUrl}`, '_blank');
+    window.open(getFileUrl(resumeUrl), '_blank');
   };
 
   if (loading) {
