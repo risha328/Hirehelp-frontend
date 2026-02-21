@@ -87,26 +87,21 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Get candidate profile data
   useEffect(() => {
-    const fetchCandidateProfile = async () => {
-      try {
-        // Replace with actual API call to get candidate profile
-        const profile = {
-          firstName: 'John', // Example data
-          lastName: 'Doe',
-          email: 'john.doe@example.com',
-          phone: '+1234567890',
-        };
-        setFormData(prev => ({ ...prev, ...profile }));
-      } catch (error) {
-        console.error('Failed to fetch profile:', error);
-      }
-    };
-
     if (isOpen) {
-      fetchCandidateProfile();
       setStep(1);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        coverLetter: '',
+        portfolioUrl: '',
+        linkedinUrl: '',
+      });
+      setResumeFile(null);
+      setCoverLetterFile(null);
+      setErrors({});
     }
   }, [isOpen]);
 
@@ -373,9 +368,9 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                           required
                           value={formData.firstName}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base bg-white text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-500 ${errors.firstName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                             }`}
-                          placeholder="Enter your first name"
+                          placeholder=""
                         />
                       </div>
                     </div>
@@ -399,9 +394,9 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                           required
                           value={formData.lastName}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base bg-white text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-500 ${errors.lastName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                             }`}
-                          placeholder="Enter your last name"
+                          placeholder=""
                         />
                       </div>
                     </div>
@@ -425,9 +420,9 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                           required
                           value={formData.email}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base bg-white text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-500 ${errors.email ? 'border-red-300 bg-red-50' : 'border-gray-300'
                             }`}
-                          placeholder="you@example.com"
+                          placeholder=""
                         />
                       </div>
                     </div>
@@ -451,9 +446,9 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                           required
                           value={formData.phone}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base bg-white text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-500 ${errors.phone ? 'border-red-300 bg-red-50' : 'border-gray-300'
                             }`}
-                          placeholder="+1 (555) 123-4567"
+                          placeholder=""
                         />
                       </div>
                     </div>
@@ -472,17 +467,8 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
                       rows={4}
                       value={formData.coverLetter}
                       onChange={handleInputChange}
-                      className="block w-full px-4 py-3.5 text-base border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      placeholder="Dear Hiring Manager,
-
-I am writing to express my interest in the [Position Name] position at [Company Name]. With my background in [relevant field] and experience with [relevant skills], I believe I would be a great fit for this role.
-
-[Share specific achievements and why you're excited about this opportunity]
-
-Thank you for considering my application.
-
-Best regards,
-[Your Name]"
+                      className="block w-full px-4 py-3.5 text-base bg-white text-gray-900 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-500"
+                      placeholder=""
                     />
                     <div className="flex justify-between text-sm text-gray-500">
                       <span>Markdown is supported</span>
@@ -655,9 +641,9 @@ Best regards,
                           type="url"
                           value={formData.portfolioUrl}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.portfolioUrl ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base bg-white text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-500 ${errors.portfolioUrl ? 'border-red-300 bg-red-50' : 'border-gray-300'
                             }`}
-                          placeholder="https://yourportfolio.com"
+                          placeholder=""
                         />
                       </div>
                     </div>
@@ -682,9 +668,9 @@ Best regards,
                           type="url"
                           value={formData.linkedinUrl}
                           onChange={handleInputChange}
-                          className={`block w-full pl-10 pr-4 py-3.5 text-base border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all ${errors.linkedinUrl ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                          className={`block w-full pl-10 pr-4 py-3.5 text-base bg-white text-gray-900 border-2 rounded-xl focus:outline-none focus:ring-3 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-gray-500 ${errors.linkedinUrl ? 'border-red-300 bg-red-50' : 'border-gray-300'
                             }`}
-                          placeholder="https://linkedin.com/in/yourprofile"
+                          placeholder=""
                         />
                       </div>
                     </div>
@@ -1365,7 +1351,7 @@ export default function JobDetailsPage() {
                     </p>
                   </div>
                   <Link
-                    href="/profile/applications"
+                    href="/applications"
                     className="w-full px-6 py-4 bg-white text-sky-600 font-bold rounded-xl hover:bg-sky-50 transition-all shadow-md block border-2 border-sky-100"
                   >
                     View Status

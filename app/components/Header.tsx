@@ -36,8 +36,8 @@ export default function TransparentHeader() {
 
 
 
-  // Don't render header on auth pages, profile page, and companyadmin pages
-  if (pathname.startsWith('/auth') || pathname === '/profile' || pathname.startsWith('/companyadmin')) {
+  // Don't render header on auth pages and companyadmin pages
+  if (pathname.startsWith('/auth') || pathname.startsWith('/companyadmin')) {
     return null;
   }
 
@@ -81,7 +81,7 @@ export default function TransparentHeader() {
       ? 'bg-white shadow-md border-b border-gray-100'
       : 'bg-transparent'
       }`}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 lg:h-20 items-center justify-between">
           {/* Logo and Brand */}
           <div className="flex items-center">
@@ -214,7 +214,7 @@ export default function TransparentHeader() {
                       <span className="text-sm font-medium">Profile</span>
                     </Link>
                     <Link
-                      href="/profile/applications"
+                      href="/applications"
                       onClick={() => setIsProfileDropdownOpen(false)}
                       className="flex items-center px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
                     >
