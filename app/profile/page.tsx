@@ -212,13 +212,15 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-16 lg:pt-20">
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+          <div className="text-center">
           <div className="relative inline-block">
             <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
             <div className="absolute top-0 left-0 w-16 h-16 border-4 border-indigo-600 rounded-full animate-spin border-t-transparent"></div>
           </div>
           <p className="mt-4 text-gray-600 font-medium">Loading profile...</p>
+          </div>
         </div>
       </div>
     );
@@ -226,8 +228,9 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white flex items-center justify-center">
-        <div className="text-center max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-16 lg:pt-20">
+        <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+          <div className="text-center max-w-md">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
           </div>
@@ -239,25 +242,26 @@ export default function ProfilePage() {
           >
             Sign In to Continue
           </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-16 lg:pt-20">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page heading - sits below layout header */}
         <div className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
+          <div className="flex flex-wrap justify-between items-start sm:items-center gap-4">
+            <div className="min-w-0 flex-1">
               <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
               <p className="text-gray-600 mt-2">Manage your professional identity and account settings</p>
             </div>
             {!isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="inline-flex items-center px-5 py-2.5 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-300 shadow-sm hover:shadow-md"
+                className="inline-flex items-center px-5 py-2.5 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-300 shadow-sm hover:shadow-md flex-shrink-0"
               >
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Profile
@@ -276,10 +280,10 @@ export default function ProfilePage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
           {/* Left Column - Profile Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden lg:sticky lg:top-24">
               {/* Profile Header */}
               <div className="relative">
                 {/* Background Pattern */}

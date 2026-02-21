@@ -20,8 +20,8 @@ import {
   MessageSquare
 } from 'lucide-react';
 import Link from 'next/link';
-import { applicationsAPI, Application } from '../../api/applications';
-import { getFileUrl } from '../../api/config';
+import { applicationsAPI, Application } from '../api/applications';
+import { getFileUrl } from '../api/config';
 
 const statusConfig = {
   APPLIED: {
@@ -110,7 +110,7 @@ export default function ApplicationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-16 lg:pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-100 to-white pt-16 lg:pt-20 flex items-center justify-center">
         <div className="text-center">
           <div className="relative inline-block">
             <div className="w-16 h-16 border-4 border-indigo-200 rounded-full"></div>
@@ -124,7 +124,7 @@ export default function ApplicationsPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-16 lg:pt-20 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-100 to-white pt-16 lg:pt-20 flex items-center justify-center">
         <div className="text-center max-w-md">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-500" />
@@ -143,24 +143,22 @@ export default function ApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-500 to-white pt-16 lg:pt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-100 to-white pt-16 lg:pt-20">
+      <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page heading - aligned with header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/profile"
-                className="inline-flex items-center text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="h-5 w-5 mr-2" />
-                Back to Profile
-              </Link>
-            </div>
-            <div className="text-right">
+          <div className="flex flex-wrap justify-between items-start sm:items-center gap-4">
+            <div className="min-w-0 flex-1">
               <h1 className="text-3xl font-bold text-gray-900">My Applications</h1>
-              <p className="text-gray-600 mt-1">Track your job application progress</p>
+              <p className="text-gray-600 mt-2">Track your job application progress</p>
             </div>
+            <Link
+              href="/profile"
+              className="inline-flex items-center text-gray-600 hover:text-gray-900 flex-shrink-0 border border-gray-300 rounded-lg px-4 py-2.5 bg-white hover:bg-gray-50 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              Back to Profile
+            </Link>
           </div>
         </div>
 
