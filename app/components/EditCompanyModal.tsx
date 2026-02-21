@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Upload, Save } from 'lucide-react';
 import { companiesAPI } from '../api/companies';
-import { API_BASE_URL } from '../api/config';
+import { API_BASE_URL, getFileUrl } from '../api/config';
 
 interface CompanyData {
   _id: string;
@@ -233,7 +233,7 @@ export default function EditCompanyModal({ isOpen, onClose, onSuccess }: EditCom
                   <div className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
                     {logoPreview || company.logo ? (
                       <img
-                        src={logoPreview || `${API_BASE_URL}${company.logo}`}
+                        src={logoPreview || getFileUrl(company.logo)}
                         alt="Company logo"
                         className="w-full h-full object-cover rounded-lg"
                       />

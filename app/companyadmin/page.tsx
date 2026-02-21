@@ -200,7 +200,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { companiesAPI, jobsAPI } from '../api/companies';
 import { applicationsAPI } from '../api/applications';
 import { analyticsAPI } from '../api/analytics';
-import { API_BASE_URL } from '../api/config';
+import { API_BASE_URL, getFileUrl } from '../api/config';
 import EditCompanyModal from '../components/EditCompanyModal';
 import RegisterCompanyModal from '../components/RegisterCompanyModal';
 import Loader from '../components/Loader';
@@ -533,7 +533,7 @@ export default function CompanyAdminPage() {
                       <div className="w-20 h-20 rounded-xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center overflow-hidden">
                         {company.logoUrl ? (
                           <img
-                            src={`${API_BASE_URL}${company.logoUrl}`}
+                            src={getFileUrl(company.logoUrl)}
                             alt={company.name}
                             className="w-16 h-16 object-contain"
                           />

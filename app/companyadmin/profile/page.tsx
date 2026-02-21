@@ -16,7 +16,7 @@ import {
   Users
 } from 'lucide-react';
 import { companiesAPI } from '../../api/companies';
-import { API_BASE_URL } from '../../api/config';
+import { API_BASE_URL, getFileUrl } from '../../api/config';
 import EditCompanyModal from '../../components/EditCompanyModal';
 import RegisterCompanyModal from '../../components/RegisterCompanyModal';
 import Loader from '../../components/Loader';
@@ -146,7 +146,7 @@ export default function CompanyProfilePage() {
                     <div className="w-20 h-20 rounded-xl bg-white/20 backdrop-blur-sm border-2 border-white/30 flex items-center justify-center overflow-hidden">
                       {company.logoUrl ? (
                         <img
-                          src={`${API_BASE_URL}${company.logoUrl}`}
+                          src={getFileUrl(company.logoUrl)}
                           alt={company.name}
                           className="w-16 h-16 object-contain"
                         />

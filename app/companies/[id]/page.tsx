@@ -18,6 +18,7 @@ import {
     Sparkles
 } from 'lucide-react';
 import { companiesAPI, jobsAPI } from '../../api/companies';
+import { getFileUrl } from '../../api/config';
 import Footer from '../../components/Footer';
 
 interface Company {
@@ -155,10 +156,7 @@ export default function CompanyDetailsPage() {
                             {/* Logo */}
                             <div className="w-32 h-32 rounded-2xl bg-white flex items-center justify-center overflow-hidden border-4 border-white/50 shadow-xl flex-shrink-0">
                                 <img
-                                    src={company.logoUrl
-                                        ? `http://localhost:3001${company.logoUrl}`
-                                        : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company.name)}&backgroundColor=6366f1`
-                                    }
+                                    src={getFileUrl(company.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company.name)}&backgroundColor=6366f1`}
                                     alt={company.name}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {

@@ -20,6 +20,7 @@ import {
   Globe
 } from 'lucide-react';
 import { companiesAPI } from '../api/companies';
+import { getFileUrl } from '../api/config';
 import Footer from '../components/Footer';
 
 interface Company {
@@ -553,10 +554,7 @@ export default function CompaniesPage() {
                   <div className={viewMode === 'list' ? 'flex-shrink-0' : 'mb-4'}>
                     <div className="w-16 h-16 rounded-lg overflow-hidden border-2 border-gray-100">
                       <img
-                        src={company.logoUrl
-                          ? `${process.env.NEXT_PUBLIC_API_URL}${company.logoUrl}`
-                          : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company.name)}&backgroundColor=6366f1`
-                        }
+                        src={getFileUrl(company.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company.name)}&backgroundColor=6366f1`}
                         alt={company.name}
                         className="w-full h-full object-cover"
                         onError={(e) => {

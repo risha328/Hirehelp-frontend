@@ -33,6 +33,7 @@ import {
 import Link from 'next/link';
 import { publicJobsAPI } from '../../api/jobs';
 import { applicationsAPI } from '../../api/applications';
+import { getFileUrl } from '../../api/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
@@ -943,7 +944,7 @@ export default function JobDetailsPage() {
                 {/* Company Logo */}
                 <div className="w-24 h-24 rounded-2xl bg-white shadow-sm border border-sky-100 flex items-center justify-center overflow-hidden p-2">
                   <img
-                    src={job.companyId.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}&backgroundColor=0ea5e9`}
+                    src={getFileUrl(job.companyId.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}&backgroundColor=0ea5e9`}
                     alt={job.companyId.name}
                     className="w-full h-full object-contain"
                     onError={(e) => {
@@ -1242,7 +1243,7 @@ export default function JobDetailsPage() {
                 <div className="text-center mb-6">
                   <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-white shadow-sm mx-auto mb-4 flex items-center justify-center">
                     <img
-                      src={job.companyId.logoUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}`}
+                      src={getFileUrl(job.companyId.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(job.companyId.name)}`}
                       alt={job.companyId.name}
                       className="w-16 h-16"
                     />

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { companiesAPI, jobsAPI } from '../../api/companies';
 import { usersAPI } from '../../api/users';
+import { getFileUrl } from '../../api/config';
 
 interface Company {
   _id: string;
@@ -390,7 +391,7 @@ export default function CompaniesPage() {
                         <div className="flex-shrink-0 h-10 w-10">
                           <img
                             src={company.logoUrl
-                              ? `${process.env.NEXT_PUBLIC_API_URL}${company.logoUrl}`
+                              ? getFileUrl(company.logoUrl)
                               : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(company.name)}&backgroundColor=6366f1`
                             }
                             alt={company.name}
@@ -553,7 +554,7 @@ export default function CompaniesPage() {
                 <div className="w-24 h-24 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border-2 border-gray-200">
                   <img
                     src={selectedCompanyForView.logoUrl
-                      ? `${process.env.NEXT_PUBLIC_API_URL}${selectedCompanyForView.logoUrl}`
+                      ? getFileUrl(selectedCompanyForView.logoUrl)
                       : `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(selectedCompanyForView.name)}&backgroundColor=6366f1`
                     }
                     alt={selectedCompanyForView.name}
