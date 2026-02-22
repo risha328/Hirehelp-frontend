@@ -2,14 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { companiesAPI } from '../../api/companies';
-import { Plus, X, User, Mail, Shield, Users, ChevronRight, AlertCircle, CheckCircle2, Eye, UserX } from 'lucide-react';
+import { Plus, X, User, Mail, Shield, Users, ChevronRight, AlertCircle, CheckCircle2, Eye, UserX, Pencil } from 'lucide-react';
 import Loader from '../../components/Loader';
+
+const TITLE_OPTIONS = ['', 'Mr.', 'Mrs.', 'Ms.', 'Dr.', 'Prof.'] as const;
 
 interface TeamMember {
     _id: string;
     name: string;
     email: string;
     role: string;
+    title?: string;
     createdAt: string;
     lastActive?: string;
     avatar?: string;
@@ -24,6 +27,7 @@ export default function TeamManagementPage() {
 
     // Invite Form State
     const [formData, setFormData] = useState({
+        title: '',
         name: '',
         email: '',
         role: 'INTERVIEWER'
@@ -34,6 +38,12 @@ export default function TeamManagementPage() {
     // Member Details State
     const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+
+    // Edit Member State
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+    const [editFormData, setEditFormData] = useState({ title: '', name: '', role: 'INTERVIEWER' });
+    const [editLoading, setEditLoading] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -86,9 +96,14 @@ export default function TeamManagementPage() {
 
         setInviteLoading(true);
         try {
-            await companiesAPI.inviteMember(companyId, formData);
+            await companiesAPI.inviteMember(companyId, {
+            name: formData.name,
+            email: formData.email,
+            role: formData.role,
+            ...(formData.title && { title: formData.title }),
+        });
 
-            setFormData({ name: '', email: '', role: 'INTERVIEWER' });
+            setFormData({ title: '', name: '', email: '', role: 'INTERVIEWER' });
             setShowInviteModal(false);
             setFormErrors({});
 
@@ -136,6 +151,10 @@ export default function TeamManagementPage() {
         }
     };
 
+    const getDisplayName = (member: TeamMember) => {
+        return member.title ? `${member.title} ${member.name}`.trim() : member.name;
+    };
+
     const getInitials = (name: string) => {
         return name
             .split(' ')
@@ -143,6 +162,41 @@ export default function TeamManagementPage() {
             .join('')
             .toUpperCase()
             .slice(0, 2);
+    };
+
+    const openEditModal = (member: TeamMember) => {
+        setEditingMember(member);
+        setEditFormData({
+            title: member.title || '',
+            name: member.name,
+            role: member.role,
+        });
+        setShowEditModal(true);
+    };
+
+    const handleEditSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!companyId || !editingMember) return;
+        setEditLoading(true);
+        try {
+            await companiesAPI.updateMember(companyId, editingMember._id, {
+                name: editFormData.name.trim(),
+                title: editFormData.title || undefined,
+                role: editFormData.role,
+            });
+            const admins = await companiesAPI.getCompanyAdmins(companyId);
+            setMembers(admins);
+            setShowEditModal(false);
+            setEditingMember(null);
+            setNotification({ type: 'success', message: 'Team member updated successfully.' });
+            if (selectedMember?._id === editingMember._id) {
+                setSelectedMember(admins.find((m: TeamMember) => m._id === editingMember._id) || null);
+            }
+        } catch (error: any) {
+            setNotification({ type: 'error', message: error.message || 'Failed to update member.' });
+        } finally {
+            setEditLoading(false);
+        }
     };
 
     const getRoleBadgeColor = (role: string) => {
@@ -245,7 +299,7 @@ export default function TeamManagementPage() {
                                                     </div>
                                                     <div>
                                                         <div className="font-semibold text-gray-900">
-                                                            {member.name}
+                                                            {getDisplayName(member)}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
                                                             {member.email}
@@ -268,6 +322,13 @@ export default function TeamManagementPage() {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => openEditModal(member)}
+                                                        className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors cursor-pointer"
+                                                        title="Edit"
+                                                    >
+                                                        <Pencil className="w-4 h-4" />
+                                                    </button>
                                                     <button
                                                         onClick={() => {
                                                             setSelectedMember(member);
@@ -331,6 +392,23 @@ export default function TeamManagementPage() {
 
                             {/* Modal Body */}
                             <form onSubmit={handleInviteSubmit} className="p-6 space-y-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Title
+                                    </label>
+                                    <select
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all appearance-none bg-white text-gray-900"
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                    >
+                                        {TITLE_OPTIONS.map((opt) => (
+                                            <option key={opt || 'none'} value={opt}>
+                                                {opt || 'None'}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <div>
                                     <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                                         Full Name <span className="text-rose-500">*</span>
@@ -463,6 +541,107 @@ export default function TeamManagementPage() {
                     </div>
                 )}
 
+                {/* Edit Member Modal */}
+                {showEditModal && editingMember && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-scale-in">
+                            <div className="px-6 py-5 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-900">Edit Team Member</h3>
+                                        <p className="text-sm text-gray-500 mt-1">
+                                            Update name, title, or role
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => { setShowEditModal(false); setEditingMember(null); }}
+                                        className="p-2 hover:bg-gray-100 rounded-xl transition-colors cursor-pointer"
+                                    >
+                                        <X className="w-5 h-5 text-gray-400" />
+                                    </button>
+                                </div>
+                            </div>
+                            <form onSubmit={handleEditSubmit} className="p-6 space-y-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title</label>
+                                    <select
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all appearance-none bg-white text-gray-900"
+                                        value={editFormData.title}
+                                        onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                                    >
+                                        {TITLE_OPTIONS.map((opt) => (
+                                            <option key={opt || 'none'} value={opt}>
+                                                {opt || 'None'}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name <span className="text-rose-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all bg-white text-gray-900"
+                                        placeholder="e.g., John Smith"
+                                        value={editFormData.name}
+                                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email</label>
+                                    <input
+                                        type="email"
+                                        readOnly
+                                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 cursor-not-allowed"
+                                        value={editingMember.email}
+                                    />
+                                    <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Role</label>
+                                    <div className="relative">
+                                        <Shield className="absolute left-3.5 top-3 h-5 w-5 text-gray-400" />
+                                        <select
+                                            className="w-full pl-11 pr-4 py-2.5 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all appearance-none bg-white text-gray-900"
+                                            value={editFormData.role}
+                                            onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value })}
+                                        >
+                                            <option value="INTERVIEWER">Interviewer - Limited Access</option>
+                                            <option value="COMPANY_ADMIN">Company Admin - Full Access</option>
+                                        </select>
+                                        <div className="absolute right-3.5 top-3 text-gray-400 pointer-events-none">
+                                            <ChevronRight className="w-5 h-5 rotate-90" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="pt-4 flex justify-end space-x-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => { setShowEditModal(false); setEditingMember(null); }}
+                                        className="px-5 py-2.5 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-all font-medium"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={editLoading}
+                                        className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-medium shadow-lg shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center min-w-[120px] justify-center"
+                                    >
+                                        {editLoading ? (
+                                            <>
+                                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                                Saving...
+                                            </>
+                                        ) : (
+                                            'Save'
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+
                 {/* Member Details Modal */}
                 {showDetailsModal && selectedMember && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
@@ -490,7 +669,7 @@ export default function TeamManagementPage() {
                                         )}
                                     </div>
                                     <div>
-                                        <h4 className="text-lg font-bold text-gray-900">{selectedMember.name}</h4>
+                                        <h4 className="text-lg font-bold text-gray-900">{getDisplayName(selectedMember)}</h4>
                                         <p className="text-gray-500">{selectedMember.email}</p>
                                     </div>
                                 </div>

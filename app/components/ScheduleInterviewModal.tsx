@@ -92,13 +92,16 @@ export default function ScheduleInterviewModal({
             // If we don't have evaluationId, we might need to find it using getEvaluationsByApplications
             // Or we can rely on the fact that if it's in the column, an evaluation likely exists.
 
-            const evals = await roundsAPI.getEvaluationsByApplications([applicationId]);
-            const evaluation = evals.find(e =>
+            let evals = await roundsAPI.getEvaluationsByApplications([applicationId]);
+            let evaluation = evals.find(e =>
                 (typeof e.roundId === 'object' ? (e.roundId as any)._id === roundId : e.roundId === roundId)
             );
 
             if (!evaluation) {
-                throw new Error('No evaluation record found. Please move the candidate to this stage first.');
+                evaluation = await roundsAPI.ensureEvaluationForSchedule(applicationId, roundId) as any;
+            }
+            if (!evaluation || !evaluation._id) {
+                throw new Error('Could not find or create evaluation for this stage.');
             }
 
             const selectedInterviewer = interviewers.find(i => i._id === formData.interviewerId);
