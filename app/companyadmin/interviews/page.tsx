@@ -251,41 +251,48 @@ export default function InterviewManagementPage() {
 
                 console.log(`Interview mode for ${app.candidateId.name}: ${mode} (eval: ${evaluation?.interviewMode}, round: ${round?.interviewMode})`);
 
-                // Date and Time parsing
-                // Prefer evaluation scheduling, then round scheduling
-                let date = new Date().toISOString(); // Default to now if missing
-                let time = '09:00'; // Default time
-                let duration = 60; // Default duration in mins
+                // Date and Time parsing – normalize backend value so time displays correctly in local timezone
+                const toDateValue = (v: any): string | null => {
+                    if (v == null) return null;
+                    if (typeof v === 'string') return v;
+                    if (typeof v === 'object' && v?.$date) return v.$date; // MongoDB extended JSON
+                    if (v instanceof Date) return v.toISOString();
+                    return null;
+                };
+                const toLocalTime = (dateValue: string | null): string => {
+                    if (!dateValue) return '09:00';
+                    const d = new Date(dateValue);
+                    if (isNaN(d.getTime())) return '09:00';
+                    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+                };
 
-                if (evaluation?.scheduledAt) {
-                    date = evaluation.scheduledAt;
-                    // Extract time from scheduledAt
-                    const dateObj = new Date(evaluation.scheduledAt);
-                    if (!isNaN(dateObj.getTime())) {
-                        const hours = dateObj.getHours().toString().padStart(2, '0');
-                        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-                        time = `${hours}:${minutes}`;
-                    }
-                } else if (round?.scheduledAt) {
-                    date = round.scheduledAt as any; // Type assertion if needed based on API response
-                    // Extract time from scheduledAt
-                    const dateObj = new Date(round.scheduledAt);
-                    if (!isNaN(dateObj.getTime())) {
-                        const hours = dateObj.getHours().toString().padStart(2, '0');
-                        const minutes = dateObj.getMinutes().toString().padStart(2, '0');
-                        time = `${hours}:${minutes}`;
-                    }
+                let date = new Date().toISOString();
+                let time = '09:00';
+                let duration = 60;
+
+                const evalScheduled = toDateValue(evaluation?.scheduledAt);
+                const roundScheduled = toDateValue(round?.scheduledAt as any);
+
+                if (evalScheduled) {
+                    date = evalScheduled;
+                    time = toLocalTime(evalScheduled);
+                } else if (roundScheduled) {
+                    date = roundScheduled;
+                    time = toLocalTime(roundScheduled);
                 } else if (round?.scheduling?.interviewDate) {
                     date = round.scheduling.interviewDate;
                     if (round.scheduling.interviewTime) {
-                        time = round.scheduling.interviewTime;
+                        const t = round.scheduling.interviewTime;
+                        time = /^\d{1,2}:\d{2}$/.test(t) ? t : t;
                     }
                 }
 
-                if (round?.duration) {
-                    // specific logic if duration is a string like "60 mins" or number
-                    const parsedDuration = parseInt(round.duration);
-                    if (!isNaN(parsedDuration)) duration = parsedDuration;
+                if (evaluation?.duration != null && evaluation?.duration !== '') {
+                    const parsed = parseInt(String(evaluation.duration), 10);
+                    if (!isNaN(parsed)) duration = parsed;
+                } else if (round?.duration) {
+                    const parsed = parseInt(String(round.duration), 10);
+                    if (!isNaN(parsed)) duration = parsed;
                 }
 
                 // Interviewer Info

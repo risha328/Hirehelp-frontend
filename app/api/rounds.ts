@@ -397,6 +397,22 @@ export const roundsAPI = {
     return response.json();
   },
 
+  ensureEvaluationForSchedule: async (applicationId: string, roundId: string): Promise<RoundEvaluation> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/evaluations/ensure`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ applicationId, roundId }),
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || `Failed to ensure evaluation: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
   rescheduleRound: async (evaluationId: string, data: {
     scheduledAt: string;
     notes?: string;

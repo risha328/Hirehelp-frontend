@@ -500,7 +500,7 @@ export const companiesAPI = {
     return response.json();
   },
 
-  inviteMember: async (companyId: string, data: { name: string; email: string; role: string }) => {
+  inviteMember: async (companyId: string, data: { name: string; email: string; role: string; title?: string }) => {
     let token = localStorage.getItem('access_token');
 
     if (!token || token === null) {
@@ -552,6 +552,43 @@ export const companiesAPI = {
       throw new Error(errorData.message || 'Failed to invite member');
     }
 
+    return response.json();
+  },
+
+  updateMember: async (
+    companyId: string,
+    memberId: string,
+    data: { name?: string; title?: string; role?: string },
+  ) => {
+    let token = localStorage.getItem('access_token');
+    if (!token || token === null) {
+      throw new Error('No access token found');
+    }
+    if (isTokenExpired(token!)) {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) throw new Error('No refresh token found');
+      const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!refreshResponse.ok) throw new Error('Token refresh failed');
+      const refreshData = await refreshResponse.json();
+      token = refreshData.accessToken;
+      localStorage.setItem('access_token', token!);
+    }
+    const response = await fetch(`${API_BASE_URL}/companies/update-member`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ companyId, memberId, ...data }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Failed to update member');
+    }
     return response.json();
   },
 
