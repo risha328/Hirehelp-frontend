@@ -342,49 +342,15 @@ export const companiesAPI = {
   },
 
   getAllCompanies: async () => {
-    let token = localStorage.getItem('access_token');
-
-    if (!token || token === null) {
-      throw new Error('No access token found');
-    }
-
-    // Check if token is expired
-    if (isTokenExpired(token!)) {
-      console.log('Access token expired, attempting refresh...');
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        throw new Error('No refresh token found');
-      }
-
-      try {
-        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refreshToken }),
-        });
-
-        if (!refreshResponse.ok) {
-          throw new Error('Token refresh failed');
-        }
-
-        const refreshData = await refreshResponse.json();
-        token = refreshData.accessToken;
-        localStorage.setItem('access_token', token!);
-        console.log('Token refreshed successfully');
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        throw new Error('Session expired, please login again');
-      }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const token = localStorage.getItem('access_token');
+    if (token && !isTokenExpired(token)) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     const response = await fetch(`${API_BASE_URL}/companies`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -395,49 +361,15 @@ export const companiesAPI = {
   },
 
   getCompanyById: async (companyId: string) => {
-    let token = localStorage.getItem('access_token');
-
-    if (!token || token === null) {
-      throw new Error('No access token found');
-    }
-
-    // Check if token is expired
-    if (isTokenExpired(token!)) {
-      console.log('Access token expired, attempting refresh...');
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        throw new Error('No refresh token found');
-      }
-
-      try {
-        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refreshToken }),
-        });
-
-        if (!refreshResponse.ok) {
-          throw new Error('Token refresh failed');
-        }
-
-        const refreshData = await refreshResponse.json();
-        token = refreshData.accessToken;
-        localStorage.setItem('access_token', token!);
-        console.log('Token refreshed successfully');
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        throw new Error('Session expired, please login again');
-      }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const token = localStorage.getItem('access_token');
+    if (token && !isTokenExpired(token)) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     const response = await fetch(`${API_BASE_URL}/companies/${companyId}`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {
@@ -701,49 +633,15 @@ export const jobsAPI = {
   },
 
   getJobsByCompany: async (companyId: string) => {
-    let token = localStorage.getItem('access_token');
-
-    if (!token || token === null) {
-      throw new Error('No access token found');
-    }
-
-    // Check if token is expired
-    if (isTokenExpired(token!)) {
-      console.log('Access token expired, attempting refresh...');
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        throw new Error('No refresh token found');
-      }
-
-      try {
-        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ refreshToken }),
-        });
-
-        if (!refreshResponse.ok) {
-          throw new Error('Token refresh failed');
-        }
-
-        const refreshData = await refreshResponse.json();
-        token = refreshData.accessToken;
-        localStorage.setItem('access_token', token!);
-        console.log('Token refreshed successfully');
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        throw new Error('Session expired, please login again');
-      }
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const token = localStorage.getItem('access_token');
+    if (token && !isTokenExpired(token)) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     const response = await fetch(`${API_BASE_URL}/jobs/company/${companyId}`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (!response.ok) {

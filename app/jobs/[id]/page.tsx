@@ -771,6 +771,7 @@ function ApplyModal({ isOpen, onClose, jobId, companyId, jobTitle, onSuccess }: 
 // Main Page Component - ADD THIS
 export default function JobDetailsPage() {
   const params = useParams();
+  const router = useRouter();
   const jobId = params.id as string;
   const { user } = useAuth();
 
@@ -830,16 +831,11 @@ export default function JobDetailsPage() {
       setHasApplied(hasAppliedForJob);
     } catch (err: any) {
       console.error('Failed to check application status:', err);
-      // If unauthorized, redirect to login
+      // If unauthorized, clear token but stay on page so guest can still view job
       if (err.message?.includes('401') || err.status === 401) {
-        console.log('Unauthorized access, redirecting to login');
-        // Clear invalid token
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
-        // Redirect to login page
-        window.location.href = '/auth/login';
-        return;
       }
       setHasApplied(false);
     }
@@ -861,6 +857,14 @@ export default function JobDetailsPage() {
 
   const toggleSave = () => {
     setIsBookmarked(!isBookmarked);
+  };
+
+  const handleApplyNowClick = () => {
+    if (!user || user.role !== 'CANDIDATE') {
+      router.push(`/auth/login?redirect=${encodeURIComponent(`/jobs/${jobId}`)}`);
+      return;
+    }
+    setShowApplyModal(true);
   };
 
   const getJobTypeColor = (type: string) => {
@@ -974,7 +978,7 @@ export default function JobDetailsPage() {
             {/* Action Buttons - restored to previous style (white/sidebar) */}
             <div className="flex flex-col space-y-4 min-w-[300px] lg:mt-12">
               <button
-                onClick={() => setShowApplyModal(true)}
+                onClick={handleApplyNowClick}
                 disabled={hasApplied || (job.applicationDeadline ? new Date(job.applicationDeadline) < new Date() : false)}
                 className={`w-full px-8 py-4 font-bold rounded-2xl transition-all duration-300 transform hover:scale-[1.02] shadow-xl ${hasApplied || (job.applicationDeadline && new Date(job.applicationDeadline) < new Date())
                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed border border-gray-300'
@@ -1369,7 +1373,7 @@ export default function JobDetailsPage() {
                 </div>
               ) : (
                 <button
-                  onClick={() => setShowApplyModal(true)}
+                  onClick={handleApplyNowClick}
                   className="w-full px-6 py-4 bg-white text-sky-600 font-bold rounded-xl hover:bg-sky-50 transition-all transform hover:scale-[1.02] shadow-xl shadow-sky-300/20 border-2 border-sky-100"
                 >
                   Apply Now
