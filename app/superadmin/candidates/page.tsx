@@ -57,6 +57,7 @@ export default function CandidatesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [experienceFilter, setExperienceFilter] = useState<string>('all');
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
   // Modal State
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
@@ -67,34 +68,31 @@ export default function CandidatesPage() {
     setIsModalOpen(true);
   };
 
-
   useEffect(() => {
     const token = localStorage.getItem('access_token');
     const user = localStorage.getItem('user');
-
     if (!token || !user) {
-      router.push('/auth/login');
+      setIsAuthorized(false);
+      setLoading(false);
       return;
     }
-
     try {
       const parsedUser = JSON.parse(user);
-      if (parsedUser.role !== 'SUPER_ADMIN') {
-        router.push('/');
-        return;
-      }
+      const authorized = parsedUser.role === 'SUPER_ADMIN';
+      setIsAuthorized(authorized);
+      if (!authorized) setLoading(false);
     } catch (err) {
       console.error('Error parsing user data:', err);
-      router.push('/auth/login');
-      return;
+      setIsAuthorized(false);
+      setLoading(false);
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
+    if (isAuthorized !== true) return;
     const fetchCandidates = async () => {
       try {
         const data = await usersAPI.getUsersByRole('CANDIDATE');
-        // Enrich with mock data for demo
         const enrichedData = data.map((candidate: any, index: number) => ({
           ...candidate,
           skills: ['React', 'TypeScript', 'Node.js', 'AWS'].slice(0, 2 + index % 3),
@@ -106,16 +104,14 @@ export default function CandidatesPage() {
         setFilteredCandidates(enrichedData);
       } catch (err: any) {
         console.error('Failed to fetch candidates:', err);
-        if (err.message.includes('Session expired') || err.message.includes('No access token')) {
-          router.push('/auth/login');
-        }
+        setCandidates([]);
+        setFilteredCandidates([]);
       } finally {
         setLoading(false);
       }
     };
-
     fetchCandidates();
-  }, [router]);
+  }, [isAuthorized]);
 
   useEffect(() => {
     let results = [...candidates];
@@ -282,8 +278,27 @@ export default function CandidatesPage() {
           </div>
         </div>
 
-        {/* Loading State */}
-        {loading ? (
+        {/* Not logged in or not Super Admin: show page with login prompt */}
+        {isAuthorized === false && (
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Users className="h-10 w-10 text-indigo-600" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Candidates</h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Please log in as Super Admin to view and manage candidates.
+            </p>
+            <button
+              onClick={() => router.push('/auth/login')}
+              className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Log in
+            </button>
+          </div>
+        )}
+
+        {/* Loading State (when checking auth or fetching candidates) */}
+        {(isAuthorized === null || (isAuthorized === true && loading)) ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="bg-white rounded-xl border border-gray-200 p-6 animate-pulse">
@@ -298,7 +313,7 @@ export default function CandidatesPage() {
               </div>
             ))}
           </div>
-        ) : (
+        ) : isAuthorized === true && !loading ? (
           <>
             {/* No Results */}
             {filteredCandidates.length === 0 && (
@@ -444,7 +459,7 @@ export default function CandidatesPage() {
               </div>
             )} */}
           </>
-        )}
+        ) : null}
 
         {/* Quick Stats */}
         {/* {!loading && candidates.length > 0 && (

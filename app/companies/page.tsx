@@ -371,13 +371,13 @@ export default function CompaniesPage() {
               return (
                 <div
                   key={index}
-                  className="bg-white/20 backdrop-blur-md border border-white/30 rounded-xl p-4 text-center"
+                  className="bg-white/95 backdrop-blur-sm border border-white shadow-lg rounded-xl p-5 text-center"
                 >
                   <div className="flex justify-center mb-2">
-                    <Icon className="h-6 w-6 text-white" />
+                    <Icon className="h-6 w-6 text-sky-600" />
                   </div>
-                  <div className="text-2xl font-bold text-white">{stat.value}</div>
-                  <div className="text-sm text-white/80">{stat.label}</div>
+                  <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
+                  <div className="text-sm font-medium text-gray-600">{stat.label}</div>
                 </div>
               );
             })}

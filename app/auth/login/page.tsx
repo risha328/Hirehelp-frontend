@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Mail,
   Lock,
@@ -19,6 +19,8 @@ import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirect');
   const { login } = useAuth();
 
   const [email, setEmail] = useState('');
@@ -54,6 +56,11 @@ export default function LoginPage() {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         const user = JSON.parse(storedUser);
+        // If they came from a protected page (e.g. Apply Now on job), send them back
+        if (redirectTo && redirectTo.startsWith('/')) {
+          router.push(redirectTo);
+          return;
+        }
         // Redirect based on user role
         if (user.role === 'COMPANY_ADMIN' || user.role === 'INTERVIEWER') {
           router.push('/companyadmin');
@@ -63,7 +70,7 @@ export default function LoginPage() {
           router.push('/');
         }
       } else {
-        router.push('/');
+        router.push(redirectTo && redirectTo.startsWith('/') ? redirectTo : '/');
       }
     } catch (err: any) {
       setError(err.message || 'Invalid credentials. Please try again.');

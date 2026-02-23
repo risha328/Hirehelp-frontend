@@ -110,9 +110,8 @@ export default function ProfilePage() {
       });
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      if (error instanceof Error && error.message.includes('Session expired')) {
-        router.push('/auth/login');
-      }
+      // Don't redirect: let guest users see the page with "Log in to view your profile"
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
