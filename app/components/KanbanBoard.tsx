@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Eye, Download, User, FileText, Clock, CheckCircle, XCircle, HelpCircle, AlertCircle } from 'lucide-react';
 import { applicationsAPI, Application } from '../api/applications';
+import { getOfferStatus, getOfferStatusLabel, getOfferStatusStyles } from '../utils/offerStatus';
 import { Round, MCQResponse } from '../api/rounds';
 import { API_BASE_URL, getFileUrl } from '../api/config';
 import ScheduleInterviewModal from './ScheduleInterviewModal';
@@ -394,29 +395,33 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
                                   })()
                                 )}
 
-                                {/* Hired column: Send offer letter or Offer sent */}
-                                {column.status === 'HIRED' && (
-                                  <div className="mb-3">
-                                    {(application as any).offerLetterUrl ? (
-                                      <div className="flex items-center p-2 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        <CheckCircle className="h-3 w-3 mr-1" />
-                                        Offer sent
-                                      </div>
-                                    ) : (
+                                {/* Hired column: Send offer letter or offer status (Accepted / Pending / Declined) */}
+                                {column.status === 'HIRED' && (() => {
+                                  const offerStatus = getOfferStatus(application);
+                                  if (offerStatus === 'not_sent') {
+                                    return (
                                       <button
                                         type="button"
                                         onClick={() => {
                                           setOfferLetterApplication(application);
                                           setShowOfferLetterModal(true);
                                         }}
-                                        className="w-full py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded transition-colors shadow-sm flex items-center justify-center cursor-pointer"
+                                        className="mb-3 w-full py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded transition-colors shadow-sm flex items-center justify-center cursor-pointer"
                                       >
                                         <FileText className="h-3 w-3 mr-2" />
                                         Send offer letter
                                       </button>
-                                    )}
-                                  </div>
-                                )}
+                                    );
+                                  }
+                                  const { className, icon } = getOfferStatusStyles(offerStatus!);
+                                  const IconComponent = icon === 'CheckCircle' ? CheckCircle : icon === 'Clock' ? Clock : icon === 'XCircle' ? XCircle : FileText;
+                                  return (
+                                    <div className={`mb-3 flex items-center p-2 rounded text-xs font-medium border ${className}`}>
+                                      <IconComponent className="h-3 w-3 mr-1 flex-shrink-0" />
+                                      {getOfferStatusLabel(offerStatus!)}
+                                    </div>
+                                  );
+                                })()}
 
                                 <div className="flex items-center justify-between">
                                   <div className="flex space-x-1">
