@@ -163,6 +163,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   Building,
@@ -225,6 +226,7 @@ export default function CompanyAdminPage() {
   const [applicationSourceData, setApplicationSourceData] = useState<any[]>([]);
   const [hiredCandidates, setHiredCandidates] = useState<any[]>([]);
   const [showAllHired, setShowAllHired] = useState(false);
+  const [acceptedOfferCount, setAcceptedOfferCount] = useState(0);
 
   useEffect(() => {
     fetchCompany();
@@ -337,6 +339,8 @@ export default function CompanyAdminPage() {
 
       // Fetch hired candidates (with offer status)
       const hiredApplications = applicationsResponse.filter((app: any) => app.status === 'HIRED');
+      const acceptedOffers = hiredApplications.filter((app: any) => app.offerAccepted === true);
+      setAcceptedOfferCount(acceptedOffers.length);
       const hiredCandidatesData = hiredApplications.slice(0, 5).map((app: any) => ({
         id: app._id,
         name: app.candidateId.name,
@@ -389,6 +393,7 @@ export default function CompanyAdminPage() {
       ]);
 
       // Fallback hired candidates data
+      setAcceptedOfferCount(0);
       setHiredCandidates([
         { id: '1', name: 'John Smith', position: 'Senior Frontend Developer', hireDate: '2024-01-15', email: 'john.smith@email.com', offerStatus: 'accepted' as const },
         { id: '2', name: 'Sarah Johnson', position: 'UX Designer', hireDate: '2024-01-10', email: 'sarah.johnson@email.com', offerStatus: 'accepted' as const },
@@ -761,14 +766,24 @@ export default function CompanyAdminPage() {
                       <p className="text-sm text-gray-500">Recently hired team members</p>
                     </div>
                   </div>
-                  {hiredCandidates.length > 2 && (
-                    <button
-                      onClick={() => setShowAllHired(!showAllHired)}
-                      className="text-sm text-emerald-600 hover:text-emerald-800 font-medium cursor-pointer"
-                    >
-                      {showAllHired ? 'View Less' : 'View More'}
-                    </button>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {acceptedOfferCount > 0 && (
+                      <Link
+                        href="/companyadmin/onboarding"
+                        className="text-sm text-emerald-600 hover:text-emerald-800 font-medium"
+                      >
+                        View onboarding ({acceptedOfferCount})
+                      </Link>
+                    )}
+                    {hiredCandidates.length > 2 && (
+                      <button
+                        onClick={() => setShowAllHired(!showAllHired)}
+                        className="text-sm text-emerald-600 hover:text-emerald-800 font-medium cursor-pointer"
+                      >
+                        {showAllHired ? 'View Less' : 'View More'}
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {hiredCandidates.length > 0 && (() => {

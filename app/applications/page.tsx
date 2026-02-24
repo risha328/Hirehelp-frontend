@@ -20,7 +20,9 @@ import {
   MessageSquare,
   FileText,
   ExternalLink,
-  Loader2
+  Loader2,
+  Upload,
+  ClipboardCheck
 } from 'lucide-react';
 import Link from 'next/link';
 import { applicationsAPI, Application } from '../api/applications';
@@ -515,6 +517,34 @@ export default function ApplicationsPage() {
                             )}
                           </p>
                         )}
+                      </div>
+                    )}
+
+                    {/* Onboarding – Document upload (shown when converted to employee) */}
+                    {selectedApplication.status === 'HIRED' &&
+                      selectedApplication.offerAccepted === true &&
+                      selectedApplication.convertedToEmployee === true && (
+                      <div className="mt-6 p-6 bg-sky-50 rounded-xl border border-sky-200">
+                        <h4 className="text-lg font-semibold text-sky-900 mb-2 flex items-center">
+                          <ClipboardCheck className="h-5 w-5 mr-2" />
+                          Onboarding – Document upload
+                        </h4>
+                        <p className="text-sm text-sky-800 mb-4">
+                          Welcome! Your employer has started your onboarding. You can complete required documentation, upload identity and employment documents, and review company policies here.
+                        </p>
+                        <div className="rounded-lg border border-sky-200 bg-white p-4">
+                          <p className="text-sm text-gray-600 mb-3">
+                            Upload required documents (e.g. ID proof, previous employment letters). Document storage will be available once configured.
+                          </p>
+                          <label className="inline-flex items-center gap-2 px-4 py-2 bg-sky-100 text-sky-800 rounded-lg cursor-pointer hover:bg-sky-200 text-sm font-medium">
+                            <Upload className="h-4 w-4" />
+                            Choose files
+                            <input type="file" multiple className="sr-only" disabled title="Document upload will be available when storage is configured" />
+                          </label>
+                          <p className="text-xs text-gray-500 mt-2">
+                            Document upload will be available here once storage is configured. Contact your HR team if you need to submit documents urgently.
+                          </p>
+                        </div>
                       </div>
                     )}
 
