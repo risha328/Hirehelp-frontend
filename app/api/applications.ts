@@ -35,6 +35,20 @@ export interface Application {
   };
   createdAt: string;
   updatedAt: string;
+  offerLetterUrl?: string;
+  offerSentAt?: string;
+  offerAccepted?: boolean | null;
+  offerAcceptedAt?: string;
+  offerDetails?: {
+    position?: string;
+    salary?: string;
+    startDate?: string;
+    expiryDate?: string;
+    terms?: string;
+    companyName?: string;
+    jobTitle?: string;
+    candidateName?: string;
+  };
 }
 
 export interface CreateApplicationDto {
@@ -149,6 +163,67 @@ export const applicationsAPI = {
       throw new Error(`Failed to update application status: ${response.status} ${response.statusText}`);
     }
 
+    return response.json();
+  },
+
+  getOfferPreview: async (applicationId: string) => {
+    const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/offer-preview`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to load offer preview');
+    }
+    return response.json();
+  },
+
+  sendOffer: async (applicationId: string, payload: { position: string; salary: string; startDate: string; expiryDate?: string; terms?: string }) => {
+    const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/send-offer`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to send offer');
+    }
+    return response.json();
+  },
+
+  acceptOffer: async (applicationId: string) => {
+    const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/offer/accept`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to accept offer');
+    }
+    return response.json();
+  },
+
+  declineOffer: async (applicationId: string) => {
+    const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/offer/decline`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to decline offer');
+    }
+    return response.json();
+  },
+
+  getOfferDownloadLink: async (applicationId: string): Promise<{ downloadUrl: string }> => {
+    const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/offer-download-link`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to get offer letter link');
+    }
     return response.json();
   },
 };

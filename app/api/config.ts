@@ -18,3 +18,13 @@ export function getFileUrl(url: string | undefined): string {
   }
   return `${API_BASE_URL}${url}`;
 }
+
+/**
+ * Returns the URL to open the offer letter PDF. Use this instead of getFileUrl for offerLetterUrl
+ * so that Cloudinary URLs are used as-is and the link does not resolve to the frontend uploads folder.
+ */
+export function getOfferLetterUrl(url: string | undefined): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${API_BASE_URL}${url.startsWith('/') ? url : '/' + url}`;
+}
