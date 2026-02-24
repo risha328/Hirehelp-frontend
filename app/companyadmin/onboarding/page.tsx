@@ -229,10 +229,10 @@ export default function OnboardingPage() {
                           <div className="flex items-center justify-end gap-2">
                             <Link
                               href={`/companyadmin/candidates/${app.candidateId._id}`}
-                              className="inline-flex items-center text-indigo-600 hover:text-indigo-900"
+                              className="inline-flex items-center justify-center p-1.5 rounded-lg text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 cursor-pointer"
+                              title="View profile"
                             >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View profile
+                              <Eye className="h-4 w-4" />
                             </Link>
                             {converted ? (
                               <span className="inline-flex items-center text-green-600">
