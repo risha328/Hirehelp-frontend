@@ -7,6 +7,7 @@ import { applicationsAPI, Application } from '../api/applications';
 import { Round, MCQResponse } from '../api/rounds';
 import { API_BASE_URL, getFileUrl } from '../api/config';
 import ScheduleInterviewModal from './ScheduleInterviewModal';
+import OfferLetterModal from './OfferLetterModal';
 
 interface KanbanBoardProps {
   applications: Application[];
@@ -39,6 +40,8 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
     roundName: string;
     roundType: string;
   } | null>(null);
+  const [showOfferLetterModal, setShowOfferLetterModal] = useState(false);
+  const [offerLetterApplication, setOfferLetterApplication] = useState<Application | null>(null);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -208,8 +211,11 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
       return;
     }
 
-    // Execute update
     await executeUpdate(application._id, newStatus, newRoundId);
+    if (newStatus === 'HIRED') {
+      setOfferLetterApplication(application);
+      setShowOfferLetterModal(true);
+    }
   };
 
   const executeUpdate = async (appId: string, status: string, roundId?: string) => {
@@ -226,9 +232,14 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
 
   const handleConfirm = async () => {
     if (!confirmData) return;
+    const { application, newStatus } = confirmData;
     setShowConfirmModal(false);
-    await executeUpdate(confirmData.application._id, confirmData.newStatus, confirmData.newRoundId);
+    await executeUpdate(application._id, confirmData.newStatus, confirmData.newRoundId);
     setConfirmData(null);
+    if (newStatus === 'HIRED') {
+      setOfferLetterApplication(application);
+      setShowOfferLetterModal(true);
+    }
   };
 
   const handleCancel = () => {
@@ -383,6 +394,30 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
                                   })()
                                 )}
 
+                                {/* Hired column: Send offer letter or Offer sent */}
+                                {column.status === 'HIRED' && (
+                                  <div className="mb-3">
+                                    {(application as any).offerLetterUrl ? (
+                                      <div className="flex items-center p-2 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                        Offer sent
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setOfferLetterApplication(application);
+                                          setShowOfferLetterModal(true);
+                                        }}
+                                        className="w-full py-1.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded transition-colors shadow-sm flex items-center justify-center cursor-pointer"
+                                      >
+                                        <FileText className="h-3 w-3 mr-2" />
+                                        Send offer letter
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+
                                 <div className="flex items-center justify-between">
                                   <div className="flex space-x-1">
                                     <button
@@ -487,7 +522,6 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
             setScheduleModalData(null);
           }}
           onSuccess={() => {
-            // Refresh applications/evaluations
             onApplicationUpdate();
           }}
           applicationId={scheduleModalData.applicationId}
@@ -495,6 +529,21 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
           candidateName={scheduleModalData.candidateName}
           roundName={scheduleModalData.roundName}
           roundType={scheduleModalData.roundType}
+        />
+      )}
+
+      {showOfferLetterModal && offerLetterApplication && (
+        <OfferLetterModal
+          isOpen={showOfferLetterModal}
+          onClose={() => {
+            setShowOfferLetterModal(false);
+            setOfferLetterApplication(null);
+          }}
+          applicationId={offerLetterApplication._id}
+          candidateName={offerLetterApplication.candidateId?.name}
+          jobTitle={offerLetterApplication.jobId?.title}
+          companyName={offerLetterApplication.companyId?.name}
+          onSuccess={onApplicationUpdate}
         />
       )}
     </div>

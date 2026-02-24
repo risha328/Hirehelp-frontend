@@ -17,7 +17,10 @@ import {
   TrendingUp,
   XCircle,
   Eye,
-  MessageSquare
+  MessageSquare,
+  FileText,
+  ExternalLink,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { applicationsAPI, Application } from '../api/applications';
@@ -70,6 +73,9 @@ export default function ApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [offerActionLoading, setOfferActionLoading] = useState<string | null>(null);
+  const [offerLinkLoading, setOfferLinkLoading] = useState<string | null>(null);
+  const [offerMessage, setOfferMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     fetchApplications();
@@ -80,6 +86,10 @@ export default function ApplicationsPage() {
       setLoading(true);
       const apps = await applicationsAPI.getApplicationsByCandidate();
       setApplications(apps);
+      if (selectedApplication) {
+        const updated = apps.find((a: Application) => a._id === selectedApplication._id);
+        if (updated) setSelectedApplication(updated);
+      }
     } catch (err) {
       console.error('Failed to fetch applications:', err);
       setError('Failed to load applications. Please try again.');
@@ -409,6 +419,104 @@ export default function ApplicationsPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Offer Letter card - for HIRED with offer sent */}
+                    {selectedApplication.status === 'HIRED' && selectedApplication.offerLetterUrl && (
+                      <div className="mt-6 p-6 bg-emerald-50 rounded-xl border border-emerald-200">
+                        <h4 className="text-lg font-semibold text-emerald-900 mb-2 flex items-center">
+                          <FileText className="h-5 w-5 mr-2" />
+                          Offer Letter
+                        </h4>
+                        {selectedApplication.offerSentAt && (
+                          <p className="text-sm text-emerald-700 mb-3">
+                            Offer letter sent on {formatDate(selectedApplication.offerSentAt)}
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!selectedApplication?.offerLetterUrl) return;
+                            setOfferLinkLoading(selectedApplication._id);
+                            setOfferMessage(null);
+                            try {
+                              const { downloadUrl } = await applicationsAPI.getOfferDownloadLink(selectedApplication._id);
+                              window.open(downloadUrl, '_blank', 'noopener,noreferrer');
+                            } catch (e: any) {
+                              setOfferMessage({ type: 'error', text: e.message || 'Could not open offer letter.' });
+                            } finally {
+                              setOfferLinkLoading(null);
+                            }
+                          }}
+                          disabled={offerLinkLoading === selectedApplication._id}
+                          className="inline-flex items-center text-sky-600 hover:text-sky-700 font-medium text-sm mb-4 disabled:opacity-50"
+                        >
+                          {offerLinkLoading === selectedApplication._id ? (
+                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          ) : (
+                            <ExternalLink className="h-4 w-4 mr-1" />
+                          )}
+                          View offer letter (PDF)
+                        </button>
+                        {offerMessage && (
+                          <div className={`mb-3 text-sm ${offerMessage.type === 'success' ? 'text-emerald-700' : 'text-red-600'}`}>
+                            {offerMessage.text}
+                          </div>
+                        )}
+                        {selectedApplication.offerAccepted === null || selectedApplication.offerAccepted === undefined ? (
+                          <div className="flex gap-3">
+                            <button
+                              onClick={async () => {
+                                setOfferActionLoading(selectedApplication._id);
+                                setOfferMessage(null);
+                                try {
+                                  await applicationsAPI.acceptOffer(selectedApplication._id);
+                                  setOfferMessage({ type: 'success', text: 'You have accepted the offer.' });
+                                  fetchApplications();
+                                  setSelectedApplication((prev) => prev ? { ...prev, offerAccepted: true, offerAcceptedAt: new Date().toISOString() } : null);
+                                } catch (e: any) {
+                                  setOfferMessage({ type: 'error', text: e.message || 'Failed to accept offer.' });
+                                } finally {
+                                  setOfferActionLoading(null);
+                                }
+                              }}
+                              disabled={offerActionLoading === selectedApplication._id}
+                              className="inline-flex items-center px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                              {offerActionLoading === selectedApplication._id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                              Accept Offer
+                            </button>
+                            <button
+                              onClick={async () => {
+                                setOfferActionLoading(selectedApplication._id);
+                                setOfferMessage(null);
+                                try {
+                                  await applicationsAPI.declineOffer(selectedApplication._id);
+                                  setOfferMessage({ type: 'success', text: 'You have declined the offer.' });
+                                  fetchApplications();
+                                  setSelectedApplication((prev) => prev ? { ...prev, offerAccepted: false, offerAcceptedAt: new Date().toISOString() } : null);
+                                } catch (e: any) {
+                                  setOfferMessage({ type: 'error', text: e.message || 'Failed to decline offer.' });
+                                } finally {
+                                  setOfferActionLoading(null);
+                                }
+                              }}
+                              disabled={offerActionLoading === selectedApplication._id}
+                              className="inline-flex items-center px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                            >
+                              {offerActionLoading === selectedApplication._id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
+                              Decline
+                            </button>
+                          </div>
+                        ) : (
+                          <p className="text-sm font-medium text-emerald-800">
+                            {selectedApplication.offerAccepted ? 'You have accepted this offer.' : 'You have declined this offer.'}
+                            {selectedApplication.offerAcceptedAt && (
+                              <span className="text-emerald-700 font-normal"> ({formatDate(selectedApplication.offerAcceptedAt)})</span>
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    )}
 
                     {/* Notes */}
                     {selectedApplication.notes && (
