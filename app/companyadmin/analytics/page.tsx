@@ -423,34 +423,68 @@ export default function CompanyAnalyticsPage() {
             Job-wise Application Count
           </h2>
           {jobWiseApplications.length > 0 ? (
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <RechartsPieChart margin={{ right: 140 }}>
-                  <Pie
-                    data={jobWiseApplications}
-                    dataKey="count"
-                    nameKey="name"
-                    cx="40%"
-                    cy="50%"
-                    outerRadius={70}
-                    label={false}
-                  >
-                    {jobWiseApplications.map((_, index) => (
-                      <Cell key={index} fill={['#4f46e5', '#7c3aed', '#06b6d4', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#6366f1'][index % 8]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend
-                    layout="vertical"
-                    align="right"
-                    verticalAlign="middle"
-                    wrapperStyle={{ paddingLeft: 16 }}
-                    iconSize={10}
-                    iconType="square"
-                    formatter={(value) => <span className="text-sm">{value}</span>}
-                  />
-                </RechartsPieChart>
-              </ResponsiveContainer>
+            <div className="h-80 min-w-0 relative overflow-visible flex items-stretch">
+              {/* Pie chart area - fixed width so circle never overlaps legend */}
+              <div className="flex-[0_0_42%] min-w-0 flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart margin={{ top: 24, right: 16, bottom: 56, left: 16 }}>
+                    <Pie
+                      data={jobWiseApplications}
+                      dataKey="count"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={70}
+                      label={false}
+                    >
+                      {jobWiseApplications.map((_, index) => (
+                        <Cell key={index} fill={['#4f46e5', '#7c3aed', '#06b6d4', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#6366f1'][index % 8]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }) => {
+                        if (active && payload?.length) {
+                          const p = payload[0];
+                          const name = String(p.name ?? '');
+                          const value = Number(p.value ?? 0);
+                          return (
+                            <div className="bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm">
+                              <p className="font-medium text-gray-900">{name}</p>
+                              <p className="text-gray-600">{value} application{value !== 1 ? 's' : ''}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                      wrapperStyle={{
+                        position: 'absolute',
+                        bottom: 8,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 10,
+                        outline: 'none',
+                      }}
+                      cursor={false}
+                    />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Legend - separate column so text never overlaps circle */}
+              <div className="flex-[1_1_58%] pl-4 flex flex-col justify-center border-l border-gray-100">
+                <ul className="space-y-2 list-none m-0 p-0">
+                  {jobWiseApplications.map((entry, index) => (
+                    <li key={index} className="flex items-center gap-2 text-sm">
+                      <span
+                        className="shrink-0 w-3 h-3 rounded-sm"
+                        style={{ backgroundColor: ['#4f46e5', '#7c3aed', '#06b6d4', '#f59e0b', '#10b981', '#ef4444', '#ec4899', '#6366f1'][index % 8] }}
+                      />
+                      <span className="text-gray-700 whitespace-normal break-words" title={entry.name}>
+                        {entry.name}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           ) : (
             <p className="text-gray-500 text-sm py-8 text-center">No job-wise data</p>
