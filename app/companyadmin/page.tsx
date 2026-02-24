@@ -194,8 +194,10 @@ import {
   Award,
   X,
   Upload,
-  Save
+  Save,
+  XCircle
 } from 'lucide-react';
+import { getOfferStatus, getOfferStatusLabel, getOfferStatusStyles } from '../utils/offerStatus';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { companiesAPI, jobsAPI } from '../api/companies';
 import { applicationsAPI } from '../api/applications';
@@ -333,14 +335,15 @@ export default function CompanyAdminPage() {
         count: applicationsResponse.filter((a: any) => a.jobId._id === app.jobId._id).length
       }));
 
-      // Fetch hired candidates
+      // Fetch hired candidates (with offer status)
       const hiredApplications = applicationsResponse.filter((app: any) => app.status === 'HIRED');
       const hiredCandidatesData = hiredApplications.slice(0, 5).map((app: any) => ({
         id: app._id,
         name: app.candidateId.name,
         position: app.jobId.title,
         hireDate: new Date(app.updatedAt).toLocaleDateString(),
-        email: app.candidateId.email
+        email: app.candidateId.email,
+        offerStatus: getOfferStatus(app) ?? 'not_sent'
       }));
       setHiredCandidates(hiredCandidatesData);
 
@@ -387,27 +390,9 @@ export default function CompanyAdminPage() {
 
       // Fallback hired candidates data
       setHiredCandidates([
-        {
-          id: '1',
-          name: 'John Smith',
-          position: 'Senior Frontend Developer',
-          hireDate: '2024-01-15',
-          email: 'john.smith@email.com'
-        },
-        {
-          id: '2',
-          name: 'Sarah Johnson',
-          position: 'UX Designer',
-          hireDate: '2024-01-10',
-          email: 'sarah.johnson@email.com'
-        },
-        {
-          id: '3',
-          name: 'Mike Davis',
-          position: 'Backend Developer',
-          hireDate: '2024-01-08',
-          email: 'mike.davis@email.com'
-        }
+        { id: '1', name: 'John Smith', position: 'Senior Frontend Developer', hireDate: '2024-01-15', email: 'john.smith@email.com', offerStatus: 'accepted' as const },
+        { id: '2', name: 'Sarah Johnson', position: 'UX Designer', hireDate: '2024-01-10', email: 'sarah.johnson@email.com', offerStatus: 'accepted' as const },
+        { id: '3', name: 'Mike Davis', position: 'Backend Developer', hireDate: '2024-01-08', email: 'mike.davis@email.com', offerStatus: 'accepted' as const }
       ]);
     }
   };
@@ -786,27 +771,48 @@ export default function CompanyAdminPage() {
                   )}
                 </div>
 
+                {hiredCandidates.length > 0 && (() => {
+                  const accepted = hiredCandidates.filter((c: any) => c.offerStatus === 'accepted').length;
+                  const pending = hiredCandidates.filter((c: any) => c.offerStatus === 'pending').length;
+                  const declined = hiredCandidates.filter((c: any) => c.offerStatus === 'declined').length;
+                  const notSent = hiredCandidates.filter((c: any) => c.offerStatus === 'not_sent').length;
+                  const parts = [];
+                  if (accepted) parts.push(`${accepted} accepted`);
+                  if (pending) parts.push(`${pending} pending`);
+                  if (declined) parts.push(`${declined} declined`);
+                  if (notSent) parts.push(`${notSent} offer not sent`);
+                  return parts.length > 0 ? (
+                    <p className="text-xs text-gray-500 mb-3">{parts.join(', ')}</p>
+                  ) : null;
+                })()}
+
                 <div className="space-y-4">
                   {hiredCandidates.length > 0 ? (
-                    (showAllHired ? hiredCandidates : hiredCandidates.slice(0, 2)).map((candidate) => (
-                      <div key={candidate.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
-                        <div className="flex-shrink-0">
-                          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
-                            <Award className="h-5 w-5 text-emerald-600" />
+                    (showAllHired ? hiredCandidates : hiredCandidates.slice(0, 2)).map((candidate: any) => {
+                      const offerStatus = candidate.offerStatus ?? 'not_sent';
+                      const { className, icon } = getOfferStatusStyles(offerStatus);
+                      const IconComponent = icon === 'CheckCircle' ? CheckCircle : icon === 'Clock' ? Clock : icon === 'XCircle' ? XCircle : FileText;
+                      return (
+                        <div key={candidate.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 transition-colors">
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                              <Award className="h-5 w-5 text-emerald-600" />
+                            </div>
                           </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-900">
+                              <span className="font-medium">{candidate.name}</span>
+                            </p>
+                            <p className="text-sm text-gray-600">{candidate.position}</p>
+                            <p className="text-xs text-gray-500 mt-1">Hired on {candidate.hireDate}</p>
+                          </div>
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border flex-shrink-0 ${className}`}>
+                            <IconComponent className="h-3 w-3 mr-1" />
+                            {getOfferStatusLabel(offerStatus)}
+                          </span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900">
-                            <span className="font-medium">{candidate.name}</span>
-                          </p>
-                          <p className="text-sm text-gray-600">{candidate.position}</p>
-                          <p className="text-xs text-gray-500 mt-1">Hired on {candidate.hireDate}</p>
-                        </div>
-                        <div className="bg-emerald-100 text-emerald-800 text-xs font-medium px-2 py-1 rounded-full">
-                          Hired
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="text-center py-8">
                       <Award className="h-12 w-12 text-gray-300 mx-auto mb-3" />

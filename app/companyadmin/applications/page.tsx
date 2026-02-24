@@ -6,6 +6,7 @@ import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText
 import { applicationsAPI, Application } from '../../api/applications';
 import { roundsAPI, MCQResponse, RoundEvaluation, EvaluationStatus, Round } from '../../api/rounds';
 import { API_BASE_URL, getFileUrl } from '../../api/config';
+import { getOfferStatus, getOfferStatusLabel, getOfferStatusStyles } from '../../utils/offerStatus';
 import KanbanBoard from '../../components/KanbanBoard';
 import Loader from '../../components/Loader';
 
@@ -420,6 +421,9 @@ export default function ApplicationsPage() {
                         Status
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Offer status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Applied Date
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -455,6 +459,20 @@ export default function ApplicationsPage() {
                             {getStatusIcon(application.status)}
                             <span className="ml-1">{application.status}</span>
                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {(() => {
+                            const offerStatus = getOfferStatus(application);
+                            if (offerStatus === null) return <span className="text-gray-400">—</span>;
+                            const { className, icon } = getOfferStatusStyles(offerStatus);
+                            const IconComponent = icon === 'CheckCircle' ? CheckCircle : icon === 'Clock' ? Clock : icon === 'XCircle' ? XCircle : FileText;
+                            return (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${className}`}>
+                                <IconComponent className="h-3 w-3 mr-1" />
+                                {getOfferStatusLabel(offerStatus)}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {new Date(application.createdAt).toLocaleDateString()}
@@ -703,6 +721,42 @@ export default function ApplicationsPage() {
                     <p className="text-sm text-gray-900">{selectedApplication.jobId.title}</p>
                   </div>
                 </div>
+
+                {/* Offer letter – HIRED only */}
+                {selectedApplication.status === 'HIRED' && (
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-3">Offer letter</h3>
+                    {!selectedApplication.offerLetterUrl ? (
+                      <p className="text-sm text-gray-600">Offer letter has not been sent yet. Send the offer from the Applications board (Hired column).</p>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-700">
+                          Sent on {selectedApplication.offerSentAt ? new Date(selectedApplication.offerSentAt).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—'}.
+                        </p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium text-gray-700">Status:</span>
+                          {(() => {
+                            const offerStatus = getOfferStatus(selectedApplication);
+                            if (!offerStatus) return null;
+                            const { className, icon } = getOfferStatusStyles(offerStatus);
+                            const IconComponent = icon === 'CheckCircle' ? CheckCircle : icon === 'Clock' ? Clock : icon === 'XCircle' ? XCircle : FileText;
+                            return (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${className}`}>
+                                <IconComponent className="h-3 w-3 mr-1" />
+                                {getOfferStatusLabel(offerStatus)}
+                              </span>
+                            );
+                          })()}
+                        </div>
+                        {(selectedApplication.offerAccepted === true || selectedApplication.offerAccepted === false) && selectedApplication.offerAcceptedAt && (
+                          <p className="text-sm text-gray-600">
+                            Responded on {new Date(selectedApplication.offerAcceptedAt).toLocaleDateString(undefined, { dateStyle: 'medium' })}.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Cover Letter */}
                 {selectedApplication.coverLetter && (
