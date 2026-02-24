@@ -13,7 +13,8 @@ import {
   Users,
   X,
   Home,
-  UserCheck
+  UserCheck,
+  ClipboardCheck
 } from 'lucide-react';
 import CompanyAdminHeader from '../components/companyadmin/Header';
 import CompanyAdminSidebar from '../components/companyadmin/Sidebar';
@@ -29,6 +30,7 @@ const sidebarItems: SidebarItem[] = [
   { name: 'Jobs', href: '/companyadmin/jobs', icon: Briefcase },
   { name: 'Applications', href: '/companyadmin/applications', icon: FileText },
   { name: 'Candidates', href: '/companyadmin/candidates', icon: UserCheck },
+  { name: 'Onboarding', href: '/companyadmin/onboarding', icon: ClipboardCheck },
   { name: 'Analytics', href: '/companyadmin/analytics', icon: BarChart3 },
   { name: 'Settings', href: '/companyadmin/settings', icon: Settings },
   { name: 'Team Management', href: '/companyadmin/team', icon: Users },

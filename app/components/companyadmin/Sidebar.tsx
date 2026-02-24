@@ -16,7 +16,8 @@ import {
   X,
   Home,
   UserCheck,
-  User
+  User,
+  ClipboardCheck
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -31,6 +32,7 @@ const sidebarItems: SidebarItem[] = [
   { name: 'Interview Management', href: '/companyadmin/interviews', icon: Users },
   { name: 'Applications', href: '/companyadmin/applications', icon: FileText },
   { name: 'Candidates', href: '/companyadmin/candidates', icon: UserCheck },
+  { name: 'Onboarding', href: '/companyadmin/onboarding', icon: ClipboardCheck },
   { name: 'Analytics', href: '/companyadmin/analytics', icon: BarChart3 },
   { name: 'Team Management', href: '/companyadmin/team', icon: Users },
 ];

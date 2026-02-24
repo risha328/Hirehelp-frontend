@@ -49,6 +49,11 @@ export interface Application {
     jobTitle?: string;
     candidateName?: string;
   };
+  joiningDate?: string;
+  onboardingProgress?: number;
+  documentStatus?: 'pending' | 'completed';
+  backgroundVerificationStatus?: string;
+  convertedToEmployee?: boolean;
 }
 
 export interface CreateApplicationDto {
@@ -223,6 +228,18 @@ export const applicationsAPI = {
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to get offer letter link');
+    }
+    return response.json();
+  },
+
+  convertToEmployee: async (applicationId: string): Promise<Application> => {
+    const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/convert-to-employee`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to convert to employee');
     }
     return response.json();
   },
