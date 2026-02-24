@@ -107,12 +107,12 @@ export default function CompanyAnalyticsPage() {
 
   const summaryCards = useMemo((): SummaryCards => {
     const inInterview = applications.filter((a) => a.status === 'UNDER_REVIEW').length;
-    const offers = applications.filter((a) => a.status === 'SHORTLISTED').length;
+    const offersReleased = applications.filter((a) => a.offerSentAt != null || !!a.offerLetterUrl).length;
     const hires = applications.filter((a) => a.status === 'HIRED').length;
     return {
       totalApplications: applications.length,
       candidatesInInterview: inInterview,
-      offersReleased: offers,
+      offersReleased,
       hiresCompleted: hires,
     };
   }, [applications]);
