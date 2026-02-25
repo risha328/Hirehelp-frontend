@@ -2,10 +2,38 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { User, Mail, Briefcase, Calendar, Eye, ClipboardCheck, ExternalLink, CheckCircle, Loader2 } from 'lucide-react';
-import { applicationsAPI, Application } from '../../api/applications';
+import { User, Mail, Briefcase, Calendar, Eye, ClipboardCheck, ExternalLink, CheckCircle, Loader2, ChevronRight } from 'lucide-react';
+import { applicationsAPI, Application, OnboardingPhase } from '../../api/applications';
 import { companiesAPI } from '../../api/companies';
 import Loader from '../../components/Loader';
+
+function getPhaseLabel(phase: OnboardingPhase | undefined): string {
+  if (!phase) return 'Pre-Joining';
+  const labels: Record<OnboardingPhase, string> = {
+    PRE_JOINING: 'Pre-Joining',
+    READY_TO_JOIN: 'Ready to Join',
+    CONVERTED: 'Converted',
+  };
+  return labels[phase] || phase;
+}
+
+function getPhaseBadgeClass(phase: OnboardingPhase | undefined): string {
+  if (!phase || phase === 'PRE_JOINING') return 'bg-amber-100 text-amber-800';
+  if (phase === 'READY_TO_JOIN') return 'bg-green-100 text-green-800';
+  return 'bg-blue-100 text-blue-800';
+}
+
+function getBgVerificationLabel(status: string | undefined): string {
+  if (!status) return 'Not Initiated';
+  const labels: Record<string, string> = {
+    NOT_INITIATED: 'Not Initiated',
+    IN_PROGRESS: 'In Progress',
+    VERIFIED: 'Verified',
+    FAILED: 'Failed',
+    pending: 'Not Initiated',
+  };
+  return labels[status] || status.replace(/_/g, ' ');
+}
 
 function getJoiningDate(app: Application): Date | null {
   if (app.joiningDate) {
@@ -157,6 +185,9 @@ export default function OnboardingPage() {
                       Job Title
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Phase
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Joining Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -205,6 +236,11 @@ export default function OnboardingPage() {
                             {app.jobId.title}
                           </div>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${getPhaseBadgeClass(app.onboardingPhase)}`}>
+                            {getPhaseLabel(app.onboardingPhase)}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           {joiningDate ? joiningDate.toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—'}
                         </td>
@@ -214,22 +250,38 @@ export default function OnboardingPage() {
                             {formatDate(app.offerAcceptedAt)}
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          {app.onboardingProgress ?? 0}%
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 min-w-[80px]">
+                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-indigo-600 rounded-full transition-all"
+                                style={{ width: `${app.onboardingProgress ?? 0}%` }}
+                              />
+                            </div>
+                            <span className="text-xs font-medium text-gray-600 tabular-nums">{app.onboardingProgress ?? 0}%</span>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${app.documentStatus === 'completed' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
                             {app.documentStatus === 'completed' ? 'Completed' : 'Pending'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 capitalize">
-                          {app.backgroundVerificationStatus || 'Pending'}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {getBgVerificationLabel(app.backgroundVerificationStatus)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex items-center justify-end gap-2">
                             <Link
+                              href={`/companyadmin/onboarding/${app._id}`}
+                              className="inline-flex items-center justify-center px-2 py-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 font-medium"
+                              title="Manage onboarding"
+                            >
+                              Manage
+                              <ChevronRight className="h-4 w-4 ml-0.5" />
+                            </Link>
+                            <Link
                               href={`/companyadmin/candidates/${app.candidateId._id}`}
-                              className="inline-flex items-center justify-center p-1.5 rounded-lg text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 cursor-pointer"
+                              className="inline-flex items-center justify-center p-1.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 cursor-pointer"
                               title="View profile"
                             >
                               <Eye className="h-4 w-4" />
@@ -239,7 +291,7 @@ export default function OnboardingPage() {
                                 <CheckCircle className="h-4 w-4 mr-1" />
                                 Welcome email sent
                               </span>
-                            ) : joiningReached ? (
+                            ) : joiningReached && app.onboardingPhase === 'READY_TO_JOIN' ? (
                               <button
                                 type="button"
                                 onClick={() => handleConvertToEmployee(app._id)}
@@ -251,6 +303,8 @@ export default function OnboardingPage() {
                                 ) : null}
                                 Convert to Employee
                               </button>
+                            ) : app.onboardingPhase === 'READY_TO_JOIN' && !joiningReached ? (
+                              <span className="text-amber-600 text-xs">Complete docs &amp; verification, then wait for joining date</span>
                             ) : (
                               <span className="text-gray-400 text-xs">After joining date</span>
                             )}
