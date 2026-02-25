@@ -25,7 +25,7 @@ import {
   ClipboardCheck
 } from 'lucide-react';
 import Link from 'next/link';
-import { applicationsAPI, Application } from '../api/applications';
+import { applicationsAPI, Application, OnboardingDocumentItem, OnboardingDocumentType } from '../api/applications';
 import { getFileUrl } from '../api/config';
 
 const statusConfig = {
@@ -69,6 +69,25 @@ const statusConfig = {
 
 const statusOrder = ['APPLIED', 'UNDER_REVIEW', 'SHORTLISTED', 'HOLD', 'HIRED', 'REJECTED'];
 
+const DOCUMENT_TYPE_LABELS: Record<OnboardingDocumentType, string> = {
+  GOVERNMENT_ID: 'Government ID',
+  ADDRESS_PROOF: 'Address Proof',
+  ACADEMIC_CERTIFICATES: 'Academic Certificates',
+  RESUME: 'Resume',
+  PHOTO: 'Photo',
+};
+
+function getDocStatusLabel(status: string): string {
+  const labels: Record<string, string> = {
+    NOT_UPLOADED: 'Not uploaded',
+    UPLOADED: 'Uploaded',
+    UNDER_REVIEW: 'Under review',
+    APPROVED: 'Approved',
+    REJECTED: 'Rejected',
+  };
+  return labels[status] || status;
+}
+
 export default function ApplicationsPage() {
   const router = useRouter();
   const [applications, setApplications] = useState<Application[]>([]);
@@ -78,10 +97,34 @@ export default function ApplicationsPage() {
   const [offerActionLoading, setOfferActionLoading] = useState<string | null>(null);
   const [offerLinkLoading, setOfferLinkLoading] = useState<string | null>(null);
   const [offerMessage, setOfferMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [onboardingDocs, setOnboardingDocs] = useState<OnboardingDocumentItem[]>([]);
+  const [onboardingDocsLoading, setOnboardingDocsLoading] = useState(false);
+  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchApplications();
   }, []);
+
+  useEffect(() => {
+    if (!selectedApplication?._id || selectedApplication.status !== 'HIRED' || selectedApplication.offerAccepted !== true) {
+      setOnboardingDocs([]);
+      return;
+    }
+    let cancelled = false;
+    setOnboardingDocsLoading(true);
+    applicationsAPI
+      .getOnboardingDocuments(selectedApplication._id)
+      .then((docs) => {
+        if (!cancelled) setOnboardingDocs(docs);
+      })
+      .catch(() => {
+        if (!cancelled) setOnboardingDocs([]);
+      })
+      .finally(() => {
+        if (!cancelled) setOnboardingDocsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [selectedApplication?._id, selectedApplication?.status, selectedApplication?.offerAccepted]);
 
   const fetchApplications = async () => {
     try {
@@ -218,31 +261,31 @@ export default function ApplicationsPage() {
                             <div className="flex items-start space-x-3">
                               <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
                                 <img
-                                  src={getFileUrl(application.jobId.companyId.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(application.jobId.companyId.name)}&backgroundColor=6366f1`}
-                                  alt={application.jobId.companyId.name}
+                                  src={getFileUrl(application.jobId?.companyId?.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(application.jobId?.companyId?.name || application.companyId?.name || 'Company')}&backgroundColor=6366f1`}
+                                  alt={application.jobId?.companyId?.name || application.companyId?.name || 'Company'}
                                   className="w-10 h-10"
                                   onError={(e) => {
-                                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(application.jobId.companyId.name)}`;
+                                    (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(application.jobId?.companyId?.name || application.companyId?.name || 'Company')}`;
                                   }}
                                 />
                               </div>
 
                               <div className="flex-1 min-w-0">
                                 <h3 className="text-lg font-semibold text-gray-900 truncate">
-                                  {application.jobId.title}
+                                  {application.jobId?.title}
                                 </h3>
                                 <div className="flex items-center text-gray-600 mt-1">
                                   <Building className="h-4 w-4 mr-1" />
-                                  <span className="font-medium">{application.jobId.companyId.name}</span>
+                                  <span className="font-medium">{application.jobId?.companyId?.name || application.companyId?.name}</span>
                                 </div>
                                 <div className="flex items-center text-sm text-gray-500 mt-2 space-x-4">
                                   <span className="flex items-center">
                                     <MapPin className="h-3 w-3 mr-1" />
-                                    {application.jobId.location}
+                                    {application.jobId?.location}
                                   </span>
                                   <span className="flex items-center">
                                     <DollarSign className="h-3 w-3 mr-1" />
-                                    {application.jobId.salary}
+                                    {application.jobId?.salary}
                                   </span>
                                 </div>
                               </div>
@@ -281,29 +324,29 @@ export default function ApplicationsPage() {
                       <div className="flex items-start space-x-4">
                         <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200">
                           <img
-                            src={getFileUrl(selectedApplication.jobId.companyId.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(selectedApplication.jobId.companyId.name)}&backgroundColor=6366f1`}
-                            alt={selectedApplication.jobId.companyId.name}
+                            src={getFileUrl(selectedApplication.jobId?.companyId?.logoUrl) || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(selectedApplication.jobId?.companyId?.name || selectedApplication.companyId?.name || 'Company')}&backgroundColor=6366f1`}
+                            alt={selectedApplication.jobId?.companyId?.name || selectedApplication.companyId?.name || 'Company'}
                             className="w-14 h-14"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(selectedApplication.jobId.companyId.name)}`;
+                              (e.target as HTMLImageElement).src = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(selectedApplication.jobId?.companyId?.name || selectedApplication.companyId?.name || 'Company')}`;
                             }}
                           />
                         </div>
 
                         <div className="flex-1">
-                          <h3 className="text-2xl font-bold text-gray-900">{selectedApplication.jobId.title}</h3>
+                          <h3 className="text-2xl font-bold text-gray-900">{selectedApplication.jobId?.title}</h3>
                           <div className="flex items-center text-gray-600 mt-2">
                             <Building className="h-5 w-5 mr-2" />
-                            <span className="text-lg font-medium">{selectedApplication.jobId.companyId.name}</span>
+                            <span className="text-lg font-medium">{selectedApplication.jobId?.companyId?.name || selectedApplication.companyId?.name}</span>
                           </div>
                           <div className="flex items-center text-gray-500 mt-2 space-x-4">
                             <span className="flex items-center">
                               <MapPin className="h-4 w-4 mr-1" />
-                              {selectedApplication.jobId.location}
+                              {selectedApplication.jobId?.location}
                             </span>
                             <span className="flex items-center">
                               <DollarSign className="h-4 w-4 mr-1" />
-                              {selectedApplication.jobId.salary}
+                              {selectedApplication.jobId?.salary}
                             </span>
                             <span className="flex items-center">
                               <Calendar className="h-4 w-4 mr-1" />
@@ -520,30 +563,88 @@ export default function ApplicationsPage() {
                       </div>
                     )}
 
-                    {/* Onboarding – Document upload (shown when converted to employee) */}
-                    {selectedApplication.status === 'HIRED' &&
-                      selectedApplication.offerAccepted === true &&
-                      selectedApplication.convertedToEmployee === true && (
+                    {/* Onboarding – Document upload (shown when offer accepted, pre-joining) */}
+                    {selectedApplication.status === 'HIRED' && selectedApplication.offerAccepted === true && (
                       <div className="mt-6 p-6 bg-sky-50 rounded-xl border border-sky-200">
                         <h4 className="text-lg font-semibold text-sky-900 mb-2 flex items-center">
                           <ClipboardCheck className="h-5 w-5 mr-2" />
                           Onboarding – Document upload
                         </h4>
                         <p className="text-sm text-sky-800 mb-4">
-                          Welcome! Your employer has started your onboarding. You can complete required documentation, upload identity and employment documents, and review company policies here.
+                          Upload the required documents below. Your HR team will review them before your joining date.
                         </p>
-                        <div className="rounded-lg border border-sky-200 bg-white p-4">
-                          <p className="text-sm text-gray-600 mb-3">
-                            Upload required documents (e.g. ID proof, previous employment letters). Document storage will be available once configured.
-                          </p>
-                          <label className="inline-flex items-center gap-2 px-4 py-2 bg-sky-100 text-sky-800 rounded-lg cursor-pointer hover:bg-sky-200 text-sm font-medium">
-                            <Upload className="h-4 w-4" />
-                            Choose files
-                            <input type="file" multiple className="sr-only" disabled title="Document upload will be available when storage is configured" />
-                          </label>
-                          <p className="text-xs text-gray-500 mt-2">
-                            Document upload will be available here once storage is configured. Contact your HR team if you need to submit documents urgently.
-                          </p>
+                        <div className="rounded-lg border border-sky-200 bg-white p-4 space-y-4">
+                          {onboardingDocsLoading ? (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              Loading checklist...
+                            </div>
+                          ) : onboardingDocs.length === 0 ? (
+                            <p className="text-sm text-gray-500">No document checklist yet. It will appear shortly after you accept the offer.</p>
+                          ) : (
+                            <ul className="space-y-3">
+                              {onboardingDocs.map((doc) => (
+                                <li key={doc._id} className="flex items-center justify-between gap-4 py-2 border-b border-gray-100 last:border-0">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-gray-900">{DOCUMENT_TYPE_LABELS[doc.documentType]}</p>
+                                    <p className="text-xs text-gray-500">{getDocStatusLabel(doc.status)}</p>
+                                    {doc.rejectedReason && (
+                                      <p className="text-xs text-red-600 mt-0.5">Reason: {doc.rejectedReason}</p>
+                                    )}
+                                    {doc.fileUrl && (
+                                      <a
+                                        href={doc.fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center text-xs text-indigo-600 hover:underline mt-1"
+                                      >
+                                        View uploaded file <ExternalLink className="h-3 w-3 ml-0.5" />
+                                      </a>
+                                    )}
+                                  </div>
+                                  <div className="flex-shrink-0">
+                                    {(doc.status === 'NOT_UPLOADED' || doc.status === 'REJECTED') && (
+                                      <label className="inline-flex items-center gap-2 px-3 py-1.5 bg-sky-100 text-sky-800 rounded-lg cursor-pointer hover:bg-sky-200 text-sm font-medium">
+                                        {uploadingDocId === doc._id ? (
+                                          <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                          <Upload className="h-4 w-4" />
+                                        )}
+                                        {uploadingDocId === doc._id ? 'Uploading...' : 'Upload'}
+                                        <input
+                                          type="file"
+                                          className="sr-only"
+                                          accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                          onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file || !selectedApplication) return;
+                                            setUploadingDocId(doc._id);
+                                            try {
+                                              await applicationsAPI.uploadOnboardingDocument(selectedApplication._id, doc._id, file);
+                                              const docs = await applicationsAPI.getOnboardingDocuments(selectedApplication._id);
+                                              setOnboardingDocs(docs);
+                                              const updated = await applicationsAPI.getApplicationById(selectedApplication._id);
+                                              setSelectedApplication(updated);
+                                            } catch (err) {
+                                              console.error(err);
+                                            } finally {
+                                              setUploadingDocId(null);
+                                              e.target.value = '';
+                                            }
+                                          }}
+                                        />
+                                      </label>
+                                    )}
+                                    {(doc.status === 'APPROVED' || doc.status === 'UPLOADED' || doc.status === 'UNDER_REVIEW') && (
+                                      <span className="text-xs font-medium text-gray-500">
+                                        {doc.status === 'APPROVED' ? 'Approved' : 'Pending review'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
                       </div>
                     )}

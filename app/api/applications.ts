@@ -1,5 +1,40 @@
 import { API_BASE_URL } from './config';
 
+/** Onboarding phase (derived): PRE_JOINING | READY_TO_JOIN | CONVERTED */
+export type OnboardingPhase = 'PRE_JOINING' | 'READY_TO_JOIN' | 'CONVERTED';
+
+/** Background verification status */
+export type BackgroundVerificationStatus = 'NOT_INITIATED' | 'IN_PROGRESS' | 'VERIFIED' | 'FAILED';
+
+/** Onboarding document type */
+export type OnboardingDocumentType =
+  | 'GOVERNMENT_ID'
+  | 'ADDRESS_PROOF'
+  | 'ACADEMIC_CERTIFICATES'
+  | 'RESUME'
+  | 'PHOTO';
+
+/** Onboarding document status */
+export type OnboardingDocumentStatus =
+  | 'NOT_UPLOADED'
+  | 'UPLOADED'
+  | 'UNDER_REVIEW'
+  | 'APPROVED'
+  | 'REJECTED';
+
+export interface OnboardingDocumentItem {
+  _id: string;
+  applicationId: string;
+  documentType: OnboardingDocumentType;
+  status: OnboardingDocumentStatus;
+  fileUrl?: string;
+  rejectedReason?: string;
+  reviewedAt?: string;
+  uploadedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface Application {
   _id: string;
   candidateId: {
@@ -54,6 +89,8 @@ export interface Application {
   documentStatus?: 'pending' | 'completed';
   backgroundVerificationStatus?: string;
   convertedToEmployee?: boolean;
+  /** Derived phase for onboarding list/detail */
+  onboardingPhase?: OnboardingPhase;
 }
 
 export interface CreateApplicationDto {
@@ -240,6 +277,79 @@ export const applicationsAPI = {
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to convert to employee');
+    }
+    return response.json();
+  },
+
+  getOnboardingDocuments: async (applicationId: string): Promise<OnboardingDocumentItem[]> => {
+    const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/onboarding-documents`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to fetch onboarding documents');
+    }
+    return response.json();
+  },
+
+  uploadOnboardingDocument: async (
+    applicationId: string,
+    documentId: string,
+    file: File,
+  ): Promise<OnboardingDocumentItem> => {
+    const token = localStorage.getItem('access_token');
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(
+      `${API_BASE_URL}/applications/${applicationId}/onboarding-documents/${documentId}/upload`,
+      {
+        method: 'POST',
+        headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+        body: formData,
+      },
+    );
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to upload document');
+    }
+    return response.json();
+  },
+
+  reviewOnboardingDocument: async (
+    applicationId: string,
+    documentId: string,
+    status: 'APPROVED' | 'REJECTED',
+    rejectedReason?: string,
+  ): Promise<OnboardingDocumentItem> => {
+    const response = await fetch(
+      `${API_BASE_URL}/applications/${applicationId}/onboarding-documents/${documentId}/review`,
+      {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status, rejectedReason }),
+      },
+    );
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to review document');
+    }
+    return response.json();
+  },
+
+  updateBackgroundVerification: async (
+    applicationId: string,
+    status: BackgroundVerificationStatus,
+    options?: { notes?: string; failedReason?: string },
+  ): Promise<Application> => {
+    const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/background-verification`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status, notes: options?.notes, failedReason: options?.failedReason }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to update background verification');
     }
     return response.json();
   },
