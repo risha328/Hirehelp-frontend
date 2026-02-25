@@ -617,7 +617,7 @@ function JobsPageContent() {
           {/* Jobs List */}
           <div className="lg:col-span-3">
             {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900">
                   {totalJobs} Job{totalJobs !== 1 ? 's' : ''} Found
@@ -628,9 +628,12 @@ function JobsPageContent() {
                     : 'No jobs match your filters'}
                 </p>
               </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-gray-500 text-sm">Sort by:</span>
-                <select className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Sort by:</span>
+                <select
+                  className="border border-gray-300 rounded-lg px-4 py-2 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent min-w-[180px]"
+                  aria-label="Sort jobs"
+                >
                   <option>Most Relevant</option>
                   <option>Newest</option>
                   <option>Salary: High to Low</option>

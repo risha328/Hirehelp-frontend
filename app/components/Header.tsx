@@ -20,6 +20,8 @@ export default function TransparentHeader() {
 
   const currentUser = user;
 
+  const hideApplicationsLink = currentUser?.role === 'COMPANY_ADMIN' || currentUser?.role === 'SUPER_ADMIN';
+
   // Handle scroll effect for transparency
   useEffect(() => {
     const handleScroll = () => {
@@ -213,14 +215,16 @@ export default function TransparentHeader() {
                       <User className="h-4 w-4 mr-2" />
                       <span className="text-sm font-medium">Profile</span>
                     </Link>
-                    <Link
-                      href="/applications"
-                      onClick={() => setIsProfileDropdownOpen(false)}
-                      className="flex items-center px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
-                    >
-                      <Briefcase className="h-4 w-4 mr-2" />
-                      <span className="text-sm font-medium">Your Applications</span>
-                    </Link>
+                    {!hideApplicationsLink && (
+                      <Link
+                        href="/applications"
+                        onClick={() => setIsProfileDropdownOpen(false)}
+                        className="flex items-center px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
+                      >
+                        <Briefcase className="h-4 w-4 mr-2" />
+                        <span className="text-sm font-medium">Your Applications</span>
+                      </Link>
+                    )}
                     <button
                       onClick={async () => {
                         await logout();
