@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Search,
@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SplitText from './animations/SplitText';
 
 export default function Hero() {
+  const router = useRouter();
   const stats = [
     { value: '50K+', label: 'Active Jobs' },
     { value: '10K+', label: 'Companies' },
@@ -98,8 +99,10 @@ export default function Hero() {
           <div className="mb-16">
             <SearchBar
               onSearch={(data) => {
-                console.log('Hero Search:', data);
-                // Handle search routing here if needed
+                const params = new URLSearchParams();
+                if (data.query?.trim()) params.set('search', data.query.trim());
+                if (data.location?.trim()) params.set('location', data.location.trim());
+                router.push(`/jobs?${params.toString()}`);
               }}
             />
           </div>

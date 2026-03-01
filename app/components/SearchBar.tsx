@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Search, MapPin, Briefcase, Filter, ChevronDown, Sparkles } from 'lucide-react';
 
 interface SearchBarProps {
@@ -33,19 +33,22 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
         'Full Stack'
     ];
 
-    const [isLoading, setIsLoading] = useState(false);
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
-
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-
         if (onSearch) {
             onSearch({ query, location, category });
         }
-        setIsLoading(false);
+    };
+
+    const handleTrendingClick = (item: string) => {
+        if (item === 'Remote') {
+            setLocation('Remote');
+            setQuery('');
+            if (onSearch) onSearch({ query: '', location: 'Remote', category: '' });
+        } else {
+            setQuery(item);
+            if (onSearch) onSearch({ query: item, location, category });
+        }
     };
 
     return (
@@ -120,34 +123,15 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
 
                     {/* Search Button */}
                     <motion.button
-                        disabled={isLoading}
                         whileHover={{ scale: 1.02, boxShadow: '0 10px 25px -5px rgba(14, 165, 233, 0.4)' }}
                         whileTap={{ scale: 0.98 }}
                         type="submit"
                         className="md:ml-2 px-8 py-4 bg-gradient-to-r from-sky-600 to-blue-700 text-white font-bold rounded-xl shadow-lg shadow-sky-500/30 flex items-center justify-center gap-2 group transition-all duration-300 relative overflow-hidden disabled:opacity-80"
                     >
-                        <AnimatePresence mode="wait">
-                            {isLoading ? (
-                                <motion.div
-                                    key="loading"
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                                />
-                            ) : (
-                                <motion.div
-                                    key="content"
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    exit={{ opacity: 0, scale: 0.8 }}
-                                    className="flex items-center gap-2"
-                                >
-                                    <Search className="h-5 w-5 group-hover:scale-110 transition-transform" />
-                                    <span>Search</span>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        <div className="flex items-center gap-2">
+                            <Search className="h-5 w-5 group-hover:scale-110 transition-transform" />
+                            <span>Search</span>
+                        </div>
                         <motion.div
                             className="absolute inset-0 bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"
                         />
@@ -166,11 +150,12 @@ export default function SearchBar({ onSearch }: SearchBarProps) {
                 {popularSearches.map((item, idx) => (
                     <motion.button
                         key={item}
+                        type="button"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 1 + idx * 0.1 }}
                         whileHover={{ y: -2, backgroundColor: 'rgba(255, 255, 255, 0.25)' }}
-                        onClick={() => setQuery(item)}
+                        onClick={() => handleTrendingClick(item)}
                         className="px-5 py-2 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 text-white text-sm font-medium hover:border-white/50 transition-all duration-200 shadow-sm"
                     >
                         {item}
