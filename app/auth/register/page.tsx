@@ -17,9 +17,11 @@ import {
   XCircle
 } from 'lucide-react';
 import { authAPI, RegisterData } from '../../api/auth';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { loginWithResponse } = useAuth();
   const [prefix, setPrefix] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -89,14 +91,8 @@ export default function RegisterPage() {
 
       const response = await authAPI.register(registerData);
 
-      // Store tokens in localStorage
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
-
-      // Store user data for quick access
-      if (response.user) {
-        localStorage.setItem('user', JSON.stringify(response.user));
-      }
+      // Update auth context and storage so header shows user immediately after redirect
+      loginWithResponse(response);
 
       // Redirect based on user role
       if (response.user.role === 'COMPANY_ADMIN') {

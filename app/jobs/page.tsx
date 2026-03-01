@@ -97,11 +97,12 @@ function JobsPageContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
 
-  // Read query parameter on mount and when it changes
+  // Read query parameters on mount and when they change (from hero search or direct URL)
   useEffect(() => {
     const typeParam = searchParams.get('type');
+    const searchParam = searchParams.get('search');
+    const locationParam = searchParams.get('location');
     if (typeParam) {
-      // Map URL parameter to job type
       const jobTypeMap: { [key: string]: string } = {
         'remote': 'remote',
         'full-time': 'full-time',
@@ -109,11 +110,12 @@ function JobsPageContent() {
         'contract': 'contract',
         'internship': 'internship'
       };
-      
       if (jobTypeMap[typeParam]) {
         setActiveJobType(jobTypeMap[typeParam]);
       }
     }
+    if (searchParam !== null) setSearchQuery(searchParam);
+    if (locationParam !== null) setLocation(locationParam);
   }, [searchParams]);
 
   useEffect(() => {

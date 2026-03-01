@@ -13,6 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithResponse: (response: { access_token: string; refresh_token: string; user: { id?: string; _id?: string; name?: string; email?: string; role?: string } }) => void;
   logout: () => Promise<void>;
   isLoading: boolean;
 }
@@ -103,20 +104,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await authAPI.login({ email, password });
       console.log('Login response:', response);
-      localStorage.setItem('access_token', response.access_token);
-      localStorage.setItem('refresh_token', response.refresh_token);
-      const user = {
-        id: response.user.id,
-        name: response.user.name || 'User',
-        email: response.user.email || '',
-        role: response.user.role || 'CANDIDATE',
-      };
-      localStorage.setItem('user', JSON.stringify(user));
-      setUser(user);
-      console.log('User set after login:', user);
+      loginWithResponse(response);
     } catch (error) {
       throw error;
     }
+  };
+
+  const loginWithResponse = (response: { access_token: string; refresh_token: string; user: { id?: string; _id?: string; name?: string; email?: string; role?: string } }) => {
+    localStorage.setItem('access_token', response.access_token);
+    localStorage.setItem('refresh_token', response.refresh_token);
+    const user = {
+      id: response.user?.id || response.user?._id || '',
+      name: response.user?.name || 'User',
+      email: response.user?.email || '',
+      role: response.user?.role || 'CANDIDATE',
+    };
+    localStorage.setItem('user', JSON.stringify(user));
+    setUser(user);
   };
 
   const logout = async () => {
@@ -134,6 +138,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     login,
+    loginWithResponse,
     logout,
     isLoading,
   };
