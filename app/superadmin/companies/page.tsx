@@ -478,7 +478,7 @@ export default function CompaniesPage() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && selectedCompany && confirmAction && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-md bg-black/30 flex items-center justify-center z-[100] p-4">
           <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
             <div className="p-6">
               <div className="flex items-center mb-4">
@@ -531,7 +531,7 @@ export default function CompaniesPage() {
 
       {/* View Company Details Modal */}
       {showViewModal && selectedCompanyForView && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 backdrop-blur-md bg-black/30 flex items-center justify-center z-[100] p-4">
           <div className="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-xl">
             {/* Modal Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -616,44 +616,44 @@ export default function CompaniesPage() {
                   )}
 
                   {/* Company Information */}
-                  <div className="bg-gray-50 rounded-lg p-5">
+                  <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Information</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Company ID</p>
-                        <p className="text-sm font-mono">{selectedCompanyForView._id}</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Company ID</p>
+                        <p className="text-sm font-mono text-gray-900 break-all">{selectedCompanyForView._id}</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Industry</p>
-                        <p className="text-sm">{selectedCompanyForView.industry || 'Not specified'}</p>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Industry</p>
+                        <p className="text-sm text-gray-900">{selectedCompanyForView.industry || 'Not specified'}</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Company Size</p>
-                        <p className="text-sm">{selectedCompanyForView.size || 'Not specified'}</p>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Company Size</p>
+                        <p className="text-sm text-gray-900">{selectedCompanyForView.size || 'Not specified'}</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Location</p>
-                        <p className="text-sm">{selectedCompanyForView.location || 'Not specified'}</p>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Location</p>
+                        <p className="text-sm text-gray-900">{selectedCompanyForView.location || 'Not specified'}</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Website</p>
+                      <div className="min-w-0 sm:col-span-2">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Website</p>
                         {selectedCompanyForView.website ? (
                           <a
                             href={selectedCompanyForView.website}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-sm text-blue-600 hover:underline flex items-center"
+                            className="text-sm text-blue-600 hover:underline break-all block"
                           >
-                            <Globe className="h-3 w-3 mr-1" />
+                            <Globe className="h-3 w-3 mr-1 inline" />
                             {selectedCompanyForView.website}
                           </a>
                         ) : (
                           <p className="text-sm text-gray-500">Not specified</p>
                         )}
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500 mb-1">Last Updated</p>
-                        <p className="text-sm">{formatDate(selectedCompanyForView.updatedAt)}</p>
+                      <div className="min-w-0">
+                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Last Updated</p>
+                        <p className="text-sm text-gray-900">{formatDate(selectedCompanyForView.updatedAt)}</p>
                       </div>
                     </div>
                   </div>

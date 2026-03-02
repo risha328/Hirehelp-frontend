@@ -2,12 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import {
-  FileText,
-  Plus,
-  Edit,
   Eye,
   Download,
-  Trash2,
 } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
 import { API_BASE_URL, getFileUrl } from '../../api/config';
@@ -75,10 +71,6 @@ export default function ResumesPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Resume Management</h1>
-        <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Upload Resume
-        </button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
