@@ -46,6 +46,10 @@ export default function TransparentHeader() {
   // Check if current page has blue background theme
   const hasBlueBackground = pathname === '/about' || pathname === '/contactus';
 
+  // Company pages have light gradient at top so transparent header + white text is invisible
+  const hasLightTopBackground = pathname.startsWith('/companies');
+  const useSolidHeader = isScrolled || isMenuOpen || hasLightTopBackground;
+
   // Navigation items
   const navItems = [
     { name: 'Home', href: '/', current: pathname === '/' },
@@ -79,7 +83,7 @@ export default function TransparentHeader() {
   ];
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMenuOpen
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${useSolidHeader
       ? 'bg-white shadow-md border-b border-gray-100'
       : 'bg-transparent'
       }`}>
@@ -111,10 +115,10 @@ export default function TransparentHeader() {
                       >
                         <button
                           className={`flex items-center px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${item.current
-                            ? isScrolled || isMenuOpen
+                            ? useSolidHeader
                               ? 'text-blue-600'
                               : 'text-white'
-                            : isScrolled || isMenuOpen
+                            : useSolidHeader
                               ? 'text-gray-700 hover:text-blue-600'
                               : 'text-white hover:text-white/80'
                             }`}
@@ -124,7 +128,7 @@ export default function TransparentHeader() {
                             (item.name === 'Company Lists' && isCompaniesDropdownOpen)
                             ? 'rotate-180'
                             : ''
-                            } ${isScrolled || isMenuOpen ? 'text-gray-600' : 'text-white/70'}`} />
+                            } ${useSolidHeader ? 'text-gray-600' : 'text-white/70'}`} />
                         </button>
 
                         {/* Dropdown Menu */}
@@ -167,10 +171,10 @@ export default function TransparentHeader() {
                       <Link
                         href={item.href}
                         className={`px-4 py-2.5 text-sm font-semibold transition-all duration-200 ${item.current
-                          ? isScrolled || isMenuOpen
+                          ? useSolidHeader
                             ? 'text-blue-600'
                             : 'text-white'
-                          : isScrolled || isMenuOpen
+                          : useSolidHeader
                             ? 'text-gray-700 hover:text-blue-600'
                             : 'text-white hover:text-white/80'
                           }`}
@@ -191,7 +195,7 @@ export default function TransparentHeader() {
               <div className="relative">
                 <button
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white transition-all duration-300 cursor-pointer ${isScrolled || isMenuOpen
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white transition-all duration-300 cursor-pointer ${useSolidHeader
                     ? 'bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
                     : 'bg-gradient-to-br from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600'
                     }`}
@@ -243,7 +247,7 @@ export default function TransparentHeader() {
               <>
                 <Link
                   href="/auth/login"
-                  className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${isScrolled || isMenuOpen
+                  className={`px-5 py-2.5 text-sm font-medium rounded-lg transition-all duration-300 ${useSolidHeader
                     ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
                     : 'text-white hover:text-white/80 hover:bg-white/10'
                     }`}
@@ -252,7 +256,7 @@ export default function TransparentHeader() {
                 </Link>
                 <Link
                   href="/auth/register"
-                  className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${isScrolled || isMenuOpen
+                  className={`px-6 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${useSolidHeader
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
                     : 'bg-white text-gray-900 hover:bg-gray-100'
                     }`}
@@ -261,7 +265,7 @@ export default function TransparentHeader() {
                 </Link>
                 {/* <Link
                   href="/auth/register?role=company"
-                  className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${isScrolled || isMenuOpen
+                  className={`px-5 py-2.5 text-sm font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl ${useSolidHeader
                       ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
                       : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:from-green-600 hover:to-emerald-600'
                     }`}
@@ -275,7 +279,7 @@ export default function TransparentHeader() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className={`lg:hidden p-2 rounded-lg transition-colors duration-300 ${isScrolled || isMenuOpen
+            className={`lg:hidden p-2 rounded-lg transition-colors duration-300 ${useSolidHeader
               ? 'text-gray-700 hover:text-gray-900 hover:bg-gray-100/80'
               : 'text-white hover:text-white/80 hover:bg-white/10'
               }`}

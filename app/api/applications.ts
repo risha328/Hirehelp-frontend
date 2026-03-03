@@ -134,7 +134,20 @@ export const applicationsAPI = {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to submit application');
+      let message = 'Failed to submit application';
+      try {
+        const err = await response.json();
+        const msg = err?.message;
+        if (msg) message = Array.isArray(msg) ? msg.join(', ') : msg;
+      } catch {
+        // response may not be JSON
+      }
+      if (response.status === 401) {
+        message = 'Please log in as a candidate to apply.';
+      } else if (response.status === 403) {
+        message = message || 'Only candidates can apply for this job.';
+      }
+      throw new Error(message);
     }
 
     return response.json();
