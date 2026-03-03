@@ -314,7 +314,7 @@ export default function CompanyAdminPage() {
     try {
       // Fetch recent jobs
       console.log('Fetching jobs for company:', currentCompany._id);
-      const jobsResponse = await jobsAPI.getJobsByCompany(currentCompany._id);
+      const jobsResponse = await jobsAPI.getJobsByCompany(currentCompany._id, { includeScheduled: true });
       console.log('Jobs response:', jobsResponse);
       const recentJobs = jobsResponse.slice(0, 3).map((job: any) => ({
         id: `job-${job._id}`,

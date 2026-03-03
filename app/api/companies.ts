@@ -632,14 +632,18 @@ export const jobsAPI = {
     return response.json();
   },
 
-  getJobsByCompany: async (companyId: string) => {
+  getJobsByCompany: async (companyId: string, options?: { includeScheduled?: boolean }) => {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     const token = localStorage.getItem('access_token');
     if (token && !isTokenExpired(token)) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}/jobs/company/${companyId}`, {
+    const includeScheduled = options?.includeScheduled === true;
+    const url = includeScheduled
+      ? `${API_BASE_URL}/jobs/company/${companyId}?publishedOnly=false`
+      : `${API_BASE_URL}/jobs/company/${companyId}`;
+    const response = await fetch(url, {
       method: 'GET',
       headers,
     });
