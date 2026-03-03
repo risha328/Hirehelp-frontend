@@ -90,7 +90,6 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
         experienceLevel: job.experienceLevel,
         skills: job.skills,
         applicationDeadline: job.applicationDeadline,
-        status: job.status,
         requirements: job.requirements,
       });
 
@@ -247,22 +246,6 @@ export default function EditJobModal({ isOpen, onClose, onSuccess, jobId }: Edit
                     onChange={(e) => handleJobChange('applicationDeadline', e.target.value)}
                     className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    value={job.status || ''}
-                    disabled={isPublished}
-                    onChange={(e) => handleJobChange('status', e.target.value)}
-                    className={`text-gray-900 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPublished ? 'bg-gray-50 cursor-not-allowed opacity-75' : ''}`}
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                    <option value="draft">Draft</option>
-                  </select>
                 </div>
 
                 <div className="md:col-span-2">

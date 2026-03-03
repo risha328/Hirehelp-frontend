@@ -95,7 +95,7 @@ export default function CompanyRoundsPage() {
 
         if (companyData && companyData._id) {
           console.log('Fetching jobs for company:', companyData._id);
-          const jobsData = await jobsAPI.getJobsByCompany(companyData._id);
+          const jobsData = await jobsAPI.getJobsByCompany(companyData._id, { includeScheduled: true });
           setJobs(jobsData || []);
           console.log('Jobs data:', jobsData);
 

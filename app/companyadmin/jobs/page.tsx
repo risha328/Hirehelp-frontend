@@ -83,6 +83,7 @@ export default function CompanyJobsPage() {
     status: '',
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [activeTab, setActiveTab] = useState<'active' | 'scheduled'>('active');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,7 +98,7 @@ export default function CompanyJobsPage() {
 
         if (companyData && companyData._id) {
           console.log('Fetching jobs for company:', companyData._id);
-          const jobsData = await jobsAPI.getJobsByCompany(companyData._id);
+          const jobsData = await jobsAPI.getJobsByCompany(companyData._id, { includeScheduled: true });
           setJobs(jobsData || []);
         } else {
           console.log('No company data or company ID found');
@@ -292,10 +293,13 @@ export default function CompanyJobsPage() {
         scheduledPublishAt,
       };
 
-      await jobsAPI.createJob(jobData);
+      const created = await jobsAPI.createJob(jobData);
 
-      const updatedJobs = await jobsAPI.getJobsByCompany(company._id);
-      setJobs(updatedJobs || []);
+      const updatedJobs = await jobsAPI.getJobsByCompany(company._id, { includeScheduled: true });
+      const list = updatedJobs || [];
+      // If backend returns only published jobs (e.g. old deploy), scheduled job won't be in list — add it so it stays visible
+      const hasNewJob = list.some((j: Job) => j._id === created._id);
+      setJobs(hasNewJob ? list : [{ ...created, createdAt: (created as any).createdAt || new Date().toISOString() } as Job, ...list]);
 
       setShowModal(false);
       setFormData({
@@ -362,38 +366,33 @@ export default function CompanyJobsPage() {
   };
 
   // Filter and search logic
-  const filteredJobs = jobs.filter(job => {
-    // Check if job is expired
+  const baseFilter = (job: Job) => {
     const isExpired = job.applicationDeadline ? new Date(job.applicationDeadline) < new Date(new Date().setHours(0, 0, 0, 0)) : false;
-
-    // Search query
     const matchesSearch = searchQuery === '' ||
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (job.skills && job.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase())));
-
-    // Filters
     const matchesLocation = filters.location === '' || job.location === filters.location;
     const matchesJobType = filters.jobType === '' || job.jobType === filters.jobType;
     const matchesExperienceLevel = filters.experienceLevel === '' || job.experienceLevel === filters.experienceLevel;
-
-    // Status filter: treat expired jobs as inactive
     let matchesStatus = true;
     if (filters.status !== '') {
-      if (filters.status === 'active') {
-        // Active: must be active AND not expired
-        matchesStatus = job.status === 'active' && !isExpired;
-      } else if (filters.status === 'inactive') {
-        // Inactive: either status is inactive OR job is expired
-        matchesStatus = job.status === 'inactive' || isExpired;
-      } else {
-        // Other statuses
-        matchesStatus = job.status === filters.status;
-      }
+      if (filters.status === 'active') matchesStatus = job.status === 'active' && !isExpired;
+      else if (filters.status === 'inactive') matchesStatus = job.status === 'inactive' || isExpired;
+      else matchesStatus = job.status === filters.status;
     }
-
     return matchesSearch && matchesLocation && matchesJobType && matchesExperienceLevel && matchesStatus;
-  });
+  };
+
+  const isJobPublished = (job: Job) => !!(job.status === 'active' && new Date(job.scheduledPublishAt || job.createdAt).getTime() <= Date.now());
+  const isJobScheduled = (job: Job) => !!(job.status === 'active' && job.scheduledPublishAt && new Date(job.scheduledPublishAt).getTime() > Date.now());
+
+  const activeJobs = jobs.filter(job => isJobPublished(job) && baseFilter(job));
+  const scheduledJobs = jobs.filter(job => isJobScheduled(job) && baseFilter(job));
+  const activeCount = jobs.filter(isJobPublished).length;
+  const scheduledCount = jobs.filter(isJobScheduled).length;
+
+  const filteredJobs = activeTab === 'active' ? activeJobs : scheduledJobs;
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
@@ -438,7 +437,7 @@ export default function CompanyJobsPage() {
           )}
 
           {/* Stats Card */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -455,12 +454,22 @@ export default function CompanyJobsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Active Jobs</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
-                    {jobs.filter(job => job.status === 'active').length}
-                  </p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{activeCount}</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <CheckBadgeIcon className="w-6 h-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Scheduled Jobs</p>
+                  <p className="text-3xl font-bold text-gray-900 mt-2">{scheduledCount}</p>
+                </div>
+                <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <ClockIcon className="w-6 h-6 text-amber-600" />
                 </div>
               </div>
             </div>
@@ -489,31 +498,68 @@ export default function CompanyJobsPage() {
         {/* Jobs List Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-200">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <h2 className="text-xl font-semibold text-gray-900">Current Job Listings</h2>
-
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative">
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search jobs..."
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64 text-gray-900 bg-white placeholder-gray-500"
-                  />
-                </div>
+            {/* Tabs */}
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-1 p-1 bg-gray-100 rounded-lg w-fit">
                 <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${showFilters
-                    ? 'bg-blue-50 border-blue-200 text-blue-700'
-                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
+                  type="button"
+                  onClick={() => setActiveTab('active')}
+                  className={`px-5 py-2.5 rounded-md text-sm font-medium transition-all ${activeTab === 'active'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'}`}
                 >
-                  <FunnelIcon className="w-5 h-5" />
-                  <span>Filters</span>
-                  <ChevronDownIcon className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                  <span className="flex items-center gap-2">
+                    <CheckBadgeIcon className="w-4 h-4" />
+                    Active Jobs
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'}`}>
+                      {activeCount}
+                    </span>
+                  </span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('scheduled')}
+                  className={`px-5 py-2.5 rounded-md text-sm font-medium transition-all ${activeTab === 'scheduled'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <ClockIcon className="w-4 h-4" />
+                    Scheduled Jobs
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${activeTab === 'scheduled' ? 'bg-amber-100 text-amber-700' : 'bg-gray-200 text-gray-600'}`}>
+                      {scheduledCount}
+                    </span>
+                  </span>
+                </button>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+                <p className="text-sm text-gray-500">
+                  {activeTab === 'active' ? 'Live jobs visible to candidates' : 'Jobs scheduled to publish later'}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search jobs..."
+                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-64 text-gray-900 bg-white placeholder-gray-500"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setShowFilters(!showFilters)}
+                    className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors ${showFilters
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                      }`}
+                  >
+                    <FunnelIcon className="w-5 h-5" />
+                    <span>Filters</span>
+                    <ChevronDownIcon className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -619,21 +665,39 @@ export default function CompanyJobsPage() {
             ) : filteredJobs.length === 0 ? (
               <div className="text-center py-16 px-4">
                 <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <BriefcaseIcon className="w-12 h-12 text-gray-400" />
+                  {activeTab === 'scheduled' ? (
+                    <ClockIcon className="w-12 h-12 text-gray-400" />
+                  ) : (
+                    <BriefcaseIcon className="w-12 h-12 text-gray-400" />
+                  )}
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Jobs Match Your Search</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {activeTab === 'active' ? 'No Active Jobs' : 'No Scheduled Jobs'}
+                </h3>
                 <p className="text-gray-600 max-w-md mx-auto mb-6">
-                  Try adjusting your search or filters to find more jobs.
+                  {activeTab === 'active'
+                    ? 'No live jobs match your search or filters. Try "Scheduled Jobs" or adjust filters.'
+                    : 'No jobs are scheduled to publish later. Post a job and choose "Publish Later" to add one.'}
                 </p>
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setFilters({ location: '', jobType: '', experienceLevel: '', status: '' });
-                  }}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Clear Filters
-                </button>
+                {activeTab === 'scheduled' ? (
+                  <button
+                    onClick={() => setShowModal(true)}
+                    disabled={company.verificationStatus !== 'verified'}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    Post New Job
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilters({ location: '', jobType: '', experienceLevel: '', status: '' });
+                    }}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -684,6 +748,15 @@ export default function CompanyJobsPage() {
                               <CalendarIcon className="w-4 h-4" />
                               Posted {formatDate(job.createdAt)}
                             </span>
+                            {!isPublished && job.scheduledPublishAt && (
+                              <span className="flex items-center gap-1 text-amber-700 font-medium">
+                                <ClockIcon className="w-4 h-4" />
+                                Publishes {formatDate(job.scheduledPublishAt)}
+                                {new Date(job.scheduledPublishAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) !== '12:00 AM' && (
+                                  <span> at {new Date(job.scheduledPublishAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                                )}
+                              </span>
+                            )}
                             {job.applicationDeadline && (
                               <span className={`flex items-center gap-1 ${isExpired ? 'text-red-600 font-medium' : ''}`}>
                                 <ClockIcon className="w-4 h-4" />

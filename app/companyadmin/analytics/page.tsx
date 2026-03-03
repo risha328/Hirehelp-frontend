@@ -78,7 +78,7 @@ export default function CompanyAnalyticsPage() {
 
         const [apps, jobsList] = await Promise.all([
           applicationsAPI.getApplicationsByCompany(companyId),
-          (await import('../../api/companies')).jobsAPI.getJobsByCompany(companyId),
+          (await import('../../api/companies')).jobsAPI.getJobsByCompany(companyId, { includeScheduled: true }),
         ]);
         setApplications(apps);
         setJobs(jobsList);

@@ -430,17 +430,6 @@ export default function JobDetailsPage() {
                     <span className="font-medium text-gray-900">{job.salary || 'Not specified'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Status</span>
-                    <span className={`font-medium ${isExpired
-                      ? 'text-red-600'
-                      : job.status === 'active'
-                        ? 'text-green-600'
-                        : 'text-gray-600'
-                      }`}>
-                      {isExpired ? 'Expired' : job.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
                     <span className="text-gray-600">Posted</span>
                     <span className="font-medium text-gray-900">{new Date(job.createdAt).toLocaleDateString()}</span>
                   </div>
