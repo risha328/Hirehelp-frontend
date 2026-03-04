@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Briefcase, Menu, X, ChevronDown, LogOut, User } from 'lucide-react';
+import { Briefcase, Menu, X, ChevronDown, LogOut, User, Bookmark } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function TransparentHeader() {
@@ -220,14 +220,24 @@ export default function TransparentHeader() {
                       <span className="text-sm font-medium">Profile</span>
                     </Link>
                     {!hideApplicationsLink && (
-                      <Link
-                        href="/applications"
-                        onClick={() => setIsProfileDropdownOpen(false)}
-                        className="flex items-center px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
-                      >
-                        <Briefcase className="h-4 w-4 mr-2" />
-                        <span className="text-sm font-medium">Your Applications</span>
-                      </Link>
+                      <>
+                        <Link
+                          href="/saved-jobs"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
+                        >
+                          <Bookmark className="h-4 w-4 mr-2" />
+                          <span className="text-sm font-medium">Your saved jobs</span>
+                        </Link>
+                        <Link
+                          href="/applications"
+                          onClick={() => setIsProfileDropdownOpen(false)}
+                          className="flex items-center px-4 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 transition-colors"
+                        >
+                          <Briefcase className="h-4 w-4 mr-2" />
+                          <span className="text-sm font-medium">Your Applications</span>
+                        </Link>
+                      </>
                     )}
                     <button
                       onClick={async () => {
@@ -374,6 +384,13 @@ export default function TransparentHeader() {
                     className="block w-full px-4 py-3 text-center font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg border border-gray-300/50 transition-colors"
                   >
                     Profile
+                  </Link>
+                  <Link
+                    href="/saved-jobs"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full px-4 py-3 text-center font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100/80 rounded-lg border border-gray-300/50 transition-colors"
+                  >
+                    Your saved jobs
                   </Link>
                   <Link
                     href="/dashboard"

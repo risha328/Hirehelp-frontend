@@ -191,7 +191,7 @@ export default function JobRoundsPage() {
         type = 'interview';
       }
 
-      const commonData = {
+      const commonData: any = {
         name: formData.name,
         description: formData.description,
         order: formData.order,
@@ -200,13 +200,45 @@ export default function JobRoundsPage() {
         platform: formData.platform || undefined,
         duration: formData.duration || undefined,
         googleFormLink: formData.googleFormLink || undefined,
-        // Scheduling details are now handled separately per candidate
-        interviewMode: undefined,
-        interviewType: undefined,
-        scheduledAt: undefined,
-        interviewers: undefined,
-        meetingLink: undefined,
       };
+
+      // Coding rounds: allow configuring online/offline coding test
+      if (type === 'coding') {
+        commonData.interviewMode = formData.interviewMode || 'online';
+
+        if (formData.interviewMode === 'offline') {
+          commonData.scheduling =
+            formData.scheduledDate || formData.scheduledTime || formData.reportingTime
+              ? {
+                interviewDate: formData.scheduledDate,
+                interviewTime: formData.scheduledTime,
+                reportingTime: formData.reportingTime || undefined,
+              }
+              : undefined;
+
+          commonData.locationDetails =
+            formData.venueName || formData.address || formData.city || formData.landmark
+              ? {
+                venueName: formData.venueName,
+                address: formData.address,
+                city: formData.city,
+                landmark: formData.landmark || '',
+              }
+              : undefined;
+        } else {
+          commonData.scheduling = undefined;
+          commonData.locationDetails = undefined;
+        }
+      } else {
+        // Scheduling is handled per candidate for interview-type rounds
+        commonData.interviewMode = undefined;
+        commonData.interviewType = undefined;
+        commonData.scheduledAt = undefined;
+        commonData.interviewers = undefined;
+        commonData.meetingLink = undefined;
+        commonData.scheduling = undefined;
+        commonData.locationDetails = undefined;
+      }
 
       if (editingRound) {
         await roundsAPI.updateRound(editingRound._id, {
@@ -269,8 +301,12 @@ export default function JobRoundsPage() {
   const handleEdit = (round: Round) => {
     setEditingRound(round);
 
-    const scheduledDate = round.scheduledAt ? new Date(round.scheduledAt).toISOString().split('T')[0] : '';
-    const scheduledTime = round.scheduledAt ? new Date(round.scheduledAt).toTimeString().slice(0, 5) : '';
+    const scheduledDate =
+      round.scheduling?.interviewDate ||
+      (round.scheduledAt ? new Date(round.scheduledAt).toISOString().split('T')[0] : '');
+    const scheduledTime =
+      round.scheduling?.interviewTime ||
+      (round.scheduledAt ? new Date(round.scheduledAt).toTimeString().slice(0, 5) : '');
 
     setFormData({
       name: round.name,
@@ -847,52 +883,213 @@ export default function JobRoundsPage() {
                       <h4 className="font-semibold text-blue-900 border-b border-blue-200 pb-2 mb-4">Coding Test Configuration</h4>
 
                       <div>
-                        <label htmlFor="platform" className="block text-sm font-semibold text-gray-900 mb-2">
-                          Platform Name <span className="text-red-500">*</span>
+                        <label htmlFor="interviewMode" className="block text-sm font-semibold text-gray-900 mb-2">
+                          Test Mode <span className="text-red-500">*</span>
                         </label>
-                        <input
-                          id="platform"
-                          name="platform"
-                          type="text"
-                          required={formData.type === 'coding'}
-                          value={formData.platform}
+                        <select
+                          id="interviewMode"
+                          name="interviewMode"
+                          value={formData.interviewMode}
                           onChange={handleInputChange}
-                          placeholder="e.g., HackerRank, LeetCode, CoderByte"
                           className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                        />
+                        >
+                          <option value="online">Online Coding Test</option>
+                          <option value="offline">Offline (On-site) Coding Test</option>
+                        </select>
                       </div>
 
-                      <div>
-                        <label htmlFor="duration" className="block text-sm font-semibold text-gray-900 mb-2">
-                          Duration <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          id="duration"
-                          name="duration"
-                          type="text"
-                          required={formData.type === 'coding'}
-                          value={formData.duration}
-                          onChange={handleInputChange}
-                          placeholder="e.g., 60 Mins, 2 Hours"
-                          className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                        />
-                      </div>
+                      {/* Online coding test settings */}
+                      {formData.interviewMode === 'online' && (
+                        <>
+                          <div>
+                            <label htmlFor="platform" className="block text-sm font-semibold text-gray-900 mb-2">
+                              Platform Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              id="platform"
+                              name="platform"
+                              type="text"
+                              required={formData.type === 'coding' && formData.interviewMode === 'online'}
+                              value={formData.platform}
+                              onChange={handleInputChange}
+                              placeholder="e.g., HackerRank, LeetCode, CoderByte"
+                              className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            />
+                          </div>
 
-                      <div>
-                        <label htmlFor="instructions" className="block text-sm font-semibold text-gray-900 mb-2">
-                          Instructions <span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                          id="instructions"
-                          name="instructions"
-                          required={formData.type === 'coding'}
-                          value={formData.instructions}
-                          onChange={handleInputChange}
-                          rows={4}
-                          placeholder="Enter specific instructions for the candidate..."
-                          className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                        />
-                      </div>
+                          <div>
+                            <label htmlFor="duration" className="block text-sm font-semibold text-gray-900 mb-2">
+                              Duration <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              id="duration"
+                              name="duration"
+                              type="text"
+                              required={formData.type === 'coding' && formData.interviewMode === 'online'}
+                              value={formData.duration}
+                              onChange={handleInputChange}
+                              placeholder="e.g., 60 Mins, 2 Hours"
+                              className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            />
+                          </div>
+
+                          <div>
+                            <label htmlFor="instructions" className="block text-sm font-semibold text-gray-900 mb-2">
+                              Instructions <span className="text-red-500">*</span>
+                            </label>
+                            <textarea
+                              id="instructions"
+                              name="instructions"
+                              required={formData.type === 'coding' && formData.interviewMode === 'online'}
+                              value={formData.instructions}
+                              onChange={handleInputChange}
+                              rows={4}
+                              placeholder="Enter specific instructions for the candidate..."
+                              className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {/* Offline coding test settings */}
+                      {formData.interviewMode === 'offline' && (
+                        <>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label htmlFor="scheduledDate" className="block text-sm font-semibold text-gray-900 mb-2">
+                                Test Date <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                id="scheduledDate"
+                                name="scheduledDate"
+                                type="date"
+                                value={formData.scheduledDate}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor="scheduledTime" className="block text-sm font-semibold text-gray-900 mb-2">
+                                Test Start Time <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                id="scheduledTime"
+                                name="scheduledTime"
+                                type="time"
+                                value={formData.scheduledTime}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label htmlFor="reportingTime" className="block text-sm font-semibold text-gray-900 mb-2">
+                                Reporting Time
+                              </label>
+                              <input
+                                id="reportingTime"
+                                name="reportingTime"
+                                type="time"
+                                value={formData.reportingTime}
+                                onChange={handleInputChange}
+                                className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor="duration" className="block text-sm font-semibold text-gray-900 mb-2">
+                                Duration <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                id="duration"
+                                name="duration"
+                                type="text"
+                                value={formData.duration}
+                                onChange={handleInputChange}
+                                placeholder="e.g., 60 Mins, 2 Hours"
+                                className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label htmlFor="venueName" className="block text-sm font-semibold text-gray-900 mb-2">
+                              Office / Venue Name <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              id="venueName"
+                              name="venueName"
+                              type="text"
+                              value={formData.venueName}
+                              onChange={handleInputChange}
+                              placeholder="e.g., ABC Technologies Pvt Ltd"
+                              className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            />
+                          </div>
+
+                          <div>
+                            <label htmlFor="address" className="block text-sm font-semibold text-gray-900 mb-2">
+                              Address Line 1 <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              id="address"
+                              name="address"
+                              type="text"
+                              value={formData.address}
+                              onChange={handleInputChange}
+                              placeholder="Building / Street / Area"
+                              className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <label htmlFor="city" className="block text-sm font-semibold text-gray-900 mb-2">
+                                City, State, PIN <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                id="city"
+                                name="city"
+                                type="text"
+                                value={formData.city}
+                                onChange={handleInputChange}
+                                placeholder="e.g., Pune, MH, 411001"
+                                className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                              />
+                            </div>
+                            <div>
+                              <label htmlFor="landmark" className="block text-sm font-semibold text-gray-900 mb-2">
+                                Landmark / Address Line 2
+                              </label>
+                              <input
+                                id="landmark"
+                                name="landmark"
+                                type="text"
+                                value={formData.landmark}
+                                onChange={handleInputChange}
+                                placeholder="Optional"
+                                className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label htmlFor="instructions" className="block text-sm font-semibold text-gray-900 mb-2">
+                              Additional Instructions (Optional)
+                            </label>
+                            <textarea
+                              id="instructions"
+                              name="instructions"
+                              value={formData.instructions}
+                              onChange={handleInputChange}
+                              rows={4}
+                              placeholder="Any extra instructions you want candidates to follow for the offline coding test..."
+                              className="w-full px-4 py-3 text-sm font-medium text-gray-900 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                            />
+                          </div>
+                        </>
+                      )}
 
                       <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mt-6">
                         <div className="flex">
@@ -901,16 +1098,17 @@ export default function JobRoundsPage() {
                           </div>
                           <div className="ml-3">
                             <h3 className="text-sm font-medium text-yellow-800">
-                              You can configure the coding platform name, test duration, and instructions for this round.
+                              You can configure the coding test details for this round.
                             </h3>
                             <div className="mt-2 text-sm text-yellow-700">
                               <p className="mb-2 font-medium">Once this round is created:</p>
                               <ul className="list-disc pl-5 space-y-1 mb-3">
                                 <li>Candidates’ application status will be updated from MCQ Round to Coding Test Round</li>
                                 <li>A shortlisting notification email will be automatically sent to the shortlisted candidates on their registered email address</li>
+                                <li>For offline mode, candidates will receive venue, date, time and reporting details automatically.</li>
                               </ul>
                               <p className="text-xs font-semibold text-yellow-800">
-                                📌 You can later share the exact test date, time, and test link manually from the Company Admin panel.
+                                📌 You can always update these details later from the Coding Test round configuration.
                               </p>
                             </div>
                           </div>

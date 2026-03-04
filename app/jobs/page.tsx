@@ -28,6 +28,7 @@ import Link from 'next/link';
 import { jobsAPI, companiesAPI } from '../api/companies';
 import { getFileUrl } from '../api/config';
 import Footer from '../components/Footer';
+import { getSavedJobIds, toggleSavedJob as toggleSavedJobStorage } from '../utils/savedJobs';
 
 interface Job {
   id: string;
@@ -90,14 +91,17 @@ function JobsPageContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedExperience, setSelectedExperience] = useState<string[]>([]);
   const [selectedSalary, setSelectedSalary] = useState<string[]>([]);
-  const [savedJobs, setSavedJobs] = useState<Set<string>>(new Set());
+  const [savedJobs, setSavedJobs] = useState<Set<string>>(() => new Set(getSavedJobIds()));
   const [featuredCompanies, setFeaturedCompanies] = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalJobs, setTotalJobs] = useState(0);
 
-  // Read query parameters on mount and when they change (from hero search or direct URL)
+  useEffect(() => {
+    setSavedJobs(new Set(getSavedJobIds()));
+  }, []);
+
   useEffect(() => {
     const typeParam = searchParams.get('type');
     const searchParam = searchParams.get('search');
@@ -221,13 +225,8 @@ function JobsPageContent() {
   };
 
   const toggleSaveJob = (jobId: string) => {
-    const newSaved = new Set(savedJobs);
-    if (newSaved.has(jobId)) {
-      newSaved.delete(jobId);
-    } else {
-      newSaved.add(jobId);
-    }
-    setSavedJobs(newSaved);
+    toggleSavedJobStorage(jobId);
+    setSavedJobs(new Set(getSavedJobIds()));
   };
 
   const clearFilters = () => {
@@ -783,11 +782,11 @@ function JobsPageContent() {
                                 <button
                                   onClick={() => toggleSaveJob(job.id)}
                                   className={`p-2 rounded-lg transition-colors ${savedJobs.has(job.id)
-                                    ? 'text-indigo-600 bg-indigo-50'
+                                    ? 'text-yellow-500 bg-yellow-50'
                                     : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                                     }`}
                                 >
-                                  <Bookmark className="h-5 w-5" />
+                                  <Bookmark className={`h-5 w-5 ${savedJobs.has(job.id) ? 'fill-yellow-400' : ''}`} />
                                 </button>
                                 <Link
                                   href={`/jobs/${job.id}`}
