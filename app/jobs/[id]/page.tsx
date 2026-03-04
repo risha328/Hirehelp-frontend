@@ -36,6 +36,7 @@ import { applicationsAPI } from '../../api/applications';
 import { getFileUrl } from '../../api/config';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { isJobSaved, toggleSavedJob } from '../../utils/savedJobs';
 
 interface Job {
   _id: string;
@@ -785,6 +786,10 @@ export default function JobDetailsPage() {
   const [isBookmarked, setIsBookmarked] = useState(false);
 
   useEffect(() => {
+    setIsBookmarked(isJobSaved(jobId));
+  }, [jobId]);
+
+  useEffect(() => {
     fetchJobDetails();
     checkApplicationStatus();
     fetchSimilarJobs();
@@ -856,7 +861,8 @@ export default function JobDetailsPage() {
   };
 
   const toggleSave = () => {
-    setIsBookmarked(!isBookmarked);
+    const nowSaved = toggleSavedJob(jobId);
+    setIsBookmarked(nowSaved);
   };
 
   const handleApplyNowClick = () => {
