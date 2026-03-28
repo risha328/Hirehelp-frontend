@@ -25,7 +25,8 @@ import {
     BellAlertIcon,
     ChartBarIcon,
     UsersIcon,
-    UserPlusIcon
+    UserPlusIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 import {
     CheckCircleIcon as CheckCircleSolid,
@@ -1898,8 +1899,17 @@ export default function InterviewManagementPage() {
             {/* Assign Interviewer Modal */}
             {showAssignModal && selectedInterview && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
-                        <div className="flex items-center gap-3 mb-4 text-blue-600">
+                    <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+                        <button
+                            type="button"
+                            onClick={() => setShowAssignModal(false)}
+                            className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer"
+                            aria-label="Close modal"
+                            disabled={assignLoading}
+                        >
+                            <XMarkIcon className="w-6 h-6" />
+                        </button>
+                        <div className="flex items-center gap-3 mb-4 text-blue-600 pr-10">
                             <UserPlusIcon className="w-8 h-8" />
                             <h3 className="text-lg font-bold">Assign Interviewer</h3>
                         </div>
