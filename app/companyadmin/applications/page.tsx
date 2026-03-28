@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List, FileQuestion, Edit, Save, X, Briefcase, ChevronDown } from 'lucide-react';
+import { Eye, Download, CheckCircle, XCircle, Clock, User, Mail, Phone, FileText, Grid3X3, List, FileQuestion, Edit, Save, X, Briefcase, ChevronDown, AlertTriangle } from 'lucide-react';
 import { applicationsAPI, Application } from '../../api/applications';
 import { roundsAPI, MCQResponse, RoundEvaluation, EvaluationStatus, Round } from '../../api/rounds';
 import { API_BASE_URL, getFileUrl } from '../../api/config';
@@ -17,7 +17,7 @@ export default function ApplicationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('kanban');
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
   const [activeTab, setActiveTab] = useState<'applications' | 'google-responses'>('applications');
   const [mcqResponses, setMcqResponses] = useState<MCQResponse[]>([]);
   const [mcqLoading, setMcqLoading] = useState(false);
@@ -42,6 +42,13 @@ export default function ApplicationsPage() {
       fetchRounds(selectedJobId);
     } else {
       setRounds([]);
+    }
+  }, [selectedJobId]);
+
+  // Kanban needs a single job’s interview rounds; "All jobs" uses table only
+  useEffect(() => {
+    if (selectedJobId === 'all') {
+      setViewMode('table');
     }
   }, [selectedJobId]);
 
@@ -354,12 +361,16 @@ export default function ApplicationsPage() {
                     <List className="h-5 w-5" />
                   </button>
                   <button
-                    onClick={() => setViewMode('kanban')}
-                    className={`p-2 rounded-lg transition-colors ${viewMode === 'kanban'
-                      ? 'bg-indigo-100 text-indigo-600'
-                      : 'text-gray-400 hover:text-gray-600'
+                    type="button"
+                    onClick={() => selectedJobId !== 'all' && setViewMode('kanban')}
+                    disabled={selectedJobId === 'all'}
+                    className={`p-2 rounded-lg transition-colors ${selectedJobId === 'all'
+                      ? 'text-gray-300 cursor-not-allowed'
+                      : viewMode === 'kanban'
+                        ? 'bg-indigo-100 text-indigo-600'
+                        : 'text-gray-400 hover:text-gray-600'
                       }`}
-                    title="Kanban View"
+                    title={selectedJobId === 'all' ? 'Select a job to use Kanban' : 'Kanban View'}
                   >
                     <Grid3X3 className="h-5 w-5" />
                   </button>
@@ -390,7 +401,7 @@ export default function ApplicationsPage() {
                 </button>
               )}
             </div>
-          ) : viewMode === 'kanban' ? (
+          ) : viewMode === 'kanban' && selectedJobId !== 'all' ? (
             <div className="flex-grow overflow-hidden">
               <KanbanBoard
                 applications={filteredApplications}
@@ -406,6 +417,21 @@ export default function ApplicationsPage() {
             </div>
 
           ) : (
+            <div className="flex-grow flex flex-col space-y-4 min-h-0">
+              {selectedJobId === 'all' && filteredApplications.length > 0 && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-3 rounded-lg border-l-4 border-amber-500 border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 shadow-sm"
+                >
+                  <AlertTriangle className="h-5 w-5 flex-shrink-0 text-amber-600 mt-0.5" aria-hidden />
+                  <div>
+                    <p className="font-semibold text-amber-950">Warning — filter by job before changing status or using Kanban</p>
+                    <p className="mt-1.5 text-amber-900/90 leading-relaxed">
+                      You are viewing applications across <span className="font-medium">all open roles</span>. Status changes and drag-and-drop moves must be made in the context of <span className="font-medium">one job at a time</span>. Select a position from the job filter above, then use Kanban so each update maps to the correct requisition and interview round. Operating without a job filter risks mis-assigned stages or incorrect candidate records.
+                    </p>
+                  </div>
+                </div>
+              )}
             <div className="bg-white shadow-sm rounded-lg overflow-hidden flex-grow">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -507,6 +533,7 @@ export default function ApplicationsPage() {
                   </tbody>
                 </table>
               </div>
+            </div>
             </div>
           )}
         </>
