@@ -29,6 +29,41 @@ interface KanbanColumn {
   applications: Application[];
 }
 
+const INTERVIEW_PIPELINE_ROUND_TYPES = new Set(['technical', 'hr', 'interview']);
+
+function isInterviewPipelineRound(roundId: string | undefined, rounds: Round[]): boolean {
+  if (!roundId) return false;
+  const r = rounds.find((x) => String(x._id) === String(roundId));
+  const t = (r?.type || '').toLowerCase();
+  return INTERVIEW_PIPELINE_ROUND_TYPES.has(t);
+}
+
+function getEvaluationForRound(evaluations: any[], applicationId: string, roundId: string) {
+  return evaluations?.find((e) => {
+    const eAppId = typeof e.applicationId === 'object' ? (e.applicationId as any)._id : e.applicationId;
+    const eRoundId = typeof e.roundId === 'object' ? (e.roundId as any)._id : e.roundId;
+    return String(eAppId) === String(applicationId) && String(eRoundId) === String(roundId);
+  });
+}
+
+function isInterviewEvaluationComplete(evaluation: any | undefined): boolean {
+  if (!evaluation) return false;
+  const s = String(evaluation.status || '').toLowerCase();
+  return s === 'completed' || s === 'passed' || s === 'failed';
+}
+
+/** Technical / HR / interview rounds: cannot drag until evaluation is concluded */
+function isInterviewStageBlockingDrag(
+  application: Application,
+  column: KanbanColumn,
+  rounds: Round[],
+  evaluations: any[],
+): boolean {
+  if (!column.roundId || !isInterviewPipelineRound(column.roundId, rounds)) return false;
+  const ev = getEvaluationForRound(evaluations, application._id, column.roundId);
+  return !isInterviewEvaluationComplete(ev);
+}
+
 export default function KanbanBoard({ applications, rounds = [], mcqResponses = [], evaluations = [], onApplicationUpdate, onViewDetails }: KanbanBoardProps) {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -172,6 +207,24 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
     const application = applications.find(app => app._id === draggableId);
     if (!application) return;
 
+    const sourceIdx = columns.findIndex((c) => c.id === source.droppableId);
+    const destIdx = columns.findIndex((c) => c.id === destination.droppableId);
+    if (sourceIdx !== -1 && destIdx !== -1 && destIdx < sourceIdx) {
+      window.alert('Moving candidates back to an earlier stage is not allowed. Use the current stage only.');
+      return;
+    }
+
+    if (
+      sourceColumn.roundId &&
+      isInterviewPipelineRound(sourceColumn.roundId, rounds) &&
+      !isInterviewEvaluationComplete(getEvaluationForRound(evaluations, application._id, sourceColumn.roundId))
+    ) {
+      window.alert(
+        'This interview is not finished yet. Mark the interview as completed (including pass/fail) before moving the candidate to the next stage.',
+      );
+      return;
+    }
+
     // Determine new status and round
     let newStatus = destColumn.status;
     let newRoundId = destColumn.roundId;
@@ -233,7 +286,35 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
 
   const handleConfirm = async () => {
     if (!confirmData) return;
-    const { application, newStatus } = confirmData;
+    const { application, newStatus, newRoundId } = confirmData;
+
+    const sourceCol = columns.find((c) => c.applications.some((a) => a._id === application._id));
+    const destCol = newRoundId
+      ? columns.find((c) => c.roundId && String(c.roundId) === String(newRoundId))
+      : columns.find((c) => c.status === newStatus && !c.roundId);
+    if (sourceCol && destCol) {
+      const sIdx = columns.indexOf(sourceCol);
+      const dIdx = columns.indexOf(destCol);
+      if (dIdx < sIdx) {
+        window.alert('Moving candidates back to an earlier stage is not allowed.');
+        setShowConfirmModal(false);
+        setConfirmData(null);
+        return;
+      }
+    }
+    if (
+      sourceCol?.roundId &&
+      isInterviewPipelineRound(sourceCol.roundId, rounds) &&
+      !isInterviewEvaluationComplete(getEvaluationForRound(evaluations, application._id, sourceCol.roundId))
+    ) {
+      window.alert(
+        'This interview is not finished yet. Mark the interview as completed before moving the candidate to the next stage.',
+      );
+      setShowConfirmModal(false);
+      setConfirmData(null);
+      return;
+    }
+
     setShowConfirmModal(false);
     await executeUpdate(application._id, confirmData.newStatus, confirmData.newRoundId);
     setConfirmData(null);
@@ -285,21 +366,30 @@ export default function KanbanBoard({ applications, rounds = [], mcqResponses = 
                     >
                       {column.applications.map((application, index) => {
                         const mcqInfo = column.roundId ? getMcqInfo(application._id, column.roundId) : null;
+                        const interviewBlocksDrag = isInterviewStageBlockingDrag(application, column, rounds, evaluations);
 
                         return (
                           <Draggable
                             key={application._id}
                             draggableId={application._id}
                             index={index}
-                            isDragDisabled={isUpdating === application._id}
+                            isDragDisabled={
+                              isUpdating === application._id ||
+                              interviewBlocksDrag
+                            }
                           >
                             {(provided, snapshot) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={`bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow ${snapshot.isDragging ? 'rotate-3 shadow-lg' : ''
-                                  } ${isUpdating === application._id ? 'opacity-50' : ''}`}
+                                title={
+                                  interviewBlocksDrag
+                                    ? 'Finish this interview (mark completed / pass / fail) before moving to the next stage'
+                                    : undefined
+                                }
+                                className={`bg-white rounded-lg p-4 shadow-sm border border-gray-200 transition-shadow ${snapshot.isDragging ? 'rotate-3 shadow-lg' : 'hover:shadow-md'
+                                  } ${isUpdating === application._id ? 'opacity-50' : ''} ${interviewBlocksDrag ? 'cursor-not-allowed opacity-95' : ''}`}
                               >
                                 <div className="flex items-start justify-between mb-3">
                                   <div className="flex items-center space-x-2">
