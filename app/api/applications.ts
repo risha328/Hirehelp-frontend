@@ -1,4 +1,5 @@
 import { API_BASE_URL } from './config';
+import { isTokenExpired } from './auth';
 
 /** Onboarding phase (derived): PRE_JOINING | READY_TO_JOIN | CONVERTED */
 export type OnboardingPhase = 'PRE_JOINING' | 'READY_TO_JOIN' | 'CONVERTED';
@@ -105,6 +106,43 @@ const getAuthHeaders = () => {
   return {
     'Content-Type': 'application/json',
     'Authorization': token ? `Bearer ${token}` : '',
+  };
+};
+
+const getValidAccessToken = async (): Promise<string> => {
+  let token = localStorage.getItem('access_token');
+  if (!token) throw new Error('No access token found');
+
+  if (isTokenExpired(token)) {
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) throw new Error('No refresh token found');
+
+    const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!refreshResponse.ok) {
+      throw new Error('Session expired, please login again');
+    }
+
+    const refreshData = await refreshResponse.json();
+    token = refreshData.accessToken;
+    if (!token) throw new Error('Session expired, please login again');
+    localStorage.setItem('access_token', token);
+  }
+
+  return token;
+};
+
+const getOfferAuthHeaders = async () => {
+  const token = await getValidAccessToken();
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
   };
 };
 
@@ -222,9 +260,10 @@ export const applicationsAPI = {
   },
 
   getOfferPreview: async (applicationId: string) => {
+    const headers = await getOfferAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/offer-preview`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers,
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -234,9 +273,10 @@ export const applicationsAPI = {
   },
 
   sendOffer: async (applicationId: string, payload: { position: string; salary: string; startDate: string; expiryDate?: string; terms?: string }) => {
+    const headers = await getOfferAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/send-offer`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
       body: JSON.stringify(payload),
     });
     if (!response.ok) {
@@ -247,9 +287,10 @@ export const applicationsAPI = {
   },
 
   acceptOffer: async (applicationId: string) => {
+    const headers = await getOfferAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/offer/accept`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -259,9 +300,10 @@ export const applicationsAPI = {
   },
 
   declineOffer: async (applicationId: string) => {
+    const headers = await getOfferAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/offer/decline`, {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers,
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
@@ -271,9 +313,10 @@ export const applicationsAPI = {
   },
 
   getOfferDownloadLink: async (applicationId: string): Promise<{ downloadUrl: string }> => {
+    const headers = await getOfferAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/applications/${applicationId}/offer-download-link`, {
       method: 'GET',
-      headers: getAuthHeaders(),
+      headers,
     });
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
