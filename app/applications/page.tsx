@@ -27,6 +27,7 @@ import {
 import Link from 'next/link';
 import { applicationsAPI, Application, OnboardingDocumentItem, OnboardingDocumentType } from '../api/applications';
 import { getFileUrl } from '../api/config';
+import { dashboardAPI, CandidateDashboardResponse } from '../api/dashboard';
 
 const statusConfig = {
   APPLIED: {
@@ -100,6 +101,44 @@ export default function ApplicationsPage() {
   const [onboardingDocs, setOnboardingDocs] = useState<OnboardingDocumentItem[]>([]);
   const [onboardingDocsLoading, setOnboardingDocsLoading] = useState(false);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
+  const [summary, setSummary] = useState<CandidateDashboardResponse['summary'] | null>(null);
+
+  const buildSummaryFromApplications = (apps: Application[]): CandidateDashboardResponse['summary'] => {
+    const byStatus = apps.reduce<Record<string, number>>((acc, app) => {
+      const status = app.status || 'UNKNOWN';
+      acc[status] = (acc[status] || 0) + 1;
+      return acc;
+    }, {});
+
+    const offersSent = apps.filter((app) => !!app.offerLetterUrl).length;
+    const offersAccepted = apps.filter((app) => app.offerAccepted === true).length;
+    const offersDeclined = apps.filter((app) => app.offerAccepted === false).length;
+    const offersPending = apps.filter((app) => app.offerLetterUrl && (app.offerAccepted === null || app.offerAccepted === undefined)).length;
+
+    const acceptedOffers = apps.filter((app) => app.status === 'HIRED' && app.offerAccepted === true);
+    const docsCompleted = acceptedOffers.filter((app) => app.documentStatus === 'completed').length;
+    const readyToJoin = acceptedOffers.filter(
+      (app) => app.documentStatus === 'completed' && app.backgroundVerificationStatus === 'VERIFIED'
+    ).length;
+    const converted = acceptedOffers.filter((app) => app.convertedToEmployee === true).length;
+
+    return {
+      totalApplications: apps.length,
+      byStatus,
+      offers: {
+        sent: offersSent,
+        accepted: offersAccepted,
+        declined: offersDeclined,
+        pending: offersPending,
+      },
+      onboarding: {
+        totalAcceptedOffers: acceptedOffers.length,
+        docsCompleted,
+        readyToJoin,
+        converted,
+      },
+    };
+  };
 
   useEffect(() => {
     fetchApplications();
@@ -129,8 +168,27 @@ export default function ApplicationsPage() {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const apps = await applicationsAPI.getApplicationsByCandidate();
+      setError(null);
+      let apps: Application[] = [];
+      let nextSummary: CandidateDashboardResponse['summary'] | null = null;
+
+      try {
+        const dashboard = await dashboardAPI.getCandidateDashboard();
+        apps = (dashboard.applications || []) as Application[];
+        nextSummary = dashboard.summary;
+      } catch (dashboardErr) {
+        console.warn('Candidate dashboard aggregate fetch failed, falling back to legacy endpoint:', dashboardErr);
+      }
+
+      // Fallback path keeps page functional while aggregate endpoint stabilizes.
+      if (apps.length === 0) {
+        const legacyApps = await applicationsAPI.getApplicationsByCandidate();
+        apps = legacyApps as Application[];
+        nextSummary = buildSummaryFromApplications(apps);
+      }
+
       setApplications(apps);
+      setSummary(nextSummary);
       if (selectedApplication) {
         const updated = apps.find((a: Application) => a._id === selectedApplication._id);
         if (updated) setSelectedApplication(updated);
@@ -216,6 +274,27 @@ export default function ApplicationsPage() {
             </Link>
           </div>
         </div>
+
+        {summary && (
+          <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <p className="text-sm text-gray-500">Total Applications</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{summary.totalApplications}</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <p className="text-sm text-gray-500">Offers Sent</p>
+              <p className="text-2xl font-bold text-emerald-700 mt-1">{summary.offers.sent}</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <p className="text-sm text-gray-500">Offers Accepted</p>
+              <p className="text-2xl font-bold text-indigo-700 mt-1">{summary.offers.accepted}</p>
+            </div>
+            <div className="bg-white rounded-xl border border-gray-200 p-4">
+              <p className="text-sm text-gray-500">Onboarding Ready</p>
+              <p className="text-2xl font-bold text-amber-700 mt-1">{summary.onboarding.readyToJoin}</p>
+            </div>
+          </div>
+        )}
 
         {applications.length === 0 ? (
           <div className="text-center py-16">

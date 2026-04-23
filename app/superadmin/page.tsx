@@ -1,10 +1,7 @@
 "use client";
 
 // API imports
-import { companiesAPI, jobsAPI } from '../api/companies';
-import { usersAPI } from '../api/users';
-import { applicationsAPI } from '../api/applications';
-import { analyticsAPI } from '../api/analytics';
+import { dashboardAPI } from '../api/dashboard';
 import {
   FileText,
   Download,
@@ -44,43 +41,37 @@ export default function SuperadminDashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingTopCompanies, setLoadingTopCompanies] = useState(true);
+  const [topCompanies, setTopCompanies] = useState<any[]>([]);
+  const [companyGrowthData, setCompanyGrowthData] = useState<any[]>([]);
+  const [hiringActivityData, setHiringActivityData] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchKPIData = async () => {
+    const fetchDashboard = async () => {
       try {
         setLoading(true);
+        setLoadingTopCompanies(true);
         setError(null);
-
-        // Fetch data from APIs
-        const [companies, candidates, jobs, applications] = await Promise.all([
-          companiesAPI.getAllCompanies(),
-          usersAPI.getUsersByRole('CANDIDATE'),
-          jobsAPI.getAllJobs(),
-          applicationsAPI.getAllApplications(),
-        ]);
-
-        // Calculate metrics
-        const totalCompanies = companies.length;
-        const totalCandidates = candidates.length;
-        const totalJobs = jobs.length;
-        const totalApplications = applications.length;
-
-        // For simplicity, using static change values; in a real app, calculate from historical data
+        const response = await dashboardAPI.getSuperAdminDashboard();
         setKpiData({
-          companies: { value: totalCompanies.toString() },
-          candidates: { value: totalCandidates.toString() },
-          jobs: { value: totalJobs.toString() },
-          applications: { value: totalApplications.toString() },
+          companies: response.kpiData.companies,
+          candidates: response.kpiData.candidates,
+          jobs: response.kpiData.jobs,
+          applications: response.kpiData.applications,
         });
+        setCompanyGrowthData(response.companyGrowthData);
+        setHiringActivityData(response.hiringActivityData);
+        setTopCompanies(response.topCompanies);
       } catch (err) {
-        console.error('Error fetching KPI data:', err);
+        console.error('Error fetching super admin dashboard data:', err);
         setError('Failed to load dashboard data');
       } finally {
         setLoading(false);
+        setLoadingTopCompanies(false);
       }
     };
 
-    fetchKPIData();
+    fetchDashboard();
   }, []);
 
   // Simplified KPI Cards
@@ -114,82 +105,6 @@ export default function SuperadminDashboardPage() {
       color: 'bg-amber-500'
     },
   ];
-
-  const [companyGrowthData, setCompanyGrowthData] = useState([
-    { month: 'Jul', companies: 240, growth: 15 },
-    { month: 'Aug', companies: 288, growth: 20 },
-    { month: 'Sep', companies: 340, growth: 18 },
-    { month: 'Oct', companies: 401, growth: 22 },
-    { month: 'Nov', companies: 459, growth: 14 },
-    { month: 'Dec', companies: 504, growth: 10 },
-  ]);
-
-  const [hiringActivityData, setHiringActivityData] = useState([
-    { week: 'W1', jobs: 210, applications: 4200 },
-    { week: 'W2', jobs: 245, applications: 4900 },
-    { week: 'W3', jobs: 280, applications: 5600 },
-    { week: 'W4', jobs: 315, applications: 6300 },
-  ]);
-
-  useEffect(() => {
-    const fetchAnalyticsData = async () => {
-      try {
-        const [companyGrowth, hiringActivity] = await Promise.all([
-          analyticsAPI.getCompanyGrowth(),
-          analyticsAPI.getHiringActivity(),
-        ]);
-
-        // Transform company growth data
-        const sortedGrowth = companyGrowth.sort((a: any, b: any) => a.period.localeCompare(b.period));
-        let cumulative = 0;
-        const transformedGrowth = sortedGrowth.map((item: any, index: number) => {
-          cumulative += item.count;
-          const growth = index === 0 ? item.count : item.count; // growth is the monthly addition
-          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          const [, month] = item.period.split('-');
-          const monthName = monthNames[parseInt(month) - 1];
-          return { month: monthName, companies: cumulative, growth };
-        });
-        setCompanyGrowthData(transformedGrowth);
-
-        // Transform hiring activity data - take last 4 weeks
-        const sortedActivity = hiringActivity.sort((a: any, b: any) => a.period.localeCompare(b.period));
-        const last4 = sortedActivity.slice(-4);
-        const transformedActivity = last4.map((item: any, index: number) => ({
-          week: `W${index + 1}`,
-          jobs: item.jobs,
-          applications: item.applications,
-        }));
-        setHiringActivityData(transformedActivity);
-      } catch (err) {
-        console.error('Error fetching analytics data:', err);
-        // Keep default data on error
-      }
-    };
-
-    fetchAnalyticsData();
-  }, []);
-
-  useEffect(() => {
-    const fetchTopCompaniesData = async () => {
-      try {
-        setLoadingTopCompanies(true);
-        const topCompaniesData = await analyticsAPI.getTopCompanies();
-        setTopCompanies(topCompaniesData);
-      } catch (err) {
-        console.error('Error fetching top companies data:', err);
-      } finally {
-        setLoadingTopCompanies(false);
-      }
-    };
-
-    fetchTopCompaniesData();
-  }, []);
-
-  const [loadingTopCompanies, setLoadingTopCompanies] = useState(true);
-  const [topCompanies, setTopCompanies] = useState<any[]>([]);
-
-
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

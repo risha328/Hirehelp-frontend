@@ -198,12 +198,10 @@ import {
   Save,
   XCircle
 } from 'lucide-react';
-import { getOfferStatus, getOfferStatusLabel, getOfferStatusStyles } from '../utils/offerStatus';
+import { getOfferStatusLabel, getOfferStatusStyles } from '../utils/offerStatus';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { companiesAPI, jobsAPI } from '../api/companies';
-import { applicationsAPI } from '../api/applications';
-import { analyticsAPI } from '../api/analytics';
-import { API_BASE_URL, getFileUrl } from '../api/config';
+import { getFileUrl } from '../api/config';
+import { dashboardAPI } from '../api/dashboard';
 import EditCompanyModal from '../components/EditCompanyModal';
 import RegisterCompanyModal from '../components/RegisterCompanyModal';
 import Loader from '../components/Loader';
@@ -229,176 +227,29 @@ export default function CompanyAdminPage() {
   const [acceptedOfferCount, setAcceptedOfferCount] = useState(0);
 
   useEffect(() => {
-    fetchCompany();
-    fetchStats();
-    fetchChartData();
+    fetchDashboard();
   }, []);
 
-  const fetchCompany = async () => {
+  const fetchDashboard = async () => {
     try {
-      const response = await companiesAPI.getMyCompany();
-      console.log('getMyCompany response:', response);
+      const response = await dashboardAPI.getCompanyAdminDashboard();
       setCompany(response.company);
-      // Fetch recent activities after company is loaded
-      if (response.company) {
-        await fetchRecentActivities(response.company);
-      }
+      setStats(response.stats);
+      setJobPerformanceData(response.jobPerformanceData);
+      setApplicationSourceData(response.applicationSourceData);
+      setRecentActivities(response.recentActivities);
+      setHiredCandidates(response.hiredCandidates);
+      setAcceptedOfferCount(response.acceptedOfferCount);
     } catch (error) {
-      console.error('Failed to fetch company:', error);
+      console.error('Failed to fetch company admin dashboard:', error);
+      if (jobPerformanceData.length === 0) {
+        setJobPerformanceData([{ name: 'No Data yet', applications: 0 }]);
+      }
+      if (applicationSourceData.length === 0) {
+        setApplicationSourceData([{ name: 'No Applications', value: 1, color: '#e2e8f0' }]);
+      }
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchStats = async () => {
-    // Mock stats data - replace with API call
-    setTimeout(() => {
-      setStats({
-        activeJobs: 12,
-        totalApplications: 156,
-        teamMembers: 8,
-        interviewsScheduled: 24
-      });
-    }, 500);
-  };
-
-  const fetchChartData = async () => {
-    console.log('fetchChartData: starting...');
-    try {
-      // Fetch Job Performance Data
-      const performanceData = await analyticsAPI.getCompanyJobPerformance();
-      console.log('fetchChartData: performanceData received:', performanceData);
-      setJobPerformanceData(performanceData);
-
-      // Fetch Application Stats for Pie Chart
-      const stats = await analyticsAPI.getCompanyApplicationStats();
-      console.log('fetchChartData: stats received:', stats);
-      const colors = {
-        'APPLIED': '#3b82f6',
-        'UNDER_REVIEW': '#f59e0b',
-        'SHORTLISTED': '#8b5cf6',
-        'HIRED': '#10b981',
-        'REJECTED': '#ef4444',
-        'HOLD': '#6b7280'
-      };
-
-      const pieData = stats.map((s: any) => ({
-        name: s.status.replace('_', ' '),
-        value: s.count,
-        color: colors[s.status as keyof typeof colors] || '#94a3b8'
-      }));
-      setApplicationSourceData(pieData);
-    } catch (error) {
-      console.error('Failed to fetch chart data:', error);
-      // Fallback to mock data if API fails or for new companies
-      if (jobPerformanceData.length === 0) {
-        setJobPerformanceData([
-          { name: 'No Data yet', applications: 0 }
-        ]);
-        setApplicationSourceData([
-          { name: 'No Applications', value: 1, color: '#e2e8f0' }
-        ]);
-      }
-    }
-  };
-
-  const fetchRecentActivities = async (companyData?: any) => {
-    const currentCompany = companyData || company;
-    if (!currentCompany) {
-      console.log('fetchRecentActivities: company not loaded yet');
-      return;
-    }
-
-    console.log('fetchRecentActivities: company loaded, id:', currentCompany._id);
-
-    try {
-      // Fetch recent jobs
-      console.log('Fetching jobs for company:', currentCompany._id);
-      const jobsResponse = await jobsAPI.getJobsByCompany(currentCompany._id, { includeScheduled: true });
-      console.log('Jobs response:', jobsResponse);
-      const recentJobs = jobsResponse.slice(0, 3).map((job: any) => ({
-        id: `job-${job._id}`,
-        action: 'Job published',
-        target: job.title,
-        time: new Date(job.createdAt).toLocaleString(),
-        type: 'published'
-      }));
-
-      // Fetch recent applications
-      console.log('Fetching applications for company:', currentCompany._id);
-      const applicationsResponse = await applicationsAPI.getApplicationsByCompany(currentCompany._id);
-      console.log('Applications response:', applicationsResponse);
-      const recentApplications = applicationsResponse.slice(0, 3).map((app: any) => ({
-        id: `app-${app._id}`,
-        action: 'New application received',
-        target: `${app.candidateId.name} - ${app.jobId.title}`,
-        time: new Date(app.createdAt).toLocaleString(),
-        type: 'application',
-        count: applicationsResponse.filter((a: any) => a.jobId._id === app.jobId._id).length
-      }));
-
-      // Fetch hired candidates (with offer status)
-      const hiredApplications = applicationsResponse.filter((app: any) => app.status === 'HIRED');
-      const acceptedOffers = hiredApplications.filter((app: any) => app.offerAccepted === true);
-      setAcceptedOfferCount(acceptedOffers.length);
-      const hiredCandidatesData = hiredApplications.slice(0, 5).map((app: any) => ({
-        id: app._id,
-        name: app.candidateId.name,
-        position: app.jobId.title,
-        hireDate: new Date(app.updatedAt).toLocaleDateString(),
-        email: app.candidateId.email,
-        offerStatus: getOfferStatus(app) ?? 'not_sent'
-      }));
-      setHiredCandidates(hiredCandidatesData);
-
-      // Combine and sort by time (most recent first)
-      const allActivities = [...recentJobs, ...recentApplications]
-        .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-        .slice(0, 5);
-
-      console.log('All activities:', allActivities);
-      setRecentActivities(allActivities);
-    } catch (error) {
-      console.error('Failed to fetch recent activities:', error);
-      // Fallback to mock data if API fails
-      setRecentActivities([
-        {
-          id: 1,
-          action: 'New application received',
-          target: 'Senior Frontend Developer',
-          time: '10 min ago',
-          count: 3
-        },
-        {
-          id: 2,
-          action: 'Interview scheduled',
-          target: 'Jane Smith - UX Designer',
-          time: '1 hour ago',
-          type: 'interview'
-        },
-        {
-          id: 3,
-          action: 'Job published',
-          target: 'DevOps Engineer',
-          time: '3 hours ago',
-          type: 'published'
-        },
-        {
-          id: 4,
-          action: 'Company profile updated',
-          target: 'Website & Logo',
-          time: '1 day ago',
-          type: 'update'
-        }
-      ]);
-
-      // Fallback hired candidates data
-      setAcceptedOfferCount(0);
-      setHiredCandidates([
-        { id: '1', name: 'John Smith', position: 'Senior Frontend Developer', hireDate: '2024-01-15', email: 'john.smith@email.com', offerStatus: 'accepted' as const },
-        { id: '2', name: 'Sarah Johnson', position: 'UX Designer', hireDate: '2024-01-10', email: 'sarah.johnson@email.com', offerStatus: 'accepted' as const },
-        { id: '3', name: 'Mike Davis', position: 'Backend Developer', hireDate: '2024-01-08', email: 'mike.davis@email.com', offerStatus: 'accepted' as const }
-      ]);
     }
   };
 
@@ -884,7 +735,7 @@ export default function CompanyAdminPage() {
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
         onSuccess={() => {
-          fetchCompany();
+          fetchDashboard();
           setShowEditModal(false);
         }}
       />
@@ -894,7 +745,7 @@ export default function CompanyAdminPage() {
         isOpen={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
         onSuccess={() => {
-          fetchCompany();
+          fetchDashboard();
           setShowRegisterModal(false);
         }}
       />

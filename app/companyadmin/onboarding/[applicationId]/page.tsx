@@ -155,7 +155,7 @@ export default function OnboardingDetailPage() {
   const handleBgUpdate = async (status: BackgroundVerificationStatus, failedReason?: string) => {
     setBgUpdating(true);
     try {
-      await applicationsAPI.updateBackgroundVerification(applicationId, status, undefined, failedReason);
+      await applicationsAPI.updateBackgroundVerification(applicationId, status, { failedReason });
       await fetchData();
     } catch (err) {
       console.error(err);
