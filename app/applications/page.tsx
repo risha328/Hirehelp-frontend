@@ -95,6 +95,7 @@ export default function ApplicationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [selectedApplicationLoading, setSelectedApplicationLoading] = useState<string | null>(null);
   const [offerActionLoading, setOfferActionLoading] = useState<string | null>(null);
   const [offerLinkLoading, setOfferLinkLoading] = useState<string | null>(null);
   const [offerMessage, setOfferMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -221,6 +222,20 @@ export default function ApplicationsPage() {
     });
   };
 
+  const handleSelectApplication = async (application: Application) => {
+    setSelectedApplication(application);
+    setSelectedApplicationLoading(application._id);
+    try {
+      // Fetch full details so currentRound and round metadata are reliably available.
+      const fullApplication = await applicationsAPI.getApplicationById(application._id);
+      setSelectedApplication(fullApplication);
+    } catch (err) {
+      console.warn('Could not load full application details:', err);
+    } finally {
+      setSelectedApplicationLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-400 via-sky-100 to-white pt-16 lg:pt-20 flex items-center justify-center">
@@ -331,7 +346,7 @@ export default function ApplicationsPage() {
                     return (
                       <div
                         key={application._id}
-                        onClick={() => setSelectedApplication(application)}
+                        onClick={() => void handleSelectApplication(application)}
                         className={`p-6 cursor-pointer hover:bg-gray-50 transition-colors ${selectedApplication?._id === application._id ? 'bg-indigo-50 border-r-4 border-indigo-500' : ''
                           }`}
                       >
@@ -543,6 +558,51 @@ export default function ApplicationsPage() {
                         </div>
                       </div>
                     </div>
+
+                    {selectedApplicationLoading === selectedApplication._id && (
+                      <div className="mt-6 rounded-xl border border-indigo-200 bg-indigo-50 p-5 text-sm text-indigo-800">
+                        Loading round details...
+                      </div>
+                    )}
+
+                    {(() => {
+                      const currentRound =
+                        selectedApplication.currentRound && typeof selectedApplication.currentRound === 'object'
+                          ? selectedApplication.currentRound
+                          : null;
+
+                      if (!currentRound || currentRound.type?.toLowerCase() !== 'mcq') return null;
+
+                      return (
+                      <div className="mt-6 rounded-xl border border-indigo-200 bg-indigo-50 p-5">
+                        <h4 className="text-lg font-semibold text-indigo-900">MCQ Round</h4>
+                        <p className="mt-1 text-sm text-indigo-800">
+                          Round: {currentRound.name} ({currentRound.mode || 'INTERNAL'})
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-3">
+                          {currentRound.mode === 'EXTERNAL' ? (
+                            <a
+                              href={currentRound.externalLink}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                            >
+                              <ExternalLink className="mr-2 h-4 w-4" />
+                              Open External Test
+                            </a>
+                          ) : (
+                            <button
+                              onClick={() => router.push(`/applications/${selectedApplication._id}/rounds/${currentRound._id}/exam`)}
+                              className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                            >
+                              <ClipboardCheck className="mr-2 h-4 w-4" />
+                              Start Test
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      );
+                    })()}
 
                     {/* Offer Letter card - for HIRED with offer sent */}
                     {selectedApplication.status === 'HIRED' && selectedApplication.offerLetterUrl && (

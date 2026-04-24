@@ -38,8 +38,13 @@ export default function TransparentHeader() {
 
 
 
-  // Don't render header on auth pages and companyadmin pages
-  if (pathname.startsWith('/auth') || pathname.startsWith('/companyadmin')) {
+  const isCandidateExamRoute =
+    pathname.startsWith('/applications/') &&
+    pathname.includes('/rounds/') &&
+    pathname.endsWith('/exam');
+
+  // Don't render global header on auth/company admin/exam pages
+  if (pathname.startsWith('/auth') || pathname.startsWith('/companyadmin') || isCandidateExamRoute) {
     return null;
   }
 

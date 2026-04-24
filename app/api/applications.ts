@@ -64,11 +64,16 @@ export interface Application {
   resumeUrl?: string;
   status: 'APPLIED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'HIRED' | 'REJECTED' | 'HOLD';
   notes?: string;
-  currentRound?: {
-    _id: string;
-    name: string;
-    type: string;
-  };
+  currentRound?:
+    | string
+    | {
+        _id: string;
+        name: string;
+        type: string;
+        mode?: 'INTERNAL' | 'EXTERNAL';
+        externalLink?: string;
+        durationMinutes?: number;
+      };
   createdAt: string;
   updatedAt: string;
   offerLetterUrl?: string;
