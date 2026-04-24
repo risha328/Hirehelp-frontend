@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { roundsAPI, Round } from '../../../../api/rounds';
+import { roundsAPI, Round, QuestionSet } from '../../../../api/rounds';
 import { jobsAPI, companiesAPI } from '../../../../api/companies';
 import {
   PlusIcon,
@@ -70,6 +70,7 @@ export default function JobRoundsPage() {
   const [editingRound, setEditingRound] = useState<Round | null>(null);
   const [posting, setPosting] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active');
+  const [questionSets, setQuestionSets] = useState<QuestionSet[]>([]);
 
   const isExpired = job?.applicationDeadline
     ? new Date(job.applicationDeadline) < new Date(new Date().setHours(0, 0, 0, 0))
@@ -82,6 +83,12 @@ export default function JobRoundsPage() {
     order: 0,
     type: 'interview' as 'mcq' | 'interview' | 'technical' | 'hr' | 'coding',
     googleFormLink: '',
+    mode: 'EXTERNAL' as 'INTERNAL' | 'EXTERNAL',
+    questionSetId: '',
+    externalLink: '',
+    durationMinutes: 60,
+    autoSubmit: true,
+    passPercentage: 60,
     platform: '',
     duration: '',
     instructions: '',
@@ -123,6 +130,8 @@ export default function JobRoundsPage() {
       }
 
       const allRounds = await roundsAPI.getAllRounds();
+      const sets = await roundsAPI.listQuestionSets().catch(() => []);
+      setQuestionSets(sets);
       const jobRounds = allRounds.filter(round => {
         const roundJobId = typeof round.jobId === 'string' ? round.jobId : round.jobId._id;
         return roundJobId === jobId;
@@ -199,6 +208,12 @@ export default function JobRoundsPage() {
         instructions: formData.instructions || undefined,
         platform: formData.platform || undefined,
         duration: formData.duration || undefined,
+        mode: formData.type === 'mcq' ? formData.mode : undefined,
+        questionSetId: formData.type === 'mcq' && formData.mode === 'INTERNAL' ? (formData.questionSetId || undefined) : undefined,
+        externalLink: formData.type === 'mcq' && formData.mode === 'EXTERNAL' ? (formData.externalLink || formData.googleFormLink || undefined) : undefined,
+        durationMinutes: formData.type === 'mcq' && formData.mode === 'INTERNAL' ? Number(formData.durationMinutes) : undefined,
+        autoSubmit: formData.type === 'mcq' && formData.mode === 'INTERNAL' ? Boolean(formData.autoSubmit) : undefined,
+        passPercentage: formData.type === 'mcq' && formData.mode === 'INTERNAL' ? Number(formData.passPercentage) : undefined,
         googleFormLink: formData.googleFormLink || undefined,
       };
 
@@ -277,6 +292,12 @@ export default function JobRoundsPage() {
       order: rounds.length > 0 ? Math.max(...rounds.map(r => r.order)) + 1 : 1,
       type: 'interview',
       googleFormLink: '',
+      mode: 'EXTERNAL',
+      questionSetId: '',
+      externalLink: '',
+      durationMinutes: 60,
+      autoSubmit: true,
+      passPercentage: 60,
       platform: '',
       duration: '',
       instructions: '',
@@ -315,6 +336,12 @@ export default function JobRoundsPage() {
       order: round.order,
       type: round.type,
       googleFormLink: round.googleFormLink || '',
+      mode: round.mode || 'EXTERNAL',
+      questionSetId: (round.questionSetId as string) || '',
+      externalLink: round.externalLink || '',
+      durationMinutes: round.durationMinutes || 60,
+      autoSubmit: round.autoSubmit ?? true,
+      passPercentage: round.passPercentage ?? 60,
       platform: round.platform || '',
       duration: round.duration || '',
       instructions: round.instructions || '',
@@ -1118,96 +1145,101 @@ export default function JobRoundsPage() {
                   )}
 
                   {formData.type === 'mcq' && (
-                    <>
-                      <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-                        <h4 className="flex items-center text-red-800 font-bold mb-2">
-                          <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
-                          Important Instructions for MCQ Assessment
-                        </h4>
-                        <p className="text-sm text-red-700 mb-3">
-                          Please follow the rules below carefully. Incorrect Google Form settings may cause responses or scores to not appear correctly.
-                        </p>
-
-                        <div className="space-y-3">
-                          <div className="flex items-start">
-                            <span className="mr-2 text-lg">🔴</span>
-                            <div>
-                              <span className="text-sm font-bold text-red-800">Google Form must be created as a Quiz</span>
-                              <p className="text-xs text-red-700 mt-0.5">Enable “Make this a quiz” in Google Form settings.</p>
-                              <p className="text-xs text-red-700">Assign correct answers and marks for each MCQ.</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <span className="mr-2 text-lg">🔴</span>
-                            <div>
-                              <span className="text-sm font-bold text-red-800">Candidate Email is Mandatory</span>
-                              <p className="text-xs text-red-700 mt-0.5">Enable “Collect email addresses”.</p>
-                              <p className="text-xs text-red-700">This email will be used to identify candidates and send further communication.</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <span className="mr-2 text-lg">🔴</span>
-                            <div>
-                              <span className="text-sm font-bold text-red-800">Use the Original Form (Edit) Link</span>
-                              <p className="text-xs text-red-700 mt-0.5">Do NOT use the public “viewform” link.</p>
-                              <p className="text-xs text-red-700">Only the original Google Form should be linked to this round.</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <span className="mr-2 text-lg">🔴</span>
-                            <div>
-                              <span className="text-sm font-bold text-red-800">Responses are Stored in Google Sheets</span>
-                              <p className="text-xs text-red-700 mt-0.5">All candidate responses and scores are automatically stored in the linked Google Sheet.</p>
-                              <p className="text-xs text-red-700">PASS / FAIL status is calculated automatically based on the cutoff score.</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <span className="mr-2 text-lg">🔴</span>
-                            <div>
-                              <span className="text-sm font-bold text-red-800">MCQ Result Evaluation</span>
-                              <p className="text-xs text-red-700 mt-0.5">Candidates scoring equal to or above the cutoff are marked as PASS.</p>
-                              <p className="text-xs text-red-700">Candidates below the cutoff are marked as FAIL.</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-start">
-                            <span className="mr-2 text-lg">🔴</span>
-                            <div>
-                              <span className="text-sm font-bold text-red-800">Next Round Shortlisting</span>
-                              <p className="text-xs text-red-700 mt-0.5">Only PASS candidates will be considered for the next round.</p>
-                              <p className="text-xs text-red-700">Shortlisted candidates may receive automated or manual email notifications</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
+                    <div className="space-y-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
                       <div>
-                        <label htmlFor="googleFormLink" className="block text-sm font-semibold text-gray-900 mb-2">
-                          Google Form Link <span className="text-red-500">*</span>
+                        <label htmlFor="mode" className="mb-2 block text-sm font-semibold text-gray-900">
+                          MCQ Mode
                         </label>
-                        <input
-                          id="googleFormLink"
-                          name="googleFormLink"
-                          type="url"
-                          required={formData.type === 'mcq'}
-                          value={formData.googleFormLink}
+                        <select
+                          id="mode"
+                          name="mode"
+                          value={formData.mode}
                           onChange={handleInputChange}
-                          placeholder="https://docs.google.com/forms/d/..."
-                          className={`w-full px-4 py-3 text-sm font-medium text-gray-900 bg-gray-50 placeholder-gray-500 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${errors.googleFormLink ? 'border-red-300' : 'border-gray-300'
-                            }`}
-                        />
-                        {errors.googleFormLink && (
-                          <p className="mt-2 text-sm text-red-600 flex items-center">
-                            <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
-                            {errors.googleFormLink}
-                          </p>
-                        )}
+                          className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="INTERNAL">Internal MCQ (HireHelp Exam)</option>
+                          <option value="EXTERNAL">External MCQ (Google Form / Link)</option>
+                        </select>
                       </div>
-                    </>
+
+                      {formData.mode === 'INTERNAL' ? (
+                        <>
+                          <div>
+                            <label htmlFor="questionSetId" className="mb-2 block text-sm font-semibold text-gray-900">
+                              Question Set <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              id="questionSetId"
+                              name="questionSetId"
+                              value={formData.questionSetId}
+                              onChange={handleInputChange}
+                              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="">Select a question set</option>
+                              {questionSets.map((set) => (
+                                <option key={set._id} value={set._id}>
+                                  {set.name} ({set.questionIds.length} questions)
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <div>
+                              <label className="mb-2 block text-sm font-semibold text-gray-900">Timer (minutes)</label>
+                              <input
+                                name="durationMinutes"
+                                type="number"
+                                min={1}
+                                value={formData.durationMinutes}
+                                onChange={handleInputChange}
+                                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-2 block text-sm font-semibold text-gray-900">Pass %</label>
+                              <input
+                                name="passPercentage"
+                                type="number"
+                                min={0}
+                                max={100}
+                                value={formData.passPercentage}
+                                onChange={handleInputChange}
+                                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="mb-2 block text-sm font-semibold text-gray-900">Auto submit</label>
+                              <select
+                                name="autoSubmit"
+                                value={String(formData.autoSubmit)}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, autoSubmit: e.target.value === 'true' }))}
+                                className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              >
+                                <option value="true">Enabled</option>
+                                <option value="false">Disabled</option>
+                              </select>
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600">Manage questions and sets from Company Admin &gt; Question Bank.</p>
+                        </>
+                      ) : (
+                        <div>
+                          <label htmlFor="externalLink" className="mb-2 block text-sm font-semibold text-gray-900">
+                            External MCQ Link <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            id="externalLink"
+                            name="externalLink"
+                            type="url"
+                            required={formData.type === 'mcq' && formData.mode === 'EXTERNAL'}
+                            value={formData.externalLink || formData.googleFormLink}
+                            onChange={handleInputChange}
+                            placeholder="https://docs.google.com/forms/d/... or any assessment URL"
+                            className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   <div>

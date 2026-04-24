@@ -17,7 +17,8 @@ import {
   Home,
   UserCheck,
   User,
-  ClipboardCheck
+  ClipboardCheck,
+  ListChecks
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -33,6 +34,7 @@ const sidebarItems: SidebarItem[] = [
   { name: 'Applications', href: '/companyadmin/applications', icon: FileText },
   { name: 'Candidates', href: '/companyadmin/candidates', icon: UserCheck },
   { name: 'Onboarding', href: '/companyadmin/onboarding', icon: ClipboardCheck },
+  { name: 'Question Bank', href: '/companyadmin/question-bank', icon: ListChecks },
   { name: 'Analytics', href: '/companyadmin/analytics', icon: BarChart3 },
   { name: 'Team Management', href: '/companyadmin/team', icon: Users },
 ];

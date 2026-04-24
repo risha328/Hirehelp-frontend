@@ -12,6 +12,17 @@ export interface Round {
   };
   order: number;
   type: 'mcq' | 'interview' | 'technical' | 'hr' | 'coding';
+  mode?: 'INTERNAL' | 'EXTERNAL';
+  questionSetId?: string | null;
+  externalLink?: string | null;
+  durationMinutes?: number;
+  autoSubmit?: boolean;
+  passPercentage?: number;
+  difficultyDistribution?: {
+    easy?: number;
+    medium?: number;
+    hard?: number;
+  };
   googleFormLink?: string | null;
   googleSheetLink?: string | null;
   platform?: string;
@@ -33,6 +44,11 @@ export interface Round {
     interviewTime: string;
     reportingTime: string;
   };
+  mcqQuestions?: {
+    question: string;
+    options: string[];
+    correctAnswer: number;
+  }[];
   isArchived: boolean;
   isActive: boolean;
   archivedAt?: string;
@@ -46,6 +62,17 @@ export interface CreateRoundDto {
   jobId: string;
   order?: number;
   type?: 'mcq' | 'interview' | 'technical' | 'hr' | 'coding';
+  mode?: 'INTERNAL' | 'EXTERNAL';
+  questionSetId?: string | null;
+  externalLink?: string | null;
+  durationMinutes?: number;
+  autoSubmit?: boolean;
+  passPercentage?: number;
+  difficultyDistribution?: {
+    easy?: number;
+    medium?: number;
+    hard?: number;
+  };
   googleFormLink?: string | null;
   googleSheetLink?: string | null;
   platform?: string;
@@ -74,6 +101,17 @@ export interface UpdateRoundDto {
   description?: string;
   order?: number;
   type?: 'mcq' | 'interview' | 'technical' | 'hr' | 'coding';
+  mode?: 'INTERNAL' | 'EXTERNAL';
+  questionSetId?: string | null;
+  externalLink?: string | null;
+  durationMinutes?: number;
+  autoSubmit?: boolean;
+  passPercentage?: number;
+  difficultyDistribution?: {
+    easy?: number;
+    medium?: number;
+    hard?: number;
+  };
   googleFormLink?: string | null;
   googleSheetLink?: string | null;
   platform?: string;
@@ -128,6 +166,59 @@ export interface MCQResponse {
 export interface SubmitMcqDto {
   applicationId: string;
   answers: number[];
+}
+
+export interface McqSubmissionStatus {
+  submitted: boolean;
+  score?: number;
+}
+
+export interface TopPerformer {
+  rank: number;
+  candidateName: string;
+  candidateEmail: string;
+  applicationId: string;
+  roundId: string;
+  jobId: string;
+  score: number;
+  submittedAt?: string | null;
+  answers: number[];
+  isCorrect?: boolean[];
+}
+
+export interface QuestionBankItem {
+  _id: string;
+  questionText: string;
+  options: string[];
+  correctAnswer: number;
+  difficulty: 'easy' | 'medium' | 'hard';
+  category: 'technical' | 'aptitude';
+  tags: string[];
+}
+
+export interface QuestionSet {
+  _id: string;
+  name: string;
+  questionIds: string[];
+  difficultyDistribution?: { easy?: number; medium?: number; hard?: number };
+}
+
+export interface ExamQuestion {
+  questionIndex: number;
+  id: string;
+  questionText: string;
+  options: string[];
+}
+
+export interface ExamSessionPayload {
+  sessionId: string;
+  status: string;
+  startTime: string;
+  endTime: string;
+  answers: number[];
+  questions: ExamQuestion[];
+  durationMinutes: number;
+  autoSubmit: boolean;
 }
 
 
@@ -315,6 +406,44 @@ export const roundsAPI = {
     return response.json();
   },
 
+  getTopPerformers: async (roundId: string, jobId: string, limit = 10): Promise<TopPerformer[]> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/jobs/${jobId}/top-performers?limit=${limit}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch top performers: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
+  getMcqStatus: async (roundId: string, applicationId: string): Promise<McqSubmissionStatus> => {
+    const headers = await getAuthHeaders();
+    // Hit the legacy route first to avoid noisy 404s on servers
+    // that have not been restarted with the new round-specific route.
+    let response = await fetch(`${API_BASE_URL}/rounds/application/${applicationId}/mcq/status`, {
+      method: 'GET',
+      headers,
+    });
+
+    // Fall back to round-specific route when legacy route is unavailable.
+    if (response.status === 404) {
+      response = await fetch(`${API_BASE_URL}/rounds/${roundId}/application/${applicationId}/mcq/status`, {
+        method: 'GET',
+        headers,
+      });
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch MCQ status: ${response.status}`);
+    }
+
+    return response.json();
+  },
+
   updateEvaluationStatus: async (
     evaluationId: string,
     status: EvaluationStatus,
@@ -366,7 +495,7 @@ export const roundsAPI = {
     return response.json();
   },
 
-  fetchGoogleSheetData: async (googleSheetUrl: string): Promise<any[]> => {
+  fetchGoogleSheetData: async (googleSheetUrl: string): Promise<unknown[]> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/fetch-google-sheet`, {
       method: 'POST',
@@ -421,7 +550,7 @@ export const roundsAPI = {
     meetingLink?: string;
     duration?: string;
     reportingTime?: string;
-    locationDetails?: any;
+    locationDetails?: Record<string, unknown>;
   }): Promise<RoundEvaluation> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/evaluation/${evaluationId}/reschedule`, {
@@ -448,7 +577,7 @@ export const roundsAPI = {
     meetingLink?: string;
     duration?: string;
     reportingTime?: string;
-    locationDetails?: any;
+    locationDetails?: Record<string, unknown>;
   }): Promise<RoundEvaluation> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/evaluations/${evaluationId}/assign`, {
@@ -461,6 +590,132 @@ export const roundsAPI = {
       throw new Error(`Failed to assign interviewer: ${response.status}`);
     }
 
+    return response.json();
+  },
+
+  createQuestionBankItem: async (data: Omit<QuestionBankItem, '_id'>): Promise<QuestionBankItem> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/question-bank`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error(`Failed to create question: ${response.status}`);
+    return response.json();
+  },
+
+  listQuestionBank: async (filters?: { category?: string; difficulty?: string; search?: string }): Promise<QuestionBankItem[]> => {
+    const headers = await getAuthHeaders();
+    const query = new URLSearchParams();
+    if (filters?.category) query.set('category', filters.category);
+    if (filters?.difficulty) query.set('difficulty', filters.difficulty);
+    if (filters?.search) query.set('search', filters.search);
+    const response = await fetch(`${API_BASE_URL}/rounds/question-bank${query.toString() ? `?${query}` : ''}`, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) throw new Error(`Failed to fetch question bank: ${response.status}`);
+    return response.json();
+  },
+
+  createQuestionSet: async (data: { name: string; questionIds?: string[]; difficultyDistribution?: { easy?: number; medium?: number; hard?: number } }): Promise<QuestionSet> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/question-sets`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error(`Failed to create question set: ${response.status}`);
+    return response.json();
+  },
+
+  listQuestionSets: async (): Promise<QuestionSet[]> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/question-sets`, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) throw new Error(`Failed to fetch question sets: ${response.status}`);
+    return response.json();
+  },
+
+  startExam: async (roundId: string, applicationId: string): Promise<ExamSessionPayload> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/exam/start`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ applicationId }),
+    });
+    if (!response.ok) throw new Error(`Failed to start exam: ${response.status}`);
+    return response.json();
+  },
+
+  saveExamAnswer: async (roundId: string, applicationId: string, questionIndex: number, answer: number): Promise<unknown> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/exam/answer`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ applicationId, questionIndex, answer }),
+    });
+    if (!response.ok) throw new Error(`Failed to save answer: ${response.status}`);
+    return response.json();
+  },
+
+  submitExam: async (roundId: string, applicationId: string): Promise<{ score: number; passed: boolean; passPercentage: number; timeoutSubmit: boolean }> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/exam/submit`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ applicationId }),
+    });
+    if (!response.ok) throw new Error(`Failed to submit exam: ${response.status}`);
+    return response.json();
+  },
+
+  getExamSession: async (roundId: string, applicationId: string): Promise<unknown> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/exam/session/${applicationId}`, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) throw new Error(`Failed to fetch exam session: ${response.status}`);
+    return response.json();
+  },
+
+  syncExternalRound: async (roundId: string, googleSheetUrl: string): Promise<{ synced: number }> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/external/sync`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ googleSheetUrl }),
+    });
+    if (!response.ok) throw new Error(`Failed to sync external round: ${response.status}`);
+    return response.json();
+  },
+
+  getRoundQuestions: async (roundId: string): Promise<any[]> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/mcq-questions`, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) throw new Error(`Failed to fetch round questions: ${response.status}`);
+    return response.json();
+  },
+
+  getCompanyMcqAnalytics: async (): Promise<{
+    totalSessions: number;
+    submittedSessions: number;
+    completionRate: number;
+    averageScore: number;
+    timeoutCount: number;
+  }> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/analytics/company`, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) throw new Error(`Failed to fetch MCQ analytics: ${response.status}`);
     return response.json();
   },
 };

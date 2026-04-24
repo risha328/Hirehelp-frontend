@@ -20,7 +20,8 @@ import {
   Building,
   Award,
   Link,
-  Loader2
+  Loader2,
+  ClipboardCheck,
 } from 'lucide-react';
 import { authAPI } from '../api/auth';
 import { getFileUrl, API_BASE_URL } from '../api/config';
@@ -257,15 +258,26 @@ export default function ProfilePage() {
               <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
               <p className="text-gray-600 mt-2">Manage your professional identity and account settings</p>
             </div>
-            {!isEditing && (
-              <button
-                onClick={() => setIsEditing(true)}
-                className="inline-flex items-center px-5 py-2.5 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-300 shadow-sm hover:shadow-md flex-shrink-0"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Profile
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {user.role === 'CANDIDATE' && !isEditing && (
+                <button
+                  onClick={() => router.push('/profile/exams')}
+                  className="inline-flex items-center px-5 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm hover:shadow-md flex-shrink-0"
+                >
+                  <ClipboardCheck className="h-4 w-4 mr-2" />
+                  My Exams
+                </button>
+              )}
+              {!isEditing && (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="inline-flex items-center px-5 py-2.5 bg-white text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors border border-gray-300 shadow-sm hover:shadow-md flex-shrink-0"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Profile
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
