@@ -45,10 +45,14 @@ export default function CandidatesPage() {
 
       const applications = await applicationsAPI.getApplicationsByCompany(response.company._id);
 
-      // Group applications by candidate
       const candidateMap = new Map<string, CandidateWithApplications>();
 
       applications.forEach((application) => {
+        // Skip applications where the candidate might have been deleted or not properly populated
+        if (!application.candidateId || !application.candidateId._id) {
+          return;
+        }
+
         const candidateId = application.candidateId._id;
         if (!candidateMap.has(candidateId)) {
           candidateMap.set(candidateId, {
@@ -60,9 +64,12 @@ export default function CandidatesPage() {
         }
         const candidate = candidateMap.get(candidateId)!;
         candidate.applications.push(application);
-        if (!candidate.positions.includes(application.jobId.title)) {
-          candidate.positions.push(application.jobId.title);
+        
+        const title = application.jobId?.title || 'Unknown Position';
+        if (!candidate.positions.includes(title)) {
+          candidate.positions.push(title);
         }
+        
         if (application.resumeUrl && !candidate.resumeUrls.includes(application.resumeUrl)) {
           candidate.resumeUrls.push(application.resumeUrl);
         }
@@ -327,7 +334,7 @@ export default function CandidatesPage() {
                                 </div>
                               </div>
 
-                              {application.currentRound && (
+                              {application.currentRound && typeof application.currentRound !== 'string' && (
                                 <div>
                                   <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Current Stage</h5>
                                   <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100 inline-block">
