@@ -163,6 +163,8 @@ export interface MCQResponse {
   submittedAt?: string;
   createdAt: string;
   updatedAt: string;
+  attemptCount?: number;
+  timeTakenMs?: number;
 }
 
 export interface SubmitMcqDto {
@@ -186,6 +188,8 @@ export interface TopPerformer {
   submittedAt?: string | null;
   answers: number[];
   isCorrect?: boolean[];
+  attemptCount?: number;
+  timeTakenMs?: number;
 }
 
 export type QuestionBankType = 'mcq' | 'video' | 'free_text';
