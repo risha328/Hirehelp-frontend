@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { roundsAPI, ExamSessionPayload } from '../../../../../api/rounds';
 
@@ -11,13 +11,21 @@ export default function CandidateExamPage() {
   const roundId = params.roundId as string;
 
   const [session, setSession] = useState<ExamSessionPayload | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isConfirmSubmitOpen, setIsConfirmSubmitOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [flaggedIndexes, setFlaggedIndexes] = useState<number[]>([]);
   const [message, setMessage] = useState<string>('');
   const [now, setNow] = useState(Date.now());
   const persistedStatusKey = `examSubmitted:${roundId}:${applicationId}`;
+
+  // Proctoring States
+  const [cameraPermission, setCameraPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [violations, setViolations] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const fetchSession = async () => {
     setLoading(true);
@@ -32,8 +40,100 @@ export default function CandidateExamPage() {
   };
 
   useEffect(() => {
-    fetchSession();
-  }, [roundId, applicationId]);
+    if (hasStarted) {
+      fetchSession();
+    }
+  }, [hasStarted]);
+
+  // Request Camera Permissions
+  const requestPermissions = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setStream(mediaStream);
+      setCameraPermission('granted');
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (err) {
+      setCameraPermission('denied');
+      alert('Camera and microphone permissions are mandatory for web proctoring. Please enable them to proceed.');
+    }
+  };
+
+  // Assign stream to video on setup
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, cameraPermission]);
+
+  // Clean up stream on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [stream]);
+
+  // Handle Fullscreen & Test Start
+  const startTest = async () => {
+    if (cameraPermission !== 'granted') {
+      alert('You must grant camera permissions before starting.');
+      return;
+    }
+
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+      setHasStarted(true);
+    } catch (err) {
+      alert('Fullscreen permission is required for taking the exam.');
+    }
+  };
+
+  // Proctoring Violations Tracking
+  useEffect(() => {
+    if (!hasStarted || !session || submitting || isConfirmSubmitOpen) return;
+
+    const handleViolation = (type: string) => {
+      setViolations((prev) => {
+        const nextViolations = prev + 1;
+        alert(`Warning! Proctoring Violation detected: ${type}. Violation ${nextViolations}/3. Continuing will lead to automatic failure.`);
+        if (nextViolations >= 3) {
+          void handleSubmit(true); // Auto submit
+        }
+        return nextViolations;
+      });
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        handleViolation('Tab switching or leaving page');
+      }
+    };
+
+    const handleWindowBlur = () => {
+      handleViolation('Lost window focus');
+    };
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        handleViolation('Exited fullscreen mode');
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleWindowBlur);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleWindowBlur);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [hasStarted, session, submitting, isConfirmSubmitOpen]);
 
   const remainingMs = useMemo(() => {
     if (!session) return 0;
@@ -65,6 +165,11 @@ export default function CandidateExamPage() {
   const handleSubmit = async (auto = false) => {
     setSubmitting(true);
     try {
+      // Exit Fullscreen
+      if (document.fullscreenElement && document.exitFullscreen) {
+        void document.exitFullscreen().catch(() => {});
+      }
+
       const result = await roundsAPI.submitExam(roundId, applicationId);
       try {
         localStorage.setItem(
@@ -108,6 +213,63 @@ export default function CandidateExamPage() {
   if (loading) {
     return <div className="p-8 text-sm text-gray-600">Loading exam...</div>;
   }
+
+  // Pre-test Instructions & Permissions Screen
+  if (!hasStarted) {
+    return (
+      <div className="min-h-screen bg-[#f3f5fa] text-gray-900 flex items-center justify-center p-5">
+        <div className="bg-white max-w-2xl w-full rounded-2xl shadow-xl p-8 border border-gray-200">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Exam Proctoring Setup</h2>
+          <p className="text-gray-600 mb-6">
+            To ensure academic integrity, this examination utilizes active AI web proctoring. Please adhere to the rules below:
+          </p>
+
+          <ul className="space-y-3 mb-6 text-sm text-gray-700">
+            <li className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-600 rounded-full" />
+              <strong>Fullscreen Enforcement:</strong> The exam operates strictly in fullscreen mode.
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-600 rounded-full" />
+              <strong>Tab Switching (Violation Tracking):</strong> Leaving this tab or swapping windows generates security flags. 
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-blue-600 rounded-full" />
+              <strong>Maximum 3 warnings allowed</strong> before automatic submission.
+            </li>
+          </ul>
+
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 mb-6 flex flex-col items-center">
+            <p className="text-sm font-semibold text-gray-800 mb-3">Camera & Audio Verification</p>
+            {cameraPermission !== 'granted' ? (
+              <button
+                onClick={() => void requestPermissions()}
+                className="bg-blue-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg hover:bg-blue-700 transition"
+              >
+                Grant Proctoring Permissions
+              </button>
+            ) : (
+              <div className="w-64 h-48 bg-black rounded-lg overflow-hidden shadow-inner relative flex items-center justify-center">
+                <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+                <span className="absolute bottom-2 left-2 bg-green-600 text-white text-[10px] px-2 py-0.5 rounded font-bold uppercase">
+                  Live
+                </span>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={() => void startTest()}
+            disabled={cameraPermission !== 'granted'}
+            className="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-center block"
+          >
+            Start Test Now
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!session) {
     return <div className="p-8 text-sm text-red-600">{message || 'Exam unavailable'}</div>;
   }
@@ -119,9 +281,22 @@ export default function CandidateExamPage() {
 
   return (
     <div className="min-h-screen bg-[#f3f5fa] text-gray-900">
+      {/* Active Proctoring Camera Overlay */}
+      <div className="fixed bottom-5 right-5 z-50 w-40 h-32 bg-black rounded-xl overflow-hidden shadow-2xl border-2 border-blue-600 flex items-center justify-center">
+        <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+        <span className="absolute top-1 left-1 bg-red-600 text-white text-[8px] px-1 rounded font-bold">
+          PROCTORING
+        </span>
+      </div>
+
       <header className="sticky top-0 z-20 border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between px-5 py-3">
-          <h1 className="text-lg font-bold text-gray-900">HireHelp Exam</h1>
+          <h1 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+            HireHelp Exam
+            <span className="text-xs bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded-full font-semibold animate-pulse">
+              Secured
+            </span>
+          </h1>
           <div className="hidden items-center gap-8 md:flex">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-500">Time Remaining</p>
@@ -135,9 +310,13 @@ export default function CandidateExamPage() {
                 Question {activeIndex + 1} of {totalQuestions}
               </p>
             </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-red-500">Violations</p>
+              <p className="text-sm font-bold text-red-600">{violations} / 3</p>
+            </div>
           </div>
           <button
-            onClick={() => void handleSubmit(false)}
+            onClick={() => setIsConfirmSubmitOpen(true)}
             disabled={submitting}
             className="rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -287,6 +466,34 @@ export default function CandidateExamPage() {
           </div>
         </aside>
       </main>
+
+      {isConfirmSubmitOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 border border-gray-200">
+            <h3 className="text-lg font-bold text-gray-900">Submit Exam?</h3>
+            <p className="text-sm text-gray-600 mt-2">
+              Are you sure you want to exit and submit your exam? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setIsConfirmSubmitOpen(false)}
+                className="px-4 py-2 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setIsConfirmSubmitOpen(false);
+                  void handleSubmit(false);
+                }}
+                className="px-4 py-2 text-sm font-semibold text-white bg-blue-700 hover:bg-blue-800 rounded-md shadow-md"
+              >
+                Yes, Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
