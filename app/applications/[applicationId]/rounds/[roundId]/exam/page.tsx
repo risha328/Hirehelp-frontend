@@ -78,7 +78,10 @@ export default function CandidateExamPage() {
       } catch {
         // ignore localStorage failures
       }
-      setMessage(`Submitted. Score: ${result.score.toFixed(2)}%. Result: ${result.passed ? 'Passed' : 'Failed'}.`);
+      const scoreDisplay = result.correctAnswersCount !== undefined && result.totalQuestions !== undefined
+        ? `${result.correctAnswersCount} out of ${result.totalQuestions} (${result.score.toFixed(2)}%)`
+        : `${result.score.toFixed(2)}%`;
+      setMessage(`Submitted. Score: ${scoreDisplay}. Result: ${result.passed ? 'Passed' : 'Failed'}.`);
       if (!auto) {
         setTimeout(() => router.push('/applications'), 1200);
       }

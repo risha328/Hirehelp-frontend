@@ -246,7 +246,9 @@ export default function RoundDetailsPage() {
                                                     : '-'}
                                             </td>
                                             <td className="border-b border-gray-100 px-3 py-3 text-gray-800">
-                                                {score.toFixed(2)}%
+                                                {response.correctAnswersCount !== undefined && response.totalQuestions !== undefined
+                                                    ? `${response.correctAnswersCount} / ${response.totalQuestions} (${score.toFixed(2)}%)`
+                                                    : `${score.toFixed(2)}%`}
                                             </td>
                                             <td className="border-b border-gray-100 px-3 py-3">
                                                 <span
