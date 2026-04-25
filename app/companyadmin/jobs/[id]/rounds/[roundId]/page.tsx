@@ -112,11 +112,31 @@ export default function RoundDetailsPage() {
         return Boolean(response.isSubmitted || response.submittedAt);
     });
 
-    const topScore = topPerformers.length ? topPerformers[0].score : null;
+    const fallbackTopPerformer = completedResponses
+        .map((response) => {
+            const rawApplicationId = response.applicationId?._id;
+            const applicationId = rawApplicationId?.toString?.() ?? rawApplicationId ?? '';
+            return {
+                rank: 1,
+                applicationId,
+                candidateName: (response.applicationId as any)?.candidateId?.name || 'Unknown Candidate',
+                candidateEmail: (response.applicationId as any)?.candidateId?.email || '',
+                score: typeof response.score === 'number' ? response.score : 0,
+                submittedAt: response.submittedAt || response.updatedAt || response.createdAt,
+                timeTakenMs: typeof response.timeTakenMs === 'number' ? response.timeTakenMs : 0,
+            };
+        })
+        .sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            const timeA = a.timeTakenMs > 0 ? a.timeTakenMs : Number.MAX_SAFE_INTEGER;
+            const timeB = b.timeTakenMs > 0 ? b.timeTakenMs : Number.MAX_SAFE_INTEGER;
+            if (timeA !== timeB) return timeA - timeB;
+            return new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime();
+        })[0] || null;
+
+    const topPerformer = topPerformers.length ? topPerformers[0] : fallbackTopPerformer;
     const topPerformerApplicationIds = new Set(
-        topPerformers
-            .filter((performer) => topScore !== null && performer.score === topScore)
-            .map((performer) => performer.applicationId),
+        topPerformer?.applicationId ? [topPerformer.applicationId] : [],
     );
 
     const saveSheetLink = async () => {
@@ -165,28 +185,36 @@ export default function RoundDetailsPage() {
         }
     };
 
+    const formatTimeTaken = (ms?: number) => {
+        if (!ms || ms <= 0) return 'N/A';
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        
+        if (minutes > 0) {
+            return `${minutes} min ${seconds} second`;
+        }
+        return `${seconds} second`;
+    };
+
     const renderMcqSubmissionHistory = () => {
         if (!round) return null;
         const passPercentage = round.passPercentage ?? 60;
 
         return (
             <div className="space-y-6">
-                {topPerformers.length > 0 && topScore !== null && (
+                {topPerformer && (
                     <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-4">
                         <p className="text-sm font-semibold text-indigo-900">
-                            Top Performer{topPerformers.filter((performer) => performer.score === topScore).length > 1 ? 's' : ''} ({topScore.toFixed(2)}%)
+                            Top Performer ({topPerformer.score.toFixed(2)}%)
                         </p>
                         <div className="mt-2 flex flex-wrap gap-2">
-                            {topPerformers
-                                .filter((performer) => performer.score === topScore)
-                                .map((performer) => (
-                                    <span
-                                        key={`${performer.applicationId}-${performer.rank}`}
-                                        className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs font-medium text-indigo-800"
-                                    >
-                                        {performer.candidateName} ({performer.candidateEmail || 'No email'})
-                                    </span>
-                                ))}
+                            <span
+                                key={`${topPerformer.applicationId}-${topPerformer.rank}`}
+                                className="rounded-full border border-indigo-200 bg-white px-3 py-1 text-xs font-medium text-indigo-800"
+                            >
+                                {topPerformer.candidateName} ({topPerformer.candidateEmail || 'No email'}) {topPerformer.timeTakenMs ? `- ${formatTimeTaken(topPerformer.timeTakenMs)}` : ''}
+                            </span>
                         </div>
                     </div>
                 )}
@@ -208,6 +236,8 @@ export default function RoundDetailsPage() {
                                 <tr>
                                     <th className="border-b border-gray-200 px-3 py-2 font-semibold text-gray-700">Candidate</th>
                                     <th className="border-b border-gray-200 px-3 py-2 font-semibold text-gray-700">Email</th>
+                                    <th className="border-b border-gray-200 px-3 py-2 font-semibold text-gray-700">Attempts</th>
+                                    <th className="border-b border-gray-200 px-3 py-2 font-semibold text-gray-700">Time Taken</th>
                                     <th className="border-b border-gray-200 px-3 py-2 font-semibold text-gray-700">Submitted At</th>
                                     <th className="border-b border-gray-200 px-3 py-2 font-semibold text-gray-700">Score</th>
                                     <th className="border-b border-gray-200 px-3 py-2 font-semibold text-gray-700">Auto Evaluation</th>
@@ -239,6 +269,12 @@ export default function RoundDetailsPage() {
                                             </td>
                                             <td className="border-b border-gray-100 px-3 py-3 text-gray-700">
                                                 {(response.applicationId as any)?.candidateId?.email || '-'}
+                                            </td>
+                                            <td className="border-b border-gray-100 px-3 py-3 text-gray-700">
+                                                {response.attemptCount || 1}
+                                            </td>
+                                            <td className="border-b border-gray-100 px-3 py-3 text-gray-700">
+                                                {formatTimeTaken(response.timeTakenMs)}
                                             </td>
                                             <td className="border-b border-gray-100 px-3 py-3 text-gray-700">
                                                 {response.submittedAt
