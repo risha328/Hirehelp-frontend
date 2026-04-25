@@ -186,14 +186,22 @@ export interface TopPerformer {
   isCorrect?: boolean[];
 }
 
+export type QuestionBankType = 'mcq' | 'video' | 'free_text';
+
 export interface QuestionBankItem {
   _id: string;
   questionText: string;
+  questionType?: QuestionBankType;
   options: string[];
   correctAnswer: number;
   difficulty: 'easy' | 'medium' | 'hard';
-  category: 'technical' | 'aptitude';
+  category: 'technical' | 'aptitude' | 'hr';
   tags: string[];
+  durationMinutes?: number;
+  autoSubmit?: boolean;
+  randomizeOptions?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface QuestionSet {
@@ -201,6 +209,7 @@ export interface QuestionSet {
   name: string;
   questionIds: string[];
   difficultyDistribution?: { easy?: number; medium?: number; hard?: number };
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 export interface ExamQuestion {
@@ -604,12 +613,29 @@ export const roundsAPI = {
     return response.json();
   },
 
-  listQuestionBank: async (filters?: { category?: string; difficulty?: string; search?: string }): Promise<QuestionBankItem[]> => {
+  updateQuestionBankItem: async (id: string, data: Partial<QuestionBankItem>): Promise<QuestionBankItem> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/question-bank/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error(`Failed to update question: ${response.status}`);
+    return response.json();
+  },
+
+  listQuestionBank: async (filters?: {
+    category?: string;
+    difficulty?: string;
+    search?: string;
+    questionType?: string;
+  }): Promise<QuestionBankItem[]> => {
     const headers = await getAuthHeaders();
     const query = new URLSearchParams();
     if (filters?.category) query.set('category', filters.category);
     if (filters?.difficulty) query.set('difficulty', filters.difficulty);
     if (filters?.search) query.set('search', filters.search);
+    if (filters?.questionType) query.set('questionType', filters.questionType);
     const response = await fetch(`${API_BASE_URL}/rounds/question-bank${query.toString() ? `?${query}` : ''}`, {
       method: 'GET',
       headers,
@@ -618,7 +644,7 @@ export const roundsAPI = {
     return response.json();
   },
 
-  createQuestionSet: async (data: { name: string; questionIds?: string[]; difficultyDistribution?: { easy?: number; medium?: number; hard?: number } }): Promise<QuestionSet> => {
+  createQuestionSet: async (data: { name: string; questionIds?: string[]; difficultyDistribution?: { easy?: number; medium?: number; hard?: number }; difficulty?: 'easy' | 'medium' | 'hard' }): Promise<QuestionSet> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/question-sets`, {
       method: 'POST',
@@ -626,6 +652,27 @@ export const roundsAPI = {
       body: JSON.stringify(data),
     });
     if (!response.ok) throw new Error(`Failed to create question set: ${response.status}`);
+    return response.json();
+  },
+
+  updateQuestionSet: async (id: string, data: Partial<{ name: string; questionIds: string[]; difficultyDistribution: { easy?: number; medium?: number; hard?: number }; difficulty: 'easy' | 'medium' | 'hard' }>): Promise<QuestionSet> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/rounds/question-sets/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      let errText = '';
+      try {
+        const errObj = await response.json();
+        errText = JSON.stringify(errObj);
+      } catch (e) {
+        errText = await response.text();
+      }
+      console.error('Update Question Set Error:', errText);
+      throw new Error(`Failed to update question set: ${response.status} - ${errText}`);
+    }
     return response.json();
   },
 
