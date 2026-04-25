@@ -677,7 +677,11 @@ export default function ApplicationsPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{response.score?.toFixed(1)}%</div>
+                          <div className="text-sm text-gray-900">
+                            {response.correctAnswersCount !== undefined && response.totalQuestions !== undefined
+                              ? `${response.correctAnswersCount} / ${response.totalQuestions} (${response.score?.toFixed(1)}%)`
+                              : `${response.score?.toFixed(1)}%`}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-sm text-gray-500">Pending</span>

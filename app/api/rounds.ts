@@ -157,6 +157,8 @@ export interface MCQResponse {
   answers: number[];
   isCorrect?: boolean[];
   score?: number;
+  correctAnswersCount?: number;
+  totalQuestions?: number;
   isSubmitted: boolean;
   submittedAt?: string;
   createdAt: string;
@@ -708,7 +710,7 @@ export const roundsAPI = {
     return response.json();
   },
 
-  submitExam: async (roundId: string, applicationId: string): Promise<{ score: number; passed: boolean; passPercentage: number; timeoutSubmit: boolean }> => {
+  submitExam: async (roundId: string, applicationId: string): Promise<{ score: number; correctAnswersCount?: number; totalQuestions?: number; passed: boolean; passPercentage: number; timeoutSubmit: boolean }> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/exam/submit`, {
       method: 'POST',
