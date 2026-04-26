@@ -791,9 +791,12 @@ export default function JobDetailsPage() {
 
   useEffect(() => {
     fetchJobDetails();
-    checkApplicationStatus();
     fetchSimilarJobs();
   }, [jobId]);
+
+  useEffect(() => {
+    checkApplicationStatus();
+  }, [jobId, user]);
 
   const fetchSimilarJobs = async () => {
     try {
@@ -832,7 +835,13 @@ export default function JobDetailsPage() {
 
     try {
       const applications = await applicationsAPI.getApplicationsByCandidate();
-      const hasAppliedForJob = applications.some(app => app.jobId._id === jobId);
+      const hasAppliedForJob = applications.some((app) => {
+        const appliedJobId =
+          (app.jobId as any)?._id?.toString?.() ||
+          (app.jobId as any)?.toString?.() ||
+          '';
+        return appliedJobId === jobId;
+      });
       setHasApplied(hasAppliedForJob);
     } catch (err: any) {
       console.error('Failed to check application status:', err);
