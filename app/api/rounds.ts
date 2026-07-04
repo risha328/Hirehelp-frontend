@@ -714,12 +714,12 @@ export const roundsAPI = {
     return response.json();
   },
 
-  submitExam: async (roundId: string, applicationId: string): Promise<{ score: number; correctAnswersCount?: number; totalQuestions?: number; passed: boolean; passPercentage: number; timeoutSubmit: boolean }> => {
+  submitExam: async (roundId: string, applicationId: string, timeoutSubmit = false): Promise<{ score: number; correctAnswersCount?: number; totalQuestions?: number; passed: boolean; passPercentage: number; timeoutSubmit: boolean; alreadySubmitted?: boolean }> => {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_BASE_URL}/rounds/${roundId}/exam/submit`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ applicationId }),
+      body: JSON.stringify({ applicationId, timeoutSubmit }),
     });
     if (!response.ok) throw new Error(`Failed to submit exam: ${response.status}`);
     return response.json();
