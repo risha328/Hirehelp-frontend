@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { applicationsAPI, Application, OnboardingDocumentItem, OnboardingDocumentType } from '../api/applications';
+import { roundsAPI, McqSubmissionStatus } from '../api/rounds';
 import { getFileUrl } from '../api/config';
 import { dashboardAPI, CandidateDashboardResponse } from '../api/dashboard';
 
@@ -96,6 +97,8 @@ export default function ApplicationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [selectedApplicationLoading, setSelectedApplicationLoading] = useState<string | null>(null);
+  const [selectedApplicationMcqStatus, setSelectedApplicationMcqStatus] = useState<McqSubmissionStatus | null>(null);
+  const [selectedApplicationMcqLoading, setSelectedApplicationMcqLoading] = useState(false);
   const [offerActionLoading, setOfferActionLoading] = useState<string | null>(null);
   const [offerLinkLoading, setOfferLinkLoading] = useState<string | null>(null);
   const [offerMessage, setOfferMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -165,6 +168,34 @@ export default function ApplicationsPage() {
       });
     return () => { cancelled = true; };
   }, [selectedApplication?._id, selectedApplication?.status, selectedApplication?.offerAccepted]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const currentRound = selectedApplication && typeof selectedApplication.currentRound === 'object' ? selectedApplication.currentRound : null;
+
+    if (!selectedApplication || !currentRound || String(currentRound.type || '').toLowerCase() !== 'mcq') {
+      setSelectedApplicationMcqStatus(null);
+      setSelectedApplicationMcqLoading(false);
+      return;
+    }
+
+    const fetchMcqStatus = async () => {
+      setSelectedApplicationMcqLoading(true);
+      try {
+        const status = await roundsAPI.getMcqStatus(currentRound._id, selectedApplication._id);
+        if (!cancelled) setSelectedApplicationMcqStatus(status);
+      } catch (error) {
+        if (!cancelled) setSelectedApplicationMcqStatus(null);
+      } finally {
+        if (!cancelled) setSelectedApplicationMcqLoading(false);
+      }
+    };
+
+    void fetchMcqStatus();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedApplication?.currentRound, selectedApplication?._id]);
 
   const fetchApplications = async () => {
     try {
@@ -573,30 +604,46 @@ export default function ApplicationsPage() {
 
                       if (!currentRound || currentRound.type?.toLowerCase() !== 'mcq') return null;
 
+                      const hasAttemptedMcq = selectedApplicationMcqStatus?.submitted === true;
+
                       return (
                       <div className="mt-6 rounded-xl border border-indigo-200 bg-indigo-50 p-5">
                         <h4 className="text-lg font-semibold text-indigo-900">MCQ Round</h4>
                         <p className="mt-1 text-sm text-indigo-800">
                           Round: {currentRound.name} ({currentRound.mode || 'INTERNAL'})
                         </p>
+                        {selectedApplicationMcqLoading ? (
+                          <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                            Checking MCQ status...
+                          </div>
+                        ) : hasAttemptedMcq ? (
+                          <div className="mt-4 rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900">
+                            You have already attempted this MCQ exam. If you are applicable for the next round, you will be further notified.
+                          </div>
+                        ) : null}
                         <div className="mt-3 flex flex-wrap gap-3">
                           {currentRound.mode === 'EXTERNAL' ? (
                             <a
                               href={currentRound.externalLink}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                              className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium ${hasAttemptedMcq ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
+                              aria-disabled={hasAttemptedMcq}
+                              onClick={(e) => {
+                                if (hasAttemptedMcq) e.preventDefault();
+                              }}
                             >
                               <ExternalLink className="mr-2 h-4 w-4" />
-                              Open External Test
+                              {hasAttemptedMcq ? 'Test Completed' : 'Open External Test'}
                             </a>
                           ) : (
                             <button
                               onClick={() => router.push(`/applications/${selectedApplication._id}/rounds/${currentRound._id}/exam`)}
-                              className="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                              disabled={hasAttemptedMcq}
+                              className={`inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium ${hasAttemptedMcq ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
                             >
                               <ClipboardCheck className="mr-2 h-4 w-4" />
-                              Start Test
+                              {hasAttemptedMcq ? 'Test Completed' : 'Start Test'}
                             </button>
                           )}
                         </div>

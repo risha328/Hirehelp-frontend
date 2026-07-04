@@ -26,6 +26,9 @@ export default function CandidateExamPage() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [violations, setViolations] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const submitInFlightRef = useRef(false);
+  const autoSubmitTriggeredRef = useRef(false);
+  const skipProctoringRef = useRef(false);
 
   const fetchSession = async () => {
     setLoading(true);
@@ -98,11 +101,13 @@ export default function CandidateExamPage() {
     if (!hasStarted || !session || submitting || isConfirmSubmitOpen) return;
 
     const handleViolation = (type: string) => {
+      if (skipProctoringRef.current || submitInFlightRef.current) return;
+
       setViolations((prev) => {
         const nextViolations = prev + 1;
         alert(`Warning! Proctoring Violation detected: ${type}. Violation ${nextViolations}/3. Continuing will lead to automatic failure.`);
         if (nextViolations >= 3) {
-          void handleSubmit(true); // Auto submit
+          void handleSubmit(true);
         }
         return nextViolations;
       });
@@ -142,7 +147,8 @@ export default function CandidateExamPage() {
 
   useEffect(() => {
     if (!session || !session.autoSubmit) return;
-    if (remainingMs <= 0 && !submitting) {
+    if (remainingMs <= 0 && !submitting && !autoSubmitTriggeredRef.current) {
+      autoSubmitTriggeredRef.current = true;
       void handleSubmit(true);
     }
   }, [remainingMs, session, submitting]);
@@ -163,14 +169,18 @@ export default function CandidateExamPage() {
   };
 
   const handleSubmit = async (auto = false) => {
+    if (submitInFlightRef.current) return;
+
+    submitInFlightRef.current = true;
+    skipProctoringRef.current = true;
     setSubmitting(true);
     try {
-      // Exit Fullscreen
+      // Exit Fullscreen (proctoring listeners are disabled via skipProctoringRef)
       if (document.fullscreenElement && document.exitFullscreen) {
         void document.exitFullscreen().catch(() => {});
       }
 
-      const result = await roundsAPI.submitExam(roundId, applicationId);
+      const result = await roundsAPI.submitExam(roundId, applicationId, auto);
       try {
         localStorage.setItem(
           persistedStatusKey,
@@ -183,17 +193,19 @@ export default function CandidateExamPage() {
       } catch {
         // ignore localStorage failures
       }
+      const scoreValue = typeof result.score === 'number' ? result.score : 0;
       const scoreDisplay = result.correctAnswersCount !== undefined && result.totalQuestions !== undefined
-        ? `${result.correctAnswersCount} out of ${result.totalQuestions} (${result.score.toFixed(2)}%)`
-        : `${result.score.toFixed(2)}%`;
-      setMessage(`Submitted. Score: ${scoreDisplay}. Result: ${result.passed ? 'Passed' : 'Failed'}.`);
-      if (!auto) {
-        setTimeout(() => router.push('/applications'), 1200);
-      }
+        ? `${result.correctAnswersCount} out of ${result.totalQuestions} (${scoreValue.toFixed(2)}%)`
+        : `${scoreValue.toFixed(2)}%`;
+      const timeoutNote = auto || result.timeoutSubmit ? ' Time expired — your exam was auto-submitted.' : '';
+      setMessage(`Submitted.${timeoutNote} Score: ${scoreDisplay}. Result: ${result.passed ? 'Passed' : 'Failed'}.`);
+      setTimeout(() => router.push('/applications'), auto ? 2500 : 1200);
     } catch (e: unknown) {
+      autoSubmitTriggeredRef.current = false;
       setMessage(e instanceof Error ? e.message : 'Submit failed');
     } finally {
       setSubmitting(false);
+      submitInFlightRef.current = false;
     }
   };
 
